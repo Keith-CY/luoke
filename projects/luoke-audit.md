@@ -57,23 +57,23 @@
 
 | 依赖 | 用来做什么 | 现状 |
 |---|---|---|
-| luoke-core | 空闲任务 `scan`、`update`；生成任务 `luoke-audit.explain`、`luoke-audit.identify`；安装、升级、卸载 | 待开 issue |
-| luoke-agent | 唯一的提醒出口：调 MCP 工具、画卡片、转达 outbox | 工具协议版本 1 已有；本工具的接口待商定 |
+| luoke-core | 空闲任务 `scan`、`update`；生成任务 `luoke-audit.explain`、`luoke-audit.identify`；安装、升级、卸载 | 需求已提（luoke-core#17） |
+| luoke-agent | 唯一的提醒出口：调 MCP 工具、画卡片、转达 outbox | 工具协议版本 1 已有；本工具的接口待商定（luoke-agent#2） |
 | luoke-mem | 写"发生了什么"（用户清了哪类、忽略了哪类、自动清了什么） | 用主控里那份 `luoke_mem` |
-| luoke-search | 待谈：共用文件元信息 | 待开 issue |
+| luoke-search | 待谈：共用文件元信息 | 在谈（luoke-search#12） |
 | macOS | FSEvents、`getattrlist`（克隆标记）、Security（验签名）、Spotlight 元数据、`sfltool` / `launchctl`（常驻项） | 系统自带 |
 | ClamAV、YARA | 特征扫描（不是模型），随本工具打包、锁定版本；病毒库由 freshclam 从上游更新 | 只进不出（顶层 ADR 0016 修订） |
 
 ## 对别的项目的需求
 
-**对 luoke-core**（待开 issue）：
+**对 luoke-core**（luoke-core#17）：
 1. 登记两个空闲任务：`scan`（每天一次，跑 ClamAV 时约 1 GB 内存）、`update`（每天一次，freshclam，只下载）。
 2. 用 `jobs` 的 `exec` 直接起本工具自己签名的程序，并让 macOS 把它记在本工具名下（TCC 的"负责的 app"是 `ai.luoke.audit`，不是主控），这样完全磁盘访问只授给本工具。
 3. 两个生成任务，都走 background：`explain` 每轮 1–3 次、每次约 2–4k token；`identify` 按需、每次几条。
 
-**对 luoke-agent**（待开 issue）：照工具协议接上面的 MCP 工具、卡片和 outbox；`audit_autoclean` 的确认卡片要写清只限会重建的缓存（顶层 ADR 0016 修订）。
+**对 luoke-agent**（luoke-agent#2）：照工具协议接上面的 MCP 工具、卡片和 outbox；`audit_autoclean` 的确认卡片要写清只限会重建的缓存（顶层 ADR 0016 修订）。
 
-**对 luoke-search**（待开 issue）：两边都要遍历文件、都用 FSEvents，谈能不能共用文件元信息（大小、时间、改动），各自只存自己要的。
+**对 luoke-search**（luoke-search#12）：两边都要遍历文件、都用 FSEvents，谈能不能共用文件元信息（大小、时间、改动），各自只存自己要的。
 
 ## 在记忆里读写什么
 
