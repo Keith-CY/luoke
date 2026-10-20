@@ -20,7 +20,7 @@
 - **只做 macOS**，最低 26.2。
 - **首发**：不在 v1 首发里，跟着 agent（v1.x）出。图片和声音的向量要等主控换上带新 mlx-vlm 的引擎包；在那之前图片、视频、录音只能按文件名和 OCR 的字找，所以有了图片和声音再发布。
 - **和 digup 的关系**：从头写。原来基于开源 DigUp（MIT）的 digup 不登记；顶层 ADR 0018「digup 的嵌入」一节由本项目接手，任务改名为 `luoke-search.embed`。
-- **现状**：2026-10-20 立项，还没有代码。
+- **现状**：2026-10-20 立项。正在写第一版：索引、读文档、按字词搜和命令行，主控嵌入客户端、补向量、按意思搜和评测，在 PR 里等审。进度见 `luoke-search/STATUS.md`。
 
 ## 对外提供
 
@@ -59,7 +59,7 @@
 
 | 依赖 | 用来做什么 | 现状 |
 |---|---|---|
-| luoke-core | 嵌入任务 `luoke-search.embed`（`POST /tasks/luoke-search.embed/v1/embed`）、`GET /tasks`；安装、在登录时拉起常驻 | 接口已有（原 `digup.embed`，ADR 0018）；改名和分档前要补的见下 |
+| luoke-core | 嵌入任务 `luoke-search.embed`（`POST /tasks/luoke-search.embed/v1/embed`）、`GET /tasks`；安装、在登录时拉起常驻 | 接口已有（原 `digup.embed`，ADR 0018）；改名和分档前要补的见下（luoke-core#16） |
 | luoke-agent | 唯一的入口：调 MCP 工具、画结果卡片、转达 outbox | 工具协议版本 1 已有；本工具的接口待商定 |
 | luoke-mem | 第二步：读记录和依据原文 | 第一版不用 |
 | luoke-mail | 第二步：搜全部邮件 | 待商定 |
@@ -67,7 +67,7 @@
 
 ## 对别的项目的需求
 
-**对 luoke-core**（issue 待开）：
+**对 luoke-core**（[luokelabs/luoke-core#16](https://github.com/luokelabs/luoke-core/issues/16)）：
 1. 任务 `digup.embed` 改名为 `luoke-search.embed`，接口不变：`/v1/embed`、`vector_space`、`lane_busy`、`retry_after_ms`，以后图片和声音的 `inputs`。
 2. 分到某一档之前补上（luoke-core 已同意）：起嵌入进程之前查 `fits_memory`、`wired_gb` 按实测写进配方、闲时停、内存压力下停、参数变了重启。
 3. 图片和声音：换上带新 mlx-vlm 的引擎包以后打开；参考向量集里 4 条媒体向量也要余弦 ≥ 0.999。
@@ -76,7 +76,7 @@
    - 建索引：`background`。第一次几千到几万个请求，每个最多 32 段；之后只有改动的文件，每分钟几个。
    - 嵌入进程的内存（M3 Pro 测试机实测）：只有文字约 0.8–1.0 GB；开了图片和声音 2.2–3.9 GB（phys_footprint）。
 
-**对 luoke-agent**（issue 待开）：照工具协议接上面的 MCP 工具、结果卡片和 outbox。
+**对 luoke-agent**（[luokelabs/luoke-agent#1](https://github.com/luokelabs/luoke-agent/issues/1)）：照工具协议接上面的 MCP 工具、结果卡片和 outbox。
 
 **待谈**：
 - **拒答门槛**：语料里没有答案时，现在多半仍会给出不相干的结果（digup 的 10 道这类题里 9 道是这样）。先在这类题上有评测数字、定下门槛，再开档。在那之前，答复里不说"有把握"，agent 不把弱结果当答案说。
