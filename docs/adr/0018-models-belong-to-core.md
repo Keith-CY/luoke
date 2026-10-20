@@ -89,3 +89,7 @@
 - **隐私模型的接入方**：决定接入以后：接口和延迟要求已交给 luoke-core（10-19），还要写进自己的注册页；权重改从主控的分发拿。
 - **ARCHITECTURE §2「模型推理」一行**：补一句"模型权重也归主控，下载、版本、校验统一走主控的分发，各工具不自带模型；体系里没有脱离主控的 LLM 运行实例"。
 - **许可证**：嵌入这条链没有 GPL：DigUp、llama.cpp、mlx-vlm 都是 MIT，EmbeddingGemma 2 的权重是 Apache-2.0。
+
+## 修订（2026-10-20）
+
+- **digup 不登记，嵌入由 luoke-search 接手**：主人 10-20 定 digup 不作为螺壳的项目登记，相关需求重新做成"螺壳深度搜索"（luoke-search，工具层，入口在 agent，注册页 `projects/luoke-search.md`）。上面「digup 的嵌入」一节的接口、评测和多模态安排原样由 luoke-search 接手，主控的任务名由 `digup.embed` 改为 `luoke-search.embed`（接口不变）。参考向量集从 digup 原样拷到 luoke-search。

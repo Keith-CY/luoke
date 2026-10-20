@@ -24,6 +24,7 @@ git submodule foreach 'git switch main && git pull'
 | [luoke-ime](luoke-ime) | 输入法：只管按键和上屏，候选交给可以随手写的引擎 | 0.1.9，首发主打之一（要 macOS 26） | [projects/luoke-ime.md](projects/luoke-ime.md) |
 | [luoke-agent](luoke-agent) | 个人 agent「螺壳」：唯一主动找用户的出口，替记忆和各工具跟用户沟通（先 Mac，再手机） | 开发版在作者机器上试用，不进首发（v1.x） | [projects/luoke-agent.md](projects/luoke-agent.md) |
 | [luoke-community](luoke-community) | 螺壳实验室的官网和螺壳社区 | 封闭测试 10-29 开始，官网在做 | [projects/luoke-community.md](projects/luoke-community.md) |
+| [luoke-search](luoke-search) | 深度搜索：给本机文件和照片建索引，按字词和意思找回来；没有自己的界面，入口在 agent | 立项，第一版在写，跟 agent（v1.x）出 | [projects/luoke-search.md](projects/luoke-search.md) |
 
 - [顶层设计](ARCHITECTURE.md)：分工、数据怎么流、项目之间的约定
 - [术语](CONTEXT.md)：跨项目共用的词

@@ -28,3 +28,8 @@
 	url = https://github.com/luokelabs/luoke-community.git
 	branch = main
 	ignore = dirty
+[submodule "luoke-search"]
+	path = luoke-search
+	url = https://github.com/luokelabs/luoke-search.git
+	branch = main
+	ignore = dirty

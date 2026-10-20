@@ -1,8 +1,8 @@
 # CLAUDE.md — 螺壳顶层
 
-给在螺壳任何一个项目里工作的 Claude Code 会话看的。这个文件夹（`~/Codes/luoke`）是顶层仓库，放顶层文档；`luoke-core/`、`luoke-ime/`、`luoke-mem/`、`luoke-mail/`、`luoke-agent/`、`luoke-community/` 作为子模块挂在下面（主人 2026-10-16 定），每个仍是独立仓库，各有自己的 CLAUDE.md。
+给在螺壳任何一个项目里工作的 Claude Code 会话看的。这个文件夹（`~/Codes/luoke`）是顶层仓库，放顶层文档；`luoke-core/`、`luoke-ime/`、`luoke-mem/`、`luoke-mail/`、`luoke-agent/`、`luoke-community/`、`luoke-search/` 作为子模块挂在下面（主人 2026-10-16 定），每个仍是独立仓库，各有自己的 CLAUDE.md。
 
-每个项目有自己的会话，会话名就是项目名（`luoke-core`、`luoke-mem`、`luoke-mail`、`luoke-ime`、`luoke-agent`、`luoke-community`）；顶层另有一个会话 `luoke-top`。用 ListAgents 找到它们，用 SendMessage 发消息。
+每个项目有自己的会话，会话名就是项目名（`luoke-core`、`luoke-mem`、`luoke-mail`、`luoke-ime`、`luoke-agent`、`luoke-community`）；顶层另有一个会话 `luoke-top`。用 ListAgents 找到它们，用 SendMessage 发消息。`luoke-search` 由团队成员在自己的机器上做，它的会话不在这台机器上：和它之间的事在 GitHub 上开 issue（见 `docs/new-component.md`）。
 
 内部团队另有私有仓库 `luokelabs/luoke-ops`，放在本目录的 `ops/`（不进本仓库）：试用记录、发布看板、评审记录，以及下面这份内部规矩。
 
