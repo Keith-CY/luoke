@@ -73,7 +73,7 @@
 <tr><td>处理习惯等是非类建议</td><td>好 → <code>useful</code> · 不用 → <code>useless</code> · 别再提 → <code>never</code></td></tr>
 <tr><td>信息性建议</td><td>知道了 → <code>useful</code> · 别再提 → <code>never</code></td></tr>
 <tr><td>关于某条理解的问题</td><td>对 → <code>yes</code> · 不对 → <code>no</code> · 以前是，现在不是 → <code>past</code> · 按我改的 → <code>revise</code> · 以后再说 → <code>later</code>（记忆把问题记为 later，7 天后由反刍重新提出）</td></tr>
-<tr><td>自由问题</td><td>交回 → <code>answer</code> · 以后再说 → <code>later</code></td></tr>
+<tr><td>自由问题</td><td>交回 → <code>answer</code></td></tr>
 </table></div>
 
 <h2>何时说</h2>
@@ -112,6 +112,5 @@
 <li>从不发送 <code>outbox_ack state:"shown"</code>，工具无法据此停止自己的通知。</li>
 <li>设置没有界面；卡片上用户改过的选项只存在壳里，壳重启后丢失；<code>core.log</code> 不轮转。</li>
 <li>简报通知的正文包含事项标题。</li>
-<li>自由问题（不针对某条理解）的"以后再说"记忆不接受，卡片会显示"这条已经变了"并关闭；记忆目前不产生自由问题。</li>
 <li>核心只在启动时取一次主控的 <code>luoke_mem</code> 路径；主控升级后需重启核心才换用新的。</li>
 </ul>

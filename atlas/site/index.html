@@ -73,7 +73,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 <body>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-20 17:05</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-20 17:07</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -804,7 +804,7 @@ sequenceDiagram
 <tr><td>处理习惯等是非类建议</td><td>好 → <code>useful</code> · 不用 → <code>useless</code> · 别再提 → <code>never</code></td></tr>
 <tr><td>信息性建议</td><td>知道了 → <code>useful</code> · 别再提 → <code>never</code></td></tr>
 <tr><td>关于某条理解的问题</td><td>对 → <code>yes</code> · 不对 → <code>no</code> · 以前是，现在不是 → <code>past</code> · 按我改的 → <code>revise</code> · 以后再说 → <code>later</code>（记忆把问题记为 later，7 天后由反刍重新提出）</td></tr>
-<tr><td>自由问题</td><td>交回 → <code>answer</code> · 以后再说 → <code>later</code></td></tr>
+<tr><td>自由问题</td><td>交回 → <code>answer</code></td></tr>
 </table></div>
 
 <h2>何时说</h2>
@@ -843,7 +843,6 @@ sequenceDiagram
 <li>从不发送 <code>outbox_ack state:"shown"</code>，工具无法据此停止自己的通知。</li>
 <li>设置没有界面；卡片上用户改过的选项只存在壳里，壳重启后丢失；<code>core.log</code> 不轮转。</li>
 <li>简报通知的正文包含事项标题。</li>
-<li>自由问题（不针对某条理解）的"以后再说"记忆不接受，卡片会显示"这条已经变了"并关闭；记忆目前不产生自由问题。</li>
 <li>核心只在启动时取一次主控的 <code>luoke_mem</code> 路径；主控升级后需重启核心才换用新的。</li>
 </ul>
 </section>
@@ -1276,7 +1275,6 @@ sequenceDiagram
 <ul>
 <li><b>改成"移到垃圾箱"形不成处理习惯</b>（邮件助手 × 记忆）：<code>mail-override</code> 的 <code>data.to</code> 用分拣动作代码，移到垃圾箱是 <code>ignore</code>；记忆归纳习惯只认 <code>ACTION_NAMES</code>（垃圾箱是 <code>trash</code>），这类改建议被跳过。改成归档的不受影响。</li>
 <li><b>归纳任务被一次模型错误整次打断</b>（记忆）：打字线遇到"稍后再来"以外的主控错误（如 <code>engine_failed</code>）时整次退出，话题线和结尾的反刍这次不跑；话题线某批持续出错时，下次仍从这一批开始，进度不再前进。</li>
-<li><b>自由问题的"以后再说"</b>（agent × 记忆，目前不会触发）：agent 对不针对某条理解的问题提供"以后再说"，记忆的 <code>reply</code> 不接受，agent 显示"这条已经变了"并永久关闭卡片。记忆现在只产生针对理解的问题。</li>
 </ul>
 
 <h2>待讨论</h2>
@@ -1329,6 +1327,7 @@ sequenceDiagram
 <li>主控本体专用路由改为按对端进程核对，<code>forbidden</code> 为 403（luoke-core f5850c1）；已知问题中主控的两条去掉。</li>
 <li>邮件助手 0.15.2：自动标已读进入操作记录、可整批撤销；agent 应用方案只在批量移到垃圾箱或垃圾邮件时要处理模式；已知问题中邮件助手的两条去掉。</li>
 <li>记忆、邮件助手、agent 按代码逐项复核（luoke-mem 0.23.3、luoke-mail 0.15.4、luoke-agent 7b158a9）：记忆补归纳顺序（反刍在前后各一次）、话题线断点续读、开跑前查任务、以前的事再次出现时的规则、邮件推出的兴趣上限、各线的定档和进度；邮件助手补后台整理默认关闭与常驻声明、端口顺延、通知、agent 接口默认关闭、往来邮件"轮到谁"、设置的模型名、数据目录文件，更正订阅阅读和日志说明；agent 补自带 luoke_mem 版本、窗口打开即读、简报计时、"以后再说"由记忆 7 天后重提；任务表更正话题归纳档位。已知问题新增三条缺陷。</li>
+<li>agent 自由问题不再提供"以后再说"，"以后再说"一律由记忆决定何时再问；已知问题中对应一条去掉（luoke-agent 47b817e）。</li>
 </ul>
 
 <h2>2026-10-19</h2>
