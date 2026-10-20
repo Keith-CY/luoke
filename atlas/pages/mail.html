@@ -1,7 +1,7 @@
 <!-- id: mail | nav: 邮件助手 luoke-mail | group: 组件 -->
 <h1>邮件助手</h1>
 <p class="lede">用本机模型整理整个邮箱：逐封分拣近期邮件，清理旧邮件，体检订阅并挑选精选，起草回复放入草稿箱。可撤回的处理会自动执行，并在"今日处理"页集中复查。</p>
-<p class="src">仓库 <code>luoke-mail</code>（包 <code>luoke_mail</code>）· 版本 0.15.4 · 支持 Gmail、QQ、网易 163/126、自定义 IMAP，可连接多个邮箱</p>
+<p class="src">仓库 <code>luoke-mail</code>（包 <code>luoke_mail</code>）· 版本 0.15.5 · 支持 Gmail、QQ、网易 163/126、自定义 IMAP，可连接多个邮箱</p>
 
 <h2>职责</h2>
 <ul>
@@ -93,7 +93,7 @@
 <tr><th>topic</th><th>说话人 / 性质</th><th>何时写</th><th>主要字段</th></tr>
 <tr><td><code>mail-read</code></td><td>user / activity</td><td>每个订阅每个整月一条（群发或有 List-Id）</td><td>封数、打开数、类别、主题、最多 3 封原文（事务类不带）</td></tr>
 <tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签</td></tr>
-<tr><td><code>mail-override</code></td><td>user / activity</td><td>用户改建议</td><td>原建议、新建议、类别</td></tr>
+<tr><td><code>mail-override</code></td><td>user / activity</td><td>用户改建议</td><td>原建议、新建议（用记忆的动作名：trash、keep、archive 等；分拣原始代码在 <code>suggestion</code>）、类别</td></tr>
 <tr><td><code>mail-auto</code></td><td>user / activity，<code>by=rule</code></td><td>习惯自动执行后</td><td>习惯编号、动作、封数</td></tr>
 <tr><td><code>mail-undo-auto</code></td><td>user / activity</td><td>撤销习惯的自动处理</td><td>习惯编号</td></tr>
 <tr><td><code>mail-cleared</code></td><td>user / activity 或 receipt</td><td>清理执行后</td><td>发件人、类别、封数</td></tr>

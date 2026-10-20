@@ -36,7 +36,7 @@
 <div class="tbl"><table>
 <tr><th>方法</th><th>说明</th></tr>
 <tr><td><code>asks(status=["open"], *, tool)</code></td><td>未过期的问题和建议；<code>tool</code> 筛出与某工具相关的</td></tr>
-<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：关于某条理解的问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code>（<code>later</code> 把问题记为 later，7 天后由反刍重新提出）；自由问题只接受 <code>answer</code>；建议 <code>useful</code>（关于习惯的建议同时确认该习惯）/ <code>useless</code> / <code>never</code>；其他组合抛 <code>ValueError</code></td></tr>
+<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：关于某条理解的问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code>（<code>later</code> 把问题记为 later，7 天后由反刍重新提出）；自由问题 <code>answer</code> / <code>later</code>（7 天后再问）；建议 <code>useful</code>（关于习惯的建议同时确认该习惯）/ <code>useless</code> / <code>never</code>；其他组合抛 <code>ValueError</code></td></tr>
 </table></div>
 <h3>工具函数</h3>
 <p><code>mask_secrets(text)</code>（遮去密码、验证码、密钥、通过 Luhn 校验的卡号、证件号）、<code>find_secrets</code>、<code>sensitive_kinds(text)</code>（健康、法律、宗教政治）、<code>confidence(note)</code>、<code>default_path()</code>。</p>
