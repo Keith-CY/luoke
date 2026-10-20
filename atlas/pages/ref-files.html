@@ -1,0 +1,60 @@
+<!-- id: ref-files | nav: 文件位置 | group: 参考 -->
+<h1>文件位置</h1>
+
+<h2>应用</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/Applications/螺壳主控.app</code></td><td>主控（内含自带 Python、记忆代码、<code>luoke</code> 命令行）</td></tr>
+<tr><td><code>~/Applications/螺壳邮件助手.app</code></td><td>邮件助手</td></tr>
+<tr><td><code>~/Applications/螺壳.app</code></td><td>agent</td></tr>
+<tr><td><code>~/Library/Input Methods/LuokeIME.app</code></td><td>输入法</td></tr>
+<tr><td><code>$TMPDIR/ai.luoke.inputmethod.Luoke.lock</code></td><td>输入法单实例锁</td></tr>
+<tr><td><code>~/.local/bin/luoke</code></td><td>命令行链接（可选安装）</td></tr>
+</table></div>
+
+<h2>主控 <code>~/Library/Application Support/luoke-core/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
+<tr><td><code>logs/hub.log</code>、<code>logs/app.log</code>、<code>logs/jobs/</code></td><td>日志（只记元数据）</td></tr>
+<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包；引擎运行目录</td></tr>
+<tr><td><code>models/</code></td><td>模型；用户登记的模型在 <code>user-&lt;名字&gt;</code></td></tr>
+<tr><td><code>downloads/</code></td><td>下载暂存</td></tr>
+<tr><td><code>state.json</code></td><td>运行状态：常驻、冒烟、探针、空闲任务、端点用量</td></tr>
+<tr><td><code>settings.json</code></td><td>功耗、电池、档、端点</td></tr>
+<tr><td><code>endpoint-key</code>、<code>user-models.json</code></td><td>端点密钥（0600）；登记的模型</td></tr>
+<tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
+<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
+<tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包和挂载记录，新主控启动后清除</td></tr>
+<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「配件回到上一版…」换回，卸载配件时一并删除</td></tr>
+</table></div>
+
+<h2>记忆 <code>~/.luoke/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>mem.db</code>（及 <code>-wal</code>、<code>-shm</code>）</td><td>记忆，0600；可用 <code>LUOKE_HOME</code> 换位置</td></tr>
+<tr><td><code>mem.db-ui.json</code>、<code>mem.db-learn.lock</code></td><td>界面进程状态；归纳任务锁</td></tr>
+<tr><td><code>agent/</code></td><td>agent 的 <code>state.db</code>、socket、日志</td></tr>
+<tr><td><code>ime/</code></td><td>输入法的设置、用户引擎、引擎数据、开发记录</td></tr>
+</table></div>
+
+<h2>邮件助手 <code>~/.luoke-mail/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>config.json</code></td><td>设置</td></tr>
+<tr><td><code>luoke.db</code></td><td>邮件、建议、规则、清理、操作记录、精选</td></tr>
+<tr><td><code>token</code></td><td>页面令牌</td></tr>
+<tr><td><code>service.log</code>、<code>app.log</code></td><td>日志</td></tr>
+</table></div>
+
+<h2>钥匙串</h2>
+<p><code>luoke-mail:imap</code>（邮箱授权码）、<code>luoke-mail:engine</code>（直连模型服务的密钥）。</p>
+
+<h2>环境变量</h2>
+<div class="tbl"><table>
+<tr><th>变量</th><th>作用</th></tr>
+<tr><td><code>LUOKE_HUB_SOCKET</code></td><td>指定主控 socket（指定后不回退默认位置）</td></tr>
+<tr><td><code>LUOKE_HOME</code></td><td>记忆所在目录</td></tr>
+<tr><td><code>LUOKE_MAIL_HOME</code></td><td>邮件助手数据目录</td></tr>
+<tr><td><code>PI_CODING_AGENT_DIR</code></td><td><code>luoke launch pi</code> 写入配置的位置</td></tr>
+</table></div>

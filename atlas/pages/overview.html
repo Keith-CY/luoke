@@ -1,0 +1,57 @@
+<!-- id: overview | nav: 总览 | group: 概览 -->
+<h1>螺壳系统文档</h1>
+<p class="lede">螺壳（Luoke）是螺壳实验室（Luoke Labs）开发的一组本机 AI 工具：所有模型推理和数据都在用户自己的 Mac 上。本文档描述系统的结构、各组件的职责与接口、数据如何流动，以及运行和发布方式。</p>
+
+<h2>组件</h2>
+<div class="tbl"><table>
+<tr><th>组件</th><th>仓库</th><th>职责</th></tr>
+<tr><td><a href="#core">主控</a></td><td><code>luoke-core</code></td><td>本机模型推理的唯一入口；安装、升级、卸载；调度空闲任务</td></tr>
+<tr><td><a href="#mem">记忆</a></td><td><code>luoke-mem</code></td><td>共用的本机记忆；唯一形成关于用户结论的地方</td></tr>
+<tr><td><a href="#mail">邮件助手</a></td><td><code>luoke-mail</code></td><td>分拣、清理、精选、起草；可撤回的处理自动执行并每日复查</td></tr>
+<tr><td><a href="#ime">输入法</a></td><td><code>luoke-ime</code></td><td>macOS 输入法；沙盒引擎出候选，本地模型重排和联想</td></tr>
+<tr><td><a href="#agent">agent「螺壳」</a></td><td><code>luoke-agent</code></td><td>唯一主动联系用户的组件；合并提问、建议和工具的事项</td></tr>
+</table></div>
+
+<h2>架构</h2>
+<pre class="mermaid">
+flowchart LR
+  subgraph Mac["用户的 Mac"]
+    direction LR
+    mail["邮件助手"]
+    ime["输入法"]
+    agent["agent「螺壳」"]
+    subgraph core["主控"]
+      engine["推理引擎（底座）"]
+      workers["打分 / 联想 / 嵌入进程"]
+      mem[("记忆 mem.db")]
+      ep["高级用户端点"]
+    end
+  end
+  mail -- "生成任务" --> engine
+  ime -- "打分、续写" --> workers
+  mem -- "归纳" --> engine
+  mail -- "记录" --> mem
+  ime -- "记录" --> mem
+  mem -- "理解" --> mail
+  mem -- "理解" --> ime
+  mem -- "提问、建议" --> agent
+  agent -- "调用能力" --> mail
+  ext["外部工具（如 pi）"] -.-> ep --> engine
+</pre>
+
+<h2>核心原则</h2>
+<ul>
+<li><b>本机就是边界</b>：数据不离开用户自己的设备；在本机内部，各组件可以读取完成工作所需的任何数据。</li>
+<li><b>模型只经主控</b>：所有推理通过主控的任务接口进行，组件不自行加载模型。</li>
+<li><b>只有记忆形成结论</b>：工具记录发生了什么，记忆据此形成带依据、分三档把握程度的理解。</li>
+<li><b>先做、事后复查</b>：能撤回的处理在用户确认一次习惯后自动执行并给出提示；不可逆或对外的操作始终由用户点按。</li>
+<li><b>凭证不进记忆</b>：密码、验证码、密钥、令牌、完整卡号和证件号在写入时遮去。</li>
+</ul>
+<p>决策记录见 <a href="#decisions">决策</a>。</p>
+
+<h2>阅读顺序</h2>
+<ul>
+<li>初次了解：本页 → <a href="#concepts">核心概念</a> → <a href="#flows">数据流</a>。</li>
+<li>开发某个组件：对应的组件章节 → 参考中的接口和数据结构。</li>
+<li>运维和发布：<a href="#ops">运行与发布</a>、<a href="#ref-files">文件位置</a>。</li>
+</ul>

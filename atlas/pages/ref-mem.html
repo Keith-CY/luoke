@@ -1,0 +1,87 @@
+<!-- id: ref-mem | nav: 记忆接口与表结构 | group: 参考 -->
+<h1>记忆接口与表结构</h1>
+<p class="lede">Python 包 <code>luoke_mem</code>（仅标准库，3.9+）。工具只需 <code>__init__</code>、<code>memory</code>、<code>sensitive</code> 三个模块；运行在主控里的配件应使用 <code>GET /tasks</code> 返回的 <code>luoke_mem.path</code>。</p>
+
+<h2>打开</h2>
+<ul>
+<li><code>Memory(path=None, tool="luoke")</code>：工具使用。默认路径 <code>$LUOKE_HOME/mem.db</code>，未设置时为 <code>~/.luoke/mem.db</code>。文件 0600，目录 0700；记忆文件或其 <code>-wal</code>、<code>-shm</code> 是符号链接时拒绝打开。</li>
+<li><code>WholeMemory(path=None)</code>：整份记忆，供记忆自己的界面、命令行和归纳任务使用；打开时执行重新定档和合并。</li>
+<li>文件 schema 比库新得多（千位不同）时抛 <code>TooNew</code>。</li>
+</ul>
+
+<h2>工具接口</h2>
+<h3>记录</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>record(speaker, kind, text, *, topic, data, ref, happened_at, sensitive)</code></td><td>写一条记录；正文和 <code>data</code> 中的字符串先遮去凭证</td></tr>
+<tr><td><code>redate(rid, happened_at)</code></td><td>修正本工具一条记录的发生时间</td></tr>
+<tr><td><code>records(*, tool="", topic, kind, speaker, ref, since, limit)</code></td><td><code>tool=""</code> 为本工具，传工具名读该工具，<code>None</code> 读全部</td></tr>
+<tr><td><code>forget_records(*, topics, since, until, match, keep_cited)</code></td><td>删除本工具的部分记录，只依赖这些记录的理解一并删除</td></tr>
+<tr><td><code>forget_tool(tool=None, *, dry_run)</code></td><td>删除本工具写入的全部内容；用户说过的话和表过态的理解转到记忆名下保留</td></tr>
+</table></div>
+<h3>理解</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>state(kind, text, …)</code></td><td>用户亲口说的，直接为"确定"</td></tr>
+<tr><td><code>propose(kind, text, cites, …)</code></td><td>推测；按定档规则可能直接生效</td></tr>
+<tr><td><code>conclude(kind, text, cites, …)</code></td><td>由用户自己的记录得出；依据须全部来自用户，按定档规则为比较确定或猜测</td></tr>
+<tr><td><code>confirm(nid)</code> / <code>reject(nid)</code> / <code>was(nid)</code> / <code>later(nid)</code> / <code>revise(nid, text)</code></td><td>用户的决定：确认、否定、以前是、以后再说、改写</td></tr>
+<tr><td><code>notes(kinds, status, tool, confidence)</code></td><td>默认只返回生效的（比较确定和确定）；每条带 <code>confidence</code>、<code>data</code>、<code>auto</code>、<code>fresh</code></td></tr>
+<tr><td><code>note(nid)</code></td><td>一条理解及其全部依据（含原文）</td></tr>
+<tr><td><code>recent(since, limit)</code></td><td>未经用户表态而直接生效的推断</td></tr>
+<tr><td><code>context(kinds, limit=600)</code></td><td>按类别拼成供模型使用的一段文字</td></tr>
+<tr><td><code>forget(nid)</code></td><td>删除理解、其历史版本及只被它引用的记录</td></tr>
+</table></div>
+<h3>想问的和建议</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>asks(status=["open"], *, tool)</code></td><td>未过期的问题和建议；<code>tool</code> 筛出与某工具相关的</td></tr>
+<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code> / <code>answer</code>；建议 <code>useful</code> / <code>useless</code> / <code>never</code></td></tr>
+</table></div>
+<h3>工具函数</h3>
+<p><code>mask_secrets(text)</code>（遮去密码、验证码、密钥、通过 Luhn 校验的卡号、证件号）、<code>find_secrets</code>、<code>sensitive_kinds(text)</code>（健康、法律、宗教政治）、<code>confidence(note)</code>、<code>default_path()</code>。</p>
+
+<h2>表结构（schema 7）</h2>
+<div class="tbl"><table>
+<tr><th>表</th><th>列</th></tr>
+<tr><td><code>records</code></td><td>id、tool、speaker、kind、topic、text、data_json、ref、happened_at、recorded_at、sensitive</td></tr>
+<tr><td><code>notes</code></td><td>id、tool、kind、text、origin（user / inferred）、status、superseded_by、valid_from、valid_to、formed_at、decided_at、why、topic、sensitive、data_json</td></tr>
+<tr><td><code>cites</code></td><td>(note_id, record_id)</td></tr>
+<tr><td><code>asks</code></td><td>id、tool、kind（question / suggestion）、text、why、about_note、about_kind、urgency、answer（JSON）、status、created_at、expires_at、decided_at、answer_record、sensitive、evidence、rank、action（JSON）、key</td></tr>
+<tr><td><code>candidates</code></td><td>id、kind、text、record_ids、first_seen、last_seen（归纳中积累的候选）</td></tr>
+<tr><td><code>learning</code></td><td>name、value（归纳进度、反刍结果、一次性修复标记）</td></tr>
+<tr><td><code>grants</code></td><td>遗留，不再使用</td></tr>
+</table></div>
+<p>升级只加不改：新表、可空的新列、新索引。版本存于 <code>PRAGMA user_version</code>。</p>
+
+<h2>取值</h2>
+<div class="tbl"><table>
+<tr><th>字段</th><th>取值</th></tr>
+<tr><td>records.speaker</td><td><code>user</code>、<code>third_party</code>、<code>system</code></td></tr>
+<tr><td>records.kind</td><td><code>statement</code>、<code>activity</code>、<code>receipt</code></td></tr>
+<tr><td>notes.kind</td><td><code>fact</code>、<code>interest</code>、<code>dislike</code>、<code>preference</code>、<code>term</code>、<code>taste</code></td></tr>
+<tr><td>notes.status</td><td><code>proposed</code>、<code>active</code>、<code>rejected</code>、<code>superseded</code>、<code>observed</code>（只读不产生）、<code>past</code></td></tr>
+<tr><td>asks.status</td><td><code>open</code>、<code>answered</code>、<code>dismissed</code>、<code>withdrawn</code>、<code>later</code>、<code>never</code></td></tr>
+<tr><td>preference 的 data</td><td><code>{account, sender, action, name, category, label | filter}</code>；可自动执行的动作 <code>archive</code>、<code>read</code>、<code>label</code>、<code>filter</code></td></tr>
+</table></div>
+
+<h2>记录话题一览</h2>
+<div class="tbl"><table>
+<tr><th>工具</th><th>topic</th></tr>
+<tr><td>邮件助手</td><td><code>mail-read</code>、<code>mail-acted</code>、<code>mail-override</code>、<code>mail-auto</code>、<code>mail-undo-auto</code>、<code>mail-cleared</code>、<code>sent-mail</code>、<code>received-mail</code>、<code>own-label</code>、<code>own-site</code>、<code>digest-open</code>、<code>digest-feedback</code></td></tr>
+<tr><td>输入法</td><td><code>ime-commit</code>、<code>ime-correction</code>、<code>ime-forget</code></td></tr>
+<tr><td>记忆</td><td><code>note:&lt;kind&gt;</code>（用户亲口说的）、<code>note-decision</code>、<code>note-later</code>、<code>ask-answer</code>、<code>ask-dismissed</code></td></tr>
+</table></div>
+
+<h2>命令行</h2>
+<div class="tbl"><table>
+<tr><th>命令</th><th>说明</th></tr>
+<tr><td><code>python -m luoke_mem [--path P] sources</code></td><td>各工具写入的条数</td></tr>
+<tr><td><code>forget-tool &lt;tool&gt; [--dry-run]</code></td><td>忘掉某工具写入的内容</td></tr>
+<tr><td><code>ui [--open] [--note N] [--view recent]</code></td><td>打印界面地址</td></tr>
+<tr><td><code>app [--note N] [--view recent]</code></td><td>在浏览器中打开界面（<code>luoke://memory</code> 的入口）</td></tr>
+<tr><td><code>learn [--force] [--again] [--hub SOCK]</code></td><td>运行一次归纳；<code>--again</code> 从头重新归纳</td></tr>
+</table></div>
+
+<h2>界面</h2>
+<p>独立进程，监听 127.0.0.1 随机端口；页面令牌在 <code>?t=</code>，接口令牌在 <code>X-Luoke-Token</code>；校验 Host 和 Origin；600 秒无请求退出。路由：<code>/api/summary</code>、<code>/api/overview</code>、<code>/api/records</code>、<code>/api/notes</code>、<code>/api/note</code>、<code>/api/recent</code>；修改用 <code>POST /api/change</code>（confirm、reject、forget、revise）、<code>/api/forget-tool</code>、<code>/api/forget-all</code>。</p>

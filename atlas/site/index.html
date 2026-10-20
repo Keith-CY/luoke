@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>螺壳系统文档</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an engineering atlas — fixed index rail on the left, one sheet at a time on the right, every fact tagged with how sure we are. */
+:root{
+  --paper:#f4f6f5; --sheet:#fbfcfb; --ink:#16212a; --muted:#5b6872; --rule:#d5dcda;
+  --shell:#2d6a6e; --shell-soft:#dbe9e8; --warn:#9a5b00; --warn-soft:#f6e8cf; --bad:#a3322b; --bad-soft:#f5dcd9; --ok:#2f6b3a; --ok-soft:#dcebdd;
+  --f-display:"Noto Serif SC","Songti SC",serif; --f-body:-apple-system,"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111719; --sheet:#161e21; --ink:#e3eaea; --muted:#9aa8ad; --rule:#2b3639;
+  --shell:#7fbdbf; --shell-soft:#1f3436; --warn:#e2b25e; --warn-soft:#3a2d16; --bad:#ec8a80; --bad-soft:#3d1f1c; --ok:#8fcf98; --ok-soft:#1d3220; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111719; --sheet:#161e21; --ink:#e3eaea; --muted:#9aa8ad; --rule:#2b3639;
+  --shell:#7fbdbf; --shell-soft:#1f3436; --warn:#e2b25e; --warn-soft:#3a2d16; --bad:#ec8a80; --bad-soft:#3d1f1c; --ok:#8fcf98; --ok-soft:#1d3220; color-scheme:dark}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+nav.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;overflow:auto;border-right:1px solid var(--rule);padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:.02em}
+.brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:2px}
+.navgroup{margin-top:20px;display:flex;flex-direction:column;gap:2px}
+.navlabel{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+nav.rail a{color:var(--ink);text-decoration:none;padding:4px 8px;border-radius:4px;font-size:14px}
+nav.rail a:hover{background:var(--shell-soft)}
+nav.rail a.on{background:var(--shell);color:var(--sheet)}
+.picker{display:none}
+main{padding-block:32px 64px;padding-left:max(16px,4vw);padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:820px}
+.page:not(.show){display:none}
+h1{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.25;margin:0 0 6px;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:36px 0 8px;padding-top:12px;border-top:1px solid var(--rule);text-wrap:balance}
+h3{font-size:15px;margin:22px 0 6px}
+.lede{color:var(--muted);margin:0 0 20px;max-width:65ch}
+p,li{max-width:70ch}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+code{background:var(--shell-soft);padding:1px 5px;border-radius:3px}
+a{color:var(--shell)}
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:13.5px;min-width:520px}
+th,td{border-bottom:1px solid var(--rule);padding:6px 10px;text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:12.5px}
+.chip{display:inline-block;font-size:11px;line-height:1.6;padding:0 7px;border-radius:3px;font-family:var(--f-mono);white-space:nowrap;vertical-align:1px}
+.c-ok{background:var(--ok-soft);color:var(--ok)} .c-check{background:var(--warn-soft);color:var(--warn)} .c-bad{background:var(--bad-soft);color:var(--bad)} .c-info{background:var(--shell-soft);color:var(--shell)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin:8px 0 18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0}
+.fact{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;min-width:0}
+.fact b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.note{background:var(--sheet);border-left:3px solid var(--warn);padding:8px 12px;margin:12px 0;font-size:14px}
+.src{font-size:12px;color:var(--muted)}
+pre.mermaid{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:12px;overflow-x:auto}
+footer{margin-top:48px;font-size:12px;color:var(--muted)}
+@media (max-width:760px){
+  .wrap{grid-template-columns:1fr}
+  nav.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .navgroup{display:none}
+  .picker{display:block;margin-top:12px;width:100%;font:inherit;padding:6px}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  h1{font-size:25px}
+}
+:focus-visible{outline:2px solid var(--shell);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="rail" aria-label="目录">
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-20 12:06</small></div>
+  <label class="picker-label" for="pagepicker" hidden>页面</label>
+  <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
+  <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
+<div class="navgroup"><div class="navlabel">组件</div><a href="#core" data-page="core">主控 luoke-core</a><a href="#mem" data-page="mem">记忆 luoke-mem</a><a href="#mail" data-page="mail">邮件助手 luoke-mail</a><a href="#ime" data-page="ime">输入法 luoke-ime</a><a href="#agent" data-page="agent">agent「螺壳」</a></div>
+<div class="navgroup"><div class="navlabel">参考</div><a href="#ref-api" data-page="ref-api">主控任务接口</a><a href="#ref-manifest" data-page="ref-manifest">配件清单与配方</a><a href="#ref-mem" data-page="ref-mem">记忆接口与表结构</a><a href="#ref-tasks" data-page="ref-tasks">任务与提示词</a><a href="#ref-files" data-page="ref-files">文件位置</a></div>
+<div class="navgroup"><div class="navlabel">运维</div><a href="#ops" data-page="ops">运行与发布</a></div>
+<div class="navgroup"><div class="navlabel">其他</div><a href="#decisions" data-page="decisions">决策</a><a href="#open" data-page="open">已知问题</a><a href="#glossary" data-page="glossary">术语表</a><a href="#changelog" data-page="changelog">文档修订</a></div>
+</nav>
+<main>
+<section class="page" id="overview" data-title="总览">
+<h1>螺壳系统文档</h1>
+<p class="lede">螺壳（Luoke）是螺壳实验室（Luoke Labs）开发的一组本机 AI 工具：所有模型推理和数据都在用户自己的 Mac 上。本文档描述系统的结构、各组件的职责与接口、数据如何流动，以及运行和发布方式。</p>
+
+<h2>组件</h2>
+<div class="tbl"><table>
+<tr><th>组件</th><th>仓库</th><th>职责</th></tr>
+<tr><td><a href="#core">主控</a></td><td><code>luoke-core</code></td><td>本机模型推理的唯一入口；安装、升级、卸载；调度空闲任务</td></tr>
+<tr><td><a href="#mem">记忆</a></td><td><code>luoke-mem</code></td><td>共用的本机记忆；唯一形成关于用户结论的地方</td></tr>
+<tr><td><a href="#mail">邮件助手</a></td><td><code>luoke-mail</code></td><td>分拣、清理、精选、起草；可撤回的处理自动执行并每日复查</td></tr>
+<tr><td><a href="#ime">输入法</a></td><td><code>luoke-ime</code></td><td>macOS 输入法；沙盒引擎出候选，本地模型重排和联想</td></tr>
+<tr><td><a href="#agent">agent「螺壳」</a></td><td><code>luoke-agent</code></td><td>唯一主动联系用户的组件；合并提问、建议和工具的事项</td></tr>
+</table></div>
+
+<h2>架构</h2>
+<pre class="mermaid">
+flowchart LR
+  subgraph Mac["用户的 Mac"]
+    direction LR
+    mail["邮件助手"]
+    ime["输入法"]
+    agent["agent「螺壳」"]
+    subgraph core["主控"]
+      engine["推理引擎（底座）"]
+      workers["打分 / 联想 / 嵌入进程"]
+      mem[("记忆 mem.db")]
+      ep["高级用户端点"]
+    end
+  end
+  mail -- "生成任务" --> engine
+  ime -- "打分、续写" --> workers
+  mem -- "归纳" --> engine
+  mail -- "记录" --> mem
+  ime -- "记录" --> mem
+  mem -- "理解" --> mail
+  mem -- "理解" --> ime
+  mem -- "提问、建议" --> agent
+  agent -- "调用能力" --> mail
+  ext["外部工具（如 pi）"] -.-> ep --> engine
+</pre>
+
+<h2>核心原则</h2>
+<ul>
+<li><b>本机就是边界</b>：数据不离开用户自己的设备；在本机内部，各组件可以读取完成工作所需的任何数据。</li>
+<li><b>模型只经主控</b>：所有推理通过主控的任务接口进行，组件不自行加载模型。</li>
+<li><b>只有记忆形成结论</b>：工具记录发生了什么，记忆据此形成带依据、分三档把握程度的理解。</li>
+<li><b>先做、事后复查</b>：能撤回的处理在用户确认一次习惯后自动执行并给出提示；不可逆或对外的操作始终由用户点按。</li>
+<li><b>凭证不进记忆</b>：密码、验证码、密钥、令牌、完整卡号和证件号在写入时遮去。</li>
+</ul>
+<p>决策记录见 <a href="#decisions">决策</a>。</p>
+
+<h2>阅读顺序</h2>
+<ul>
+<li>初次了解：本页 → <a href="#concepts">核心概念</a> → <a href="#flows">数据流</a>。</li>
+<li>开发某个组件：对应的组件章节 → 参考中的接口和数据结构。</li>
+<li>运维和发布：<a href="#ops">运行与发布</a>、<a href="#ref-files">文件位置</a>。</li>
+</ul>
+</section>
+<section class="page" id="concepts" data-title="核心概念">
+<h1>核心概念</h1>
+
+<h2>配件</h2>
+<p>由主控安装和管理的一个签名 .app，例如邮件助手、输入法、agent。每个配件在 <code>luoke-accessory.json</code> 中声明自己的身份、需要的任务、空闲任务、数据目录和给 agent 的能力。Python 配件自带固定版本的 Python。记忆没有独立的 .app，它打包在主控里。</p>
+
+<h2>任务</h2>
+<p>配件向主控请求推理的单位，名字形如 <code>luoke-mail.triage</code>。配件只说要哪个任务，不指定模型；主控按配方和机器的硬件档决定用哪个模型、参数是多少。任务分四种：</p>
+<div class="tbl"><table>
+<tr><th>kind</th><th>做什么</th><th>例子</th></tr>
+<tr><td><code>generate</code></td><td>生成文字（流式，约束为 JSON）</td><td>邮件分拣、记忆归纳</td></tr>
+<tr><td><code>score</code></td><td>给候选打分</td><td>输入法重排</td></tr>
+<tr><td><code>predict</code></td><td>续写</td><td>输入法联想</td></tr>
+<tr><td><code>embed</code></td><td>向量</td><td>本机搜索</td></tr>
+</table></div>
+<p>提示词、输出格式和业务判断写在调用任务的配件里；主控只提供通用的推理能力。</p>
+
+<h2>硬件档</h2>
+<p>按内存把机器分为 16、32、128 三档，每档有自己的底座模型、内存上限和底座是否常驻。每个任务在哪一档开启，由评测决定：连续 3 遍全部通过才开启，一遍不过即关闭。</p>
+
+<h2>请求等级</h2>
+<p>主控按三个等级调度：打字（输入法打分和联想，最优先）、用户在等（用户正在等结果的请求）、后台（可以等待的工作）。后台工作只在机器空闲、接通电源、未过热、内存充足时运行，用户一回来就让路。</p>
+
+<h2>空闲任务</h2>
+<p>配件登记的"空闲时运行"的命令，例如记忆的归纳、邮件助手判断旧邮件。主控只决定何时启动（安静时刻、满足最短间隔），不关心它做什么；用户回来时让它收尾。</p>
+
+<h2>记录</h2>
+<p>工具写入记忆的"发生了什么"：谁（用户、第三方、规则自动执行）、做了什么、什么时候真实发生，可附原文。记录是理解的依据。</p>
+
+<h2>理解与把握程度</h2>
+<p>记忆从记录归纳出的关于用户的认识：事实、关注的话题、不感兴趣、处理习惯、常用说法、精选口味。每条理解引用它的依据，并有三档把握程度：</p>
+<div class="tbl"><table>
+<tr><th>档</th><th>含义</th><th>谁能用</th></tr>
+<tr><td>猜测</td><td>推出来但证据不足</td><td>不使用，只在记忆界面中显示</td></tr>
+<tr><td>比较确定</td><td>依据足够</td><td>各工具可以使用</td></tr>
+<tr><td>确定</td><td>用户说过或确认过</td><td>各工具可以使用，可据此自动执行</td></tr>
+</table></div>
+<p>一条推断能到哪一档，取决于依据的类型和数量（见记忆 · 定档规则）。会变的理解太久没有新依据会变成"以前的事"。</p>
+
+<h2>提问与建议</h2>
+<p>记忆在空闲时整理理解，产出两类请求：<b>提问</b>（只问用户才能定、答了有用的猜测）和<b>建议</b>（如"以后这类邮件都自动归档？"）。它们由 agent 或相关工具的页面展示，用户的回答交回记忆定档。</p>
+
+<h2>处理习惯与自动执行</h2>
+<p>用户对某个发件人某类邮件反复做同样的处理，记忆形成一条处理习惯并建议自动执行；用户同意后，邮件助手在同步时照做。只有能撤回的动作（归档、标已读、加标签）会自动执行，每次都可在"今日处理"中撤销，撤销一次即视为反证。</p>
+
+<h2>能力</h2>
+<p>工具在清单中向 agent 声明的可报事项和可执行动作，经工具协议（MCP 子集）调用。会改动数据的调用只在用户点按卡片时发出。</p>
+</section>
+<section class="page" id="flows" data-title="数据流">
+<h1>数据流</h1>
+
+<h2>一封邮件</h2>
+<pre class="mermaid">
+sequenceDiagram
+  participant M as 邮箱（IMAP）
+  participant L as 邮件助手
+  participant C as 主控
+  participant R as 记忆
+  participant U as 用户
+  L->>M: 同步收件箱
+  L->>C: triage（用户在等或后台）
+  C-->>L: 建议、摘要、截止日期、可疑
+  L->>M: 标已读；按确定的习惯归档或加标签
+  L->>R: 记录 mail-read、mail-auto
+  U->>L: 在"今日处理"中撤销或改建议
+  L->>R: 记录 mail-override、mail-undo-auto
+  R->>C: 空闲时归纳话题和习惯
+  R-->>L: 建议"以后都这样？"
+</pre>
+<ol>
+<li>后台循环按间隔同步，新邮件逐封交给主控的 <code>luoke-mail.triage</code>，"关于用户"取自记忆中比较确定以上的事实和习惯。</li>
+<li>分拣后自动标已读，并执行记忆中确定、可自动执行的处理习惯；结果进入"今日处理"。</li>
+<li>用户的操作（改建议、亲手归档、撤销自动处理）写成记录。</li>
+<li>记忆的归纳任务从这些记录形成处理习惯和话题，向邮件助手提出建议；用户同意后习惯成为确定，下一次同步开始自动执行。</li>
+</ol>
+
+<h2>打的字</h2>
+<pre class="mermaid">
+sequenceDiagram
+  participant E as 打字引擎（沙盒）
+  participant P as 个人化组件
+  participant C as 主控
+  participant R as 记忆
+  E->>P: score（候选）
+  P->>C: luoke-ime.rerank
+  C-->>P: logprobs
+  P-->>E: 分数（引擎据此重排）
+  P->>R: ime-commit（上屏 + 前文，凭证已遮去）
+  R->>C: 空闲时归纳常用说法和话题
+</pre>
+
+<h2>提问和建议</h2>
+<ol>
+<li>记忆的反刍每次空闲都运行，生成提问（每天 ≤ 2）和建议（每天 ≤ 3），写入 <code>asks</code>。</li>
+<li>agent 每 300 秒读取一次，在窗口、通知或简报中展示；与邮件有关的建议也在邮件助手的记忆页中展示。</li>
+<li>用户的回答经 <code>Memory.reply</code> 交回，记忆据此定档。</li>
+</ol>
+
+<h2>外部工具</h2>
+<p>高级用户可开启主控的本机端点，让 pi 等工具通过 OpenAI 兼容接口使用本机模型，包括用户自己登记的模型。这些请求与配件请求一起由主控调度，按"用户在等"处理。</p>
+</section>
+<section class="page" id="core" data-title="主控 luoke-core">
+<h1>主控</h1>
+<p class="lede">本机所有模型推理的唯一入口，也是螺壳的安装器。它按配方为每个硬件档选择模型，调度各配件的请求和空闲任务，监管推理引擎和专用模型进程，并负责下载、升级和卸载。</p>
+<p class="src">仓库 <code>luoke-core</code> · bundle id <code>ai.luoke.core</code> · 接口细节见「参考 · 主控任务接口」「参考 · 配件清单与配方」</p>
+
+<h2>组成</h2>
+<div class="tbl"><table>
+<tr><th>进程</th><th>谁启动</th><th>说明</th></tr>
+<tr><td>菜单栏本体 <code>螺壳主控.app</code></td><td>用户、登录项或 <code>luoke://</code></td><td>Swift：状态灯、设置、首次运行、安装器、检查更新、升级、配件回滚、卸载、打开记忆界面</td></tr>
+<tr><td>主控进程</td><td>本体</td><td>自带 Python：<code>python -m luoke_core serve</code>，在 Unix socket <code>run/hub.sock</code> 上提供任务层；父进程退出时随之退出</td></tr>
+<tr><td>推理引擎</td><td>主控</td><td>oMLX（引擎包内的 <code>omlx-cli serve</code>），只监听 127.0.0.1 随机端口并带随机密钥；运行底座模型</td></tr>
+<tr><td>打分 / 联想工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td>引擎包 Python 运行 <code>score_worker.py</code>，经管道通信，不监听端口</td></tr>
+<tr><td>嵌入工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td><code>embed_worker.py</code>，同上</td></tr>
+<tr><td>空闲任务</td><td>主控</td><td>配件 .app 自带的 Python 运行清单中 <code>jobs</code> 的命令，环境带 <code>LUOKE_HUB_SOCKET</code></td></tr>
+<tr><td>常驻配件</td><td>本体</td><td>以 <code>--resident</code> 启动；10 分钟内最多自动重启 3 次</td></tr>
+<tr><td>记忆界面</td><td>本体</td><td>用主控自带的 Python 运行记忆的入口</td></tr>
+<tr><td>高级用户端点</td><td>主控内的线程</td><td>OpenAI 兼容，127.0.0.1:17860 起</td></tr>
+</table></div>
+
+<h2>生命周期</h2>
+<h3>启动</h3>
+<ol>
+<li>本体判断是否以安装器身份运行（文件名不是 <code>螺壳主控.app</code>、位于 <code>/Volumes/</code> 或被系统隔离），是则进入安装流程。</li>
+<li>首次运行未完成时显示首次运行向导；否则启动主控进程，有升级标记时显示升级页，然后拉起常驻配件；清理上次经"检查更新"升级时挂载的安装包。</li>
+<li>主控先绑定 socket 并应答（启动期间除 <code>/tasks</code>、<code>/status</code>、<code>/downloads</code> 外答 <code>busy</code>），再启动引擎：清理上次留下的孤儿进程、等待底座出现、做冒烟检查。</li>
+<li>启动采样线程，进入运行状态；设置中开启了端点则开启端点。</li>
+</ol>
+<h3>运行</h3>
+<p>采样线程每 5 秒检查引擎是否崩溃，刷新电源、温度和内存压力，按需打断后台工作、卸载闲置底座、跑探针、每 60 秒重扫配件清单、调度空闲任务，并写入 <code>state.json</code>。本体每 3 秒轮询一次 <code>/status</code>。空闲超过 10 分钟的专用模型工作进程停掉；内存压力 critical 时全部停掉，30 秒内不起。</p>
+<h3>退出</h3>
+<p>本体发 SIGTERM，等待 40 秒。主控依次停止端点、空闲任务（SIGTERM，15 秒后 SIGKILL）、工作进程、引擎，最后删除自己绑定的 socket。</p>
+
+<h2>调度</h2>
+<h3>请求等级</h3>
+<div class="tbl"><table>
+<tr><th>等级</th><th>来源</th><th>待遇</th></tr>
+<tr><td>打字</td><td>打分、联想（输入法）</td><td>立即处理；记为交互；16 GB 档会立即卸载底座让出内存</td></tr>
+<tr><td>用户在等</td><td>生成请求带 <code>X-Luoke-Priority: user-waiting</code>；端点请求</td><td>优先；正在运行的后台工作若预计剩余超过 11 秒则被打断（返回 <code>interrupted</code>）</td></tr>
+<tr><td>后台</td><td><code>X-Luoke-Priority: background</code>；空闲任务</td><td>需通过后台接纳</td></tr>
+</table></div>
+<p><b>交互中</b>指最近 60 秒内有过用户在等的请求或新的预热；<b>安静时刻</b>指距最近一次此类事件满 5 分钟。</p>
+<h3>后台接纳</h3>
+<p>按顺序检查，第一条不满足即挡回：</p>
+<div class="tbl"><table>
+<tr><th>条件</th><th>返回</th><th>原因</th></tr>
+<tr><td>全机后台已暂停（电池、低电量模式、过热、内存压力）</td><td><code>paused</code></td><td>各原因</td></tr>
+<tr><td>底座放不下</td><td><code>paused</code></td><td><code>memory</code></td></tr>
+<tr><td>交互中</td><td><code>busy</code></td><td><code>interactive</code></td></tr>
+<tr><td>最近 180 秒打过分</td><td><code>busy</code></td><td><code>scored_recently</code></td></tr>
+<tr><td>16 GB 档且不在安静时刻</td><td><code>busy</code></td><td><code>not_quiet</code></td></tr>
+<tr><td>别的配件的空闲任务在运行</td><td><code>busy</code></td><td><code>idle_job</code></td></tr>
+<tr><td>引擎里已有一项后台工作</td><td><code>busy</code></td><td><code>engine_busy</code></td></tr>
+<tr><td>功耗间歇中（空闲任务所属配件豁免）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
+</table></div>
+<p><b>功耗档</b>：全速、均衡、安静；每项后台工作结束后按占用时长的 0、1、3 倍歇息。<b>专用模型通道</b>（嵌入）每个任务有独立通道和间歇，不占用引擎的后台名额；用户在等的嵌入查询插在后台批（每 8 条）之间。</p>
+<h3>内存</h3>
+<ul>
+<li>模型能否加载要过两道检查：大小不超过引擎上限 <code>(guard_gb − 2) × 0.95</code>；且不超过 Metal 可用上限减去当前 wired 内存（按物理内存的 74%–84% 估算）。端点的用户模型独占引擎时，上限改为 内存 − 8%（3–8 GB）− 常驻专用模型 − 1 GB，换回底座时还原。</li>
+<li>起专用模型工作进程前先算剩余内存（Metal 上限 − wired + 已加载的底座），装不下它的 <code>wired_gb</code> 就不起，答 <code>not_ready</code>（retry_after 30）。</li>
+<li>引擎上限随正在运行的工作进程动态调整。</li>
+<li>引擎同时只有一个"当前模型"；端点登记的小模型放得下时与底座同时加载，放不下则独占（先卸掉其他模型）。</li>
+<li>底座闲置超过本档 <code>idle_unload_secs</code> 后卸载；有后台工作或有效的预热租约时不卸。</li>
+</ul>
+<h3>空闲任务</h3>
+<p>同一时间只运行一个。启动条件：主控空闲、处于安静时刻、后台未暂停（清单可声明允许电池）、距上次启动满 <code>min_interval_minutes</code>（上次被收尾时缩短为 10 分钟）。用户回来、超时、后台暂停或卸载配件时收尾。</p>
+
+<h2>配方和档位</h2>
+<ul>
+<li><b>配方</b>（<code>recipe.json</code>）定义硬件档（内存范围、引擎上限、底座是否常驻）、模型（目录、类型、常驻内存）、每档的模型分配、引擎版本、每个任务的参数、允许接入的配件版本和评测证据。</li>
+<li><b>选档</b>：取第一个满足 <code>min_gb ≤ 内存 &lt; max_gb</code> 的档；用户可在设置中选择更低的档（如 128 档的"省空间"）。</li>
+<li><b>任务开关</b>：每个任务在哪一档开启由出版流程的支持台账决定：未开启的档须连续 3 遍评测全部通过才开启，开启的档一遍不过即关闭。</li>
+<li><b>冒烟检查</b>：引擎启动后测一次实际的预填和生成速度，后台估时使用实测值。</li>
+<li><b>探针</b>：打分、联想工作进程就绪后测 p90 延迟，超过配方 <code>latency_ms</code> 时把任务标为较慢。</li>
+</ul>
+
+<h2>下载、安装、升级、卸载</h2>
+<ul>
+<li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。</li>
+<li><b>配件安装校验</b>：<code>codesign --verify --deep --strict</code>、Team ID、bundle id 与清单一致、公证票据有效。</li>
+<li><b>首次运行</b>：预检（档位、磁盘、系统版本、照实说明体验）→ 选择应用 → 确认下载计划 → 下载 → 本机检查 → 完成（注册登录项；输入法未启用时调一次它的 <code>--register</code>，每秒检查是否已添加，添加后改提示）。</li>
+<li><b>升级</b>：新安装器的 <code>built_at</code> 更新时，旧主控移入 <code>previous.noindex</code>，新主控显示升级页，按新清单更新引擎、模型和比清单旧的应用（不降级，不重装用户回滚掉的版本）；可回到上一版。</li>
+<li><b>检查更新</b>：菜单「检查更新…」按本机主控的渠道（内部版 <code>internal-*</code>、beta <code>beta*</code>）查 <code>luokelabs/luoke-releases</code>，<code>built_at</code> 更新才算；升级时下载主控 DMG，核大小、sha256、公证票据、签名和 Team ID，再打开它走原地升级。本机版、开发版不查。默认每天自动检查一次，只在菜单显示「有更新：&lt;版本&gt;…」，不自动安装。</li>
+<li><b>配件回滚</b>：菜单「配件回到上一版…」把配件与 <code>previous.noindex</code> 里的旧版对调（先核签名、Team ID、bundle id、公证，按路径结束进程，不动输入源；再点一次换回）。主控把每个被本版配方认可的配件版本及其通过的任务记入 <code>verified-history.json</code>（每配件 3 个版本）；换回的版本只能用记录中的任务，无记录的不能换回。</li>
+<li><b>卸载</b>：输入法先停用输入源；结束进程；删除 .app 时连同 <code>previous.noindex</code> 里的旧版；可选"一起从记忆里忘掉"和"删除数据"。只删除配件清单 <code>data</code> 中声明且符合配件自身标识的路径；不删除 <code>mem.db</code>。"卸载全部"删除环境目录、登录项和主控本身。</li>
+</ul>
+
+<h2>故障和降级</h2>
+<div class="tbl"><table>
+<tr><th>情况</th><th>表现</th></tr>
+<tr><td>引擎崩溃</td><td>以新端口和密钥重启；600 秒内崩溃 3 次熔断，生成任务保持 <code>paused</code> 直到主控重启</td></tr>
+<tr><td>请求中途引擎出错</td><td>尚无输出时自动重试一次，否则以 <code>engine_failed</code> 结束</td></tr>
+<tr><td>模型放不下</td><td>用户在等的请求返回 <code>needs_user</code> 并附占用内存的进程列表；后台请求返回 <code>paused</code></td></tr>
+<tr><td>引擎因内存拒绝提示（尚无输出）</td><td>卸载并重新加载底座以释放 MLX 缓冲池，重试一次；仍不行答内存不够</td></tr>
+<tr><td>冒烟检查放不下</td><td>推迟，每 300 秒在空闲时重试</td></tr>
+<tr><td>专用模型进程空闲或内存紧张</td><td>停掉；按需重起时答 <code>not_ready</code>（retry_after 2），内存不够时 retry_after 30</td></tr>
+<tr><td>专用模型进程失败 ≥ 3 次</td><td>该任务暂停，不再重启</td></tr>
+<tr><td>下载失败</td><td>分三类说明：服务器上找不到、连不上、核对不过</td></tr>
+<tr><td>配件版本未通过验证</td><td>调用返回 <code>unknown_accessory</code></td></tr>
+</table></div>
+
+<h2>文件</h2>
+<p>环境目录 <code>~/Library/Application Support/luoke-core/</code>，详见「参考 · 文件位置」。日志只记元数据（任务、优先级、token 数、耗时、结果），请求文字不落盘、不进日志。</p>
+
+<h2>已知限制</h2>
+<ul>
+<li>内存压力会暂停和打断后台、停掉专用模型工作进程，但不主动卸载底座。</li>
+<li>熔断不会自动恢复，需要重启主控。</li>
+<li><code>/settings</code>、<code>/downloads</code>、<code>/endpoint</code> 只核对请求头自报的身份；<code>/status</code>、<code>/jobs/run</code> 不核身份。</li>
+<li>配方不支持撤回已发布的配件版本，也不声明最低主控版本。</li>
+<li>端点只有 <code>/v1/models</code> 和 <code>/v1/chat/completions</code>；<code>luoke launch</code> 只支持 pi。</li>
+</ul>
+</section>
+<section class="page" id="mem" data-title="记忆 luoke-mem">
+<h1>记忆</h1>
+<p class="lede">螺壳各组件共用的本机记忆：一个 SQLite 文件。工具写入"发生了什么"（记录）；记忆是唯一形成结论的地方，从记录归纳出带依据、分三档把握程度的理解，并在空闲时整理，产出想问用户的问题和建议。</p>
+<p class="src">仓库 <code>luoke-mem</code>（包 <code>luoke_mem</code>，仅标准库，Python 3.9+）· 版本 0.23.1 · schema 7 · 接口和表结构见「参考 · 记忆」</p>
+
+<h2>职责</h2>
+<ul>
+<li>保存三类数据：<b>记录</b>（records）、<b>理解</b>（notes，每条引用它所依据的记录）、<b>想问的和建议</b>（asks）。</li>
+<li>归纳关于用户的理解：事实、关注的话题、不感兴趣、处理习惯、常用说法，以及只供精选使用的口味。</li>
+<li>写入时遮去凭证；提供整份记忆的查看和管理界面。</li>
+</ul>
+
+<h2>运行形态</h2>
+<div class="tbl"><table>
+<tr><th>形态</th><th>如何启动</th><th>说明</th></tr>
+<tr><td>库</td><td>工具进程内 <code>Memory(path, tool)</code></td><td>WAL、<code>secure_delete</code>、10 秒锁等待；工具使用主控内置的那份 <code>luoke_mem</code></td></tr>
+<tr><td>归纳任务</td><td>主控空闲任务：<code>python -m luoke_mem --path {memory} learn</code>，最短间隔 120 分钟、超时 30 分钟、不在电池上跑</td><td>文件锁 <code>mem.db-learn.lock</code> 保证同一份记忆只跑一个；收到 SIGTERM 时已完成的批次保留</td></tr>
+<tr><td>界面</td><td><code>luoke://memory</code> → 主控执行 <code>-m luoke_mem app</code></td><td>独立进程，监听 127.0.0.1 随机端口，带令牌；600 秒无请求退出</td></tr>
+<tr><td>命令行</td><td><code>python -m luoke_mem …</code></td><td><code>sources</code>、<code>forget-tool</code>、<code>ui</code>、<code>app</code>、<code>learn</code></td></tr>
+</table></div>
+
+<h2>记录与理解</h2>
+<h3>记录</h3>
+<p>每条记录有写入的工具、说话人（<code>user</code>、<code>third_party</code>、<code>system</code>）、性质（<code>statement</code>、<code>activity</code>、<code>receipt</code>）、话题（如 <code>mail-read</code>、<code>ime-commit</code>）、正文、结构化数据 <code>data</code>（可含原文）和真实发生时间 <code>happened_at</code>。</p>
+<h3>理解的类别</h3>
+<div class="tbl"><table>
+<tr><th>类别</th><th>含义</th><th>谁用</th></tr>
+<tr><td><code>fact</code></td><td>关于用户的事实</td><td>邮件分拣、起草</td></tr>
+<tr><td><code>interest</code></td><td>关注的话题</td><td>输入法、agent</td></tr>
+<tr><td><code>dislike</code></td><td>不感兴趣</td><td>精选</td></tr>
+<tr><td><code>preference</code></td><td>处理习惯（发件人 × 邮件类别 → 动作）</td><td>邮件助手自动执行</td></tr>
+<tr><td><code>term</code></td><td>常用说法</td><td>输入法候选加分</td></tr>
+<tr><td><code>taste</code></td><td>精选口味，不算对用户的了解，不提问</td><td>精选</td></tr>
+</table></div>
+<h3>三档把握程度</h3>
+<p>由状态推出，不单独存储：</p>
+<div class="tbl"><table>
+<tr><th>档</th><th>条件</th></tr>
+<tr><td>猜测</td><td>状态 <code>proposed</code> 或 <code>observed</code></td></tr>
+<tr><td>比较确定</td><td>状态 <code>active</code>，用户未表态，来源是推断</td></tr>
+<tr><td>确定</td><td>状态 <code>active</code>，且用户确认过或来源是用户本人</td></tr>
+</table></div>
+<p>被否定（<code>rejected</code>）、被取代（<code>superseded</code>）、以前的事（<code>past</code>）不属于任何一档。工具读取时默认只得到比较确定以上的理解。</p>
+
+<h2>定档规则</h2>
+<p>一条推断能否成为"比较确定"，取决于它所依据的<b>记录话题</b>和数量。门槛写作（条数, 不同日子数, 首尾相隔天数）：</p>
+<div class="tbl"><table>
+<tr><th>理解</th><th>能撑到"比较确定"的记录</th></tr>
+<tr><td>fact</td><td><code>sent-mail</code> (2, 2, 7)</td></tr>
+<tr><td>interest</td><td><code>sent-mail</code>、<code>own-site</code>、<code>digest-feedback</code> (2, 2, 7)；<code>mail-read</code> (3, 3, 60，另需合计打开 ≥ 5 封、发件人 ≥ 2 个)；<code>digest-open</code> (3, 2, 28)；<code>ime-commit</code> (3, 3, 0)</td></tr>
+<tr><td>dislike</td><td><code>digest-feedback</code> (2, 2, 7)</td></tr>
+<tr><td>preference</td><td><code>mail-override</code> (2, 2, 7)</td></tr>
+<tr><td>term</td><td><code>ime-commit</code> (3, 3, 0)</td></tr>
+<tr><td>taste</td><td>用户的任何记录</td></tr>
+</table></div>
+<ul>
+<li>表中没有的组合（如 <code>own-label</code>、<code>mail-cleared</code>、<code>mail-acted</code>）最多是猜测。规则自动执行的记录（<code>data.by</code> 不是 user）和事务邮件的打开不算依据。</li>
+<li>名字只有品牌或来源名（如"Zillow""X 相关动态"）的话题不会成为兴趣。</li>
+<li><b>第三方来信推出的事实</b>：同一来源 ≥ 6 封、跨 ≥ 3 个月、打开 ≥ 2 封、最近 6 个月内仍有来信时直接生效。</li>
+<li><b>健康、法律、宗教政治</b>相关的推断必须由用户确认。</li>
+<li><b>门槛按用户调整</b>：同一类被否定 ≥ 2 次且多于确认，门槛上调；确认 ≥ 3 次且从未否定，门槛下调。</li>
+<li><b>以前的事</b>：会变的理解最新依据超过 730 天，标为 <code>past</code>，不再使用也不再提问；姓名、学校、家人等不会变的不受影响。用户说"现在还是"即恢复为确定。</li>
+<li><b>取代与合并</b>：同类同话题的新理解生效时，取代用户未表态的旧推断（"其他"话题除外）；说法相近的话题合并为一条。</li>
+</ul>
+
+<h2>归纳</h2>
+<p>归纳任务每次依次执行：打字线、话题线、反刍。两条线都通过主控的后台生成任务调用模型，结果的数量和依据由代码判定，模型只负责提名。</p>
+<div class="tbl"><table>
+<tr><th></th><th>打字线（<code>luoke-mem.typing</code>）</th><th>话题线（<code>luoke-mem.topics</code>）</th></tr>
+<tr><td>输入</td><td>输入法的 <code>ime-commit</code>（排除输入法自动上屏的）</td><td>邮件助手的用户记录，最近 365 天，按来源聚合，带原文（每来源 ≤ 1200 字）</td></tr>
+<tr><td>触发</td><td>新增 ≥ 80 段，或有新增且距上次 ≥ 1 天</td><td>新增 ≥ 20 条，或有新增且距上次 ≥ 1 天，或提示词版本变化（此时重新归纳）</td></tr>
+<tr><td>产出</td><td>常用说法（2–12 字）、关注的话题</td><td>关注的话题（"领域：具体对象"）、精选口味、不感兴趣</td></tr>
+<tr><td>提示词</td><td><code>luoke_mem/learn.py</code> PROMPT</td><td><code>luoke_mem/topics.py</code> PROMPT（版本 5）</td></tr>
+</table></div>
+
+<h2>反刍</h2>
+<p>不使用模型，每次归纳任务都执行。</p>
+<ul>
+<li><b>降档</b>：打字归纳出的兴趣和常用说法，最新依据超过 90 天且用户未表态，回到猜测。</li>
+<li><b>处理习惯</b>：同一（邮箱, 发件人, 邮件类别, 动作）出现 ≥ 2 次形成一条习惯；来自改建议的按定档规则判定，仅来自亲手处理的为猜测。用户撤销一次自动执行即回到猜测。</li>
+<li><b>想问的</b>：只问兴趣和处理习惯里依据无法自行撑到比较确定、180 天内有依据的猜测；每天最多 2 个，14 天过期。</li>
+<li><b>建议</b>：每天最多 3 条。"以后都这样？"（处理习惯，用户点"好"即成为确定并可自动执行）；"退订？"（30 天内整批清掉同一发件人 ≥ 2 次）。</li>
+<li><b>去重</b>：同一件事已有未答的问题时不再生成；"以后再说"7 天后、已答 60 天后才可能再问；"别再提"永不再问。</li>
+</ul>
+
+<h2>读写关系</h2>
+<div class="tbl"><table>
+<tr><th>组件</th><th>写入的记录</th><th>读取</th></tr>
+<tr><td>邮件助手</td><td><code>mail-read</code>、<code>mail-acted</code>、<code>mail-override</code>、<code>mail-auto</code>、<code>mail-undo-auto</code>、<code>mail-cleared</code>、<code>sent-mail</code>、<code>received-mail</code>、<code>digest-open</code>、<code>digest-feedback</code>、<code>own-label</code>、<code>own-site</code></td><td>事实和习惯（分拣、起草）、可自动执行的习惯、口味、给它的 asks</td></tr>
+<tr><td>输入法</td><td><code>ime-commit</code>、<code>ime-correction</code>、<code>ime-forget</code></td><td>常用说法；可读全部记录</td></tr>
+<tr><td>agent</td><td>只经 <code>reply</code> 交回回答</td><td>asks 和全文依据</td></tr>
+</table></div>
+<p>任何组件都能读取全部记录和依据；删除其他工具写入的内容只能在记忆自己的界面中进行。</p>
+
+<h2>已知限制</h2>
+<ul>
+<li>界面没有"以后再说"和单独的"以前是"按钮（只能通过修改框的文字识别）。</li>
+<li>打字线在主控没有该任务时仍会发起请求；话题线被中断时整次不推进进度，下次重读。</li>
+<li>以前的事被新证据唤回时会清空 <code>decided_at</code>，用户以前的确认不再计入。</li>
+<li>重新定档、以前的事只在整份记忆被打开时运行（界面、命令行、归纳任务）。</li>
+<li>没有向工具索取更多原文的通道；自由回答不参与学习。</li>
+<li>命令行 <code>forget-tool luoke-mem</code> 以未捕获异常退出。</li>
+<li>敏感词和凭证识别基于正则，存在漏判和误判。</li>
+</ul>
+</section>
+<section class="page" id="mail" data-title="邮件助手 luoke-mail">
+<h1>邮件助手</h1>
+<p class="lede">用本机模型整理整个邮箱：逐封分拣近期邮件，清理旧邮件，体检订阅并挑选精选，起草回复放入草稿箱。可撤回的处理会自动执行，并在"今日处理"页集中复查。</p>
+<p class="src">仓库 <code>luoke-mail</code>（包 <code>luoke_mail</code>）· 版本 0.15.2 · 支持 Gmail、QQ、网易 163/126、自定义 IMAP，可连接多个邮箱</p>
+
+<h2>职责</h2>
+<ul>
+<li>为每封邮件给出建议（回复、加入日程、待跟进、归档、移到垃圾箱），附类别、优先级、摘要、截止日期、日程字段、回复要点和可疑标记。</li>
+<li>执行用户的操作并保留撤销步骤：归档、移到垃圾箱、移到垃圾邮件、加星标、标已读、加标签、写草稿、生成日历文件、退订。</li>
+<li>不发信，不永久删除：删除即移到垃圾箱，回复只存入草稿箱。</li>
+<li>把用户的操作写成记忆记录；关于用户的结论由记忆形成。</li>
+</ul>
+
+<h2>运行形态</h2>
+<div class="tbl"><table>
+<tr><th>入口</th><th>行为</th></tr>
+<tr><td><code>--app --resident</code></td><td>主控拉起的常驻实例：本机网页服务 + 后台循环</td></tr>
+<tr><td><code>--app</code></td><td>打开正在运行实例的页面，没有则在后台启动一个</td></tr>
+<tr><td><code>--job clean|digest|learn</code></td><td>主控调度的空闲任务（判断旧邮件 / 读订阅和挑精选 / 学习），每次最多 25 分钟，被叫停时做完当前一步退出</td></tr>
+<tr><td><code>--forget-secrets</code></td><td>卸载前删除钥匙串中的本工具条目</td></tr>
+</table></div>
+<ul>
+<li><b>网页服务</b>：只绑定 127.0.0.1，端口默认 8765；令牌保存在 <code>token</code> 文件（0600），请求需带 <code>X-Luoke-Token</code>；校验 Host；HTML 带 CSP；请求体上限 1 MB；以 <code>server.lock</code> 保证单实例。</li>
+<li><b>后台循环</b>：每 30 秒一次（有空闲任务时 5 秒）。后台整理默认每 30 分钟（可选 15、30、60、120），对每个邮箱执行同步流程；一个邮箱失败不影响其他。</li>
+<li><b>主控</b>：经 Unix socket 调用任务（<code>X-Luoke-Accessory: luoke-mail/&lt;版本&gt;</code>，优先级 <code>user-waiting</code> 或 <code>background</code>）；任务状态和参数（<code>max_chars</code>、<code>batch</code>、<code>sender_verdict</code>）从 <code>GET /tasks</code> 读取并缓存 60 秒；页面可见时预热 <code>luoke-mail.triage</code>。打包版只经主控。</li>
+<li><b>记忆</b>：优先使用主控内置的 <code>luoke_mem</code>（要求 ≥ 0.23.0），以 <code>tool="luoke-mail"</code> 打开。</li>
+</ul>
+
+<h2>同步与分拣</h2>
+<ol>
+<li>读取收件箱最近 N 天（默认 30）的邮件，新邮件最多取 100 封；只取前 1 MiB、不改变已读状态，正文去引用后截到 6000 字。</li>
+<li>对照收件箱现状：已不在的标记为完成；推断用户在别处做了什么（归档、删除、读过、加标签，写入 <code>mail-acted</code>）；记为已移走却仍在收件箱的放回待处理。</li>
+<li>补充发件域名验证结论（Gmail 的 DMARC），以及用户最近 7 天自己归档但可能仍需处理的邮件（Gmail，最多 50 封）。</li>
+<li>逐封分拣（<code>luoke-mail.triage</code>）。命中的规则作为上下文提供给模型；模型可提出不同建议。</li>
+<li>依次执行：精选来源排队、自动标已读、按习惯处理、处理螺壳自己的邮箱、更新往来邮件状态。</li>
+</ol>
+<h3>安全规则</h3>
+<ul>
+<li>邮件内容视为数据。试图指挥 AI、索要密码或验证码、冒充、催促转账的邮件标为可疑；只要模型判为可疑，动作一律改为忽略、类别改为钓鱼。</li>
+<li>页面渲染不使用 innerHTML。</li>
+</ul>
+
+<h2>自动处理</h2>
+<div class="tbl"><table>
+<tr><th>动作</th><th>条件</th><th>撤销</th></tr>
+<tr><td>标已读</td><td>收件箱中已分析的邮件（设置 <code>flow.mark_read</code>，默认开）；邮件助手标的已读另行记录，不当作用户读过</td><td>今日处理中逐封"标为未读"，或在操作记录中整批撤销（"分析后标为已读 N 封"）；撤销过的不再自动标。不写入记忆（不是用户的动作）</td></tr>
+<tr><td>按习惯归档、标已读、加标签</td><td>记忆中确定的处理习惯（发件人 × 邮件类别）；跳过可疑、需用户处理、撤销过的邮件</td><td>今日处理中逐封撤销，记一次反证（<code>mail-undo-auto</code>）</td></tr>
+<tr><td>螺壳自己的邮箱</td><td>设置中标为 <code>own</code> 的邮箱：照建议归档或移到垃圾箱</td><td>今日处理中逐封撤销</td></tr>
+</table></div>
+<p>用户自己的邮箱里，移到垃圾箱、垃圾邮件、退订不会自动执行。<b>处理模式</b>（默认关，开启需确认）只控制不可逆的批量操作：批量移到垃圾箱或垃圾邮件、含删除的清理、清理某发件人的历史邮件。</p>
+
+<h2>页面</h2>
+<div class="tbl"><table>
+<tr><th>页面</th><th>内容</th></tr>
+<tr><td>今日处理</td><td>某天每封邮件的结果，需要用户处理的排在前面；可撤销、标未读、改建议；可查看前 7 天</td></tr>
+<tr><td>收件箱</td><td>同步、分组显示建议、快到期（3 天内到期或过期不到 7 天）、等对方回复的往来、逐封或批量处理、草稿、日历</td></tr>
+<tr><td>清理</td><td>收件箱中的旧邮件和已归档邮件：只读邮件头，模型在后台逐封判断，按类别和来源分组执行；星标和保留类标签的邮件不参与</td></tr>
+<tr><td>精选</td><td>最近 7 天约 20 条、更早每月约 10 条；收藏和"没兴趣"写入记忆</td></tr>
+<tr><td>订阅体检</td><td>按发件人统计，建议退订、无法退订、可疑勿退订或常读；可退订、批量归档、清理历史、生成规则</td></tr>
+<tr><td>规则</td><td>按发件人、域名、邮件列表的规则；导出 Gmail 过滤器前用过去一年邮件预演命中数和误伤；操作记录可撤销</td></tr>
+<tr><td>记忆</td><td>想问你的、全部类别的理解及依据、用户网站、学习的暂停与继续、打开整份记忆</td></tr>
+<tr><td>设置</td><td>邮箱（含"螺壳自己的邮箱"）、处理模式、后台整理、自动标已读、往来邮件、功耗、分析范围</td></tr>
+</table></div>
+
+<h2>主控任务</h2>
+<div class="tbl"><table>
+<tr><th>任务</th><th>提示词</th><th>输入 → 输出</th><th>批量与失败</th></tr>
+<tr><td><code>triage</code></td><td><code>triage.py</code></td><td>一封邮件、规则、关于用户（≤ 600 字）→ 类别、优先级、动作、摘要、截止日期、可疑等</td><td>一次一封；两次失败后记错误，下次同步重试</td></tr>
+<tr><td><code>draft</code></td><td><code>triage.py</code></td><td>回复要点 + 邮件 → 正文</td><td>一次</td></tr>
+<tr><td><code>senders</code></td><td><code>triage.py</code></td><td>发件人最近 8 个主题 → 类型</td><td>每批 ≤ 10；失败则不改判</td></tr>
+<tr><td><code>cleanup</code></td><td><code>triage.py</code></td><td>邮件头 → 归档、删除、保留类别</td><td>每批 ≤ 25；失败一律保留</td></tr>
+<tr><td><code>digest-read</code></td><td><code>digest.py</code></td><td>订阅正文（≤ 12000 字）+ 口味 → 条目、评分、摘要</td><td>每次 3 封</td></tr>
+<tr><td><code>digest-pick</code></td><td><code>editor.py</code></td><td>候选条目 → 入选及理由</td><td>每批 ≤ 30；失败按阅读分数排</td></tr>
+<tr><td><code>learn-sent</code></td><td><code>learn.py</code></td><td>用户发出的邮件（只留本人写的部分）→ 事实</td><td>每批 ≤ 8</td></tr>
+<tr><td><code>learn-orgs</code></td><td><code>learn.py</code></td><td>往来机构的封数和主题 → 事实</td><td>每批 ≤ 10，最多 30 个机构</td></tr>
+<tr><td><code>thread</code></td><td><code>threads.py</code></td><td>往来串最后 ≤ 6 封 → 等谁、从何时、卡在哪</td><td>每次同步最多 10 串；失败判为已了结</td></tr>
+</table></div>
+
+<h2>写入记忆的记录</h2>
+<p>所有记录的 <code>data</code> 带 <code>sender</code>、<code>by</code>（user / rule / suggestion）和 <code>account</code>（邮箱的不透明键）；正文经凭证遮蔽。示例邮箱不写真实记忆。</p>
+<div class="tbl"><table>
+<tr><th>topic</th><th>说话人 / 性质</th><th>何时写</th><th>主要字段</th></tr>
+<tr><td><code>mail-read</code></td><td>user / activity</td><td>每个订阅每个整月一条（群发或有 List-Id）</td><td>封数、打开数、类别、主题、最多 3 封原文（事务类不带）</td></tr>
+<tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签</td></tr>
+<tr><td><code>mail-override</code></td><td>user / activity</td><td>用户改建议</td><td>原建议、新建议、类别</td></tr>
+<tr><td><code>mail-auto</code></td><td>user / activity，<code>by=rule</code></td><td>习惯自动执行后</td><td>习惯编号、动作、封数</td></tr>
+<tr><td><code>mail-undo-auto</code></td><td>user / activity</td><td>撤销习惯的自动处理</td><td>习惯编号</td></tr>
+<tr><td><code>mail-cleared</code></td><td>user / activity 或 receipt</td><td>清理执行后</td><td>发件人、类别、封数</td></tr>
+<tr><td><code>sent-mail</code></td><td>user / statement</td><td>从发出的邮件中抽出事实（至少两封一致）；用户发起的邮件主题</td><td>本人写的部分（≤ 800 字）</td></tr>
+<tr><td><code>received-mail</code></td><td>third_party / statement</td><td>往来机构的推测依据</td><td>封数、首末月份、月数、打开数</td></tr>
+<tr><td><code>own-label</code></td><td>user / statement</td><td>用户的邮箱标签</td><td>封数、首末日期（<code>happened_at</code> 为标签下最新一封的日期）</td></tr>
+<tr><td><code>own-site</code></td><td>user / statement</td><td>用户网站的文章</td><td>发布日期</td></tr>
+<tr><td><code>digest-feedback</code>、<code>digest-open</code></td><td>user</td><td>精选中收藏、没兴趣、打开</td><td>标题、来源、摘要</td></tr>
+</table></div>
+
+<h2>从记忆读取</h2>
+<div class="tbl"><table>
+<tr><th>内容</th><th>用途</th></tr>
+<tr><td><code>context(["fact","preference"], 600)</code></td><td>分拣和起草的"关于用户"</td></tr>
+<tr><td>确定且可自动执行的 <code>preference</code>（本邮箱、动作 archive / read / label）</td><td>按习惯自动处理</td></tr>
+<tr><td><code>context(["taste","interest","dislike"], 500)</code> + 最近的收藏和没兴趣</td><td>精选阅读和挑选</td></tr>
+<tr><td><code>asks(tool="luoke-mail")</code></td><td>记忆页"想问你的"</td></tr>
+</table></div>
+
+<h2>数据和文件</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/.luoke-mail/config.json</code></td><td>邮箱、模型、处理模式、后台整理、功耗、学习、往来、自动标已读等设置</td></tr>
+<tr><td><code>~/.luoke-mail/luoke.db</code></td><td>邮件和建议（<code>items</code>）、规则、发件人决定、缓存、清理（<code>old_mail</code>）、操作记录和撤销步骤（<code>log</code>）、精选、学习候选</td></tr>
+<tr><td>钥匙串 <code>luoke-mail:imap</code>、<code>luoke-mail:engine</code></td><td>邮箱授权码、模型服务密钥；Mac 锁定时读不到会跳过本轮，不视为未保存</td></tr>
+<tr><td><code>service.log</code>、<code>app.log</code></td><td>常驻日志（超过 1 MB 清空）</td></tr>
+</table></div>
+
+<h2>可靠性</h2>
+<ul>
+<li><b>写入核实</b>：移动后检查是否真的移走，没移走的不标已处理；不支持 MOVE 的服务器先确认副本存在才标删除，只对自己标记的邮件做 UID EXPUNGE。</li>
+<li><b>撤销</b>：按 Message-ID 找邮件；改动前先备好撤销步骤，断线时记"结果未确认"并保留撤销。</li>
+<li><b>主控不可用</b>：邮件照常入库、暂不分析，主控就绪后自动开始；模型忙时用户等待的请求原地等，后台任务延后。</li>
+<li><b>邮箱差异</b>：网易登录后需发 IMAP ID；QQ 先查 CAPABILITY 再用扩展命令；Gmail 归档即移到"所有邮件"，标签用 <code>X-GM-LABELS</code>。</li>
+</ul>
+
+<h2>已知限制</h2>
+<ul>
+<li>发件域名验证、最近归档的分拣、加标签、过滤器导出只支持 Gmail。</li>
+<li>单封移到垃圾箱和退订不需要处理模式。</li>
+<li>往来邮件只看已发送中最近 60 封，等待阈值固定为 3 天。</li>
+</ul>
+</section>
+<section class="page" id="ime" data-title="输入法 luoke-ime">
+<h1>输入法</h1>
+<p class="lede">macOS 输入法。壳负责按键、组字、候选窗和上屏；候选全部由沙盒里的引擎子进程给出。个人化组件把上屏写入记忆，并把打分和联想请求转给主控。</p>
+<p class="src">仓库 <code>luoke-ime</code> · 版本 0.1.9 · bundle id <code>ai.luoke.inputmethod.Luoke</code></p>
+
+<h2>结构</h2>
+<div class="tbl"><table>
+<tr><th>部分</th><th>实现</th><th>职责</th></tr>
+<tr><td>壳</td><td>Swift：<code>LuokeShell</code>（平台无关的状态机和引擎宿主）+ <code>LuokeIME</code>（InputMethodKit 外壳）；另有共用状态机的命令行版</td><td>按键、组字、候选窗、上屏、沙盒、转问</td></tr>
+<tr><td>打字引擎</td><td>自带小鹤双拼 <code>xiaohe</code>、全拼 <code>quanpin</code>（苹果转换引擎和 RIME 出候选）</td><td>出候选，经个人化组件请求打分后重排。小鹤、全拼有评测用的选项 <code>pause</code>（毫秒，默认 0）和 <code>pause_when</code>（<code>slow</code> / <code>always</code>）：键后停顿够久才重排；默认关。</td></tr>
+<tr><td>个人化组件</td><td><code>engines/personal</code>（Python，仅标准库），运行在主控自带的 Python 上</td><td>写入记忆；把打分和联想转给主控</td></tr>
+</table></div>
+
+<h2>进程模型</h2>
+<ul>
+<li><b>壳</b>由系统拉起（菜单栏不显示）。每个输入框一个 <code>Session</code>；全进程一个 <code>EngineManager</code>，主线程每秒轮询配置和引擎状态。只运行一份：父进程不是 launchd 时直接退出；用 <code>$TMPDIR/ai.luoke.inputmethod.Luoke.lock</code> 文件锁占位（最多等 3 秒），已有一份时退出。</li>
+<li><b>引擎</b>以 <code>posix_spawn</code> 在独立进程组中启动，命令为 <code>/usr/bin/sandbox-exec -p &lt;模板&gt; …</code>，工作目录是引擎文件夹。<code>run[0]</code> 为 <code>luoke-python</code> 时使用主控 .app 内的 Python。自带引擎用固定 PATH；第三方引擎第一次启动时才解析登录 shell 的 PATH（最多 3 秒）。</li>
+<li><b>通信</b>：标准输入输出上每行一个 JSON，第一条必定是 <code>hello</code>；写入走每个引擎自己的串行队列。</li>
+<li><b>停止</b>：关闭 stdin，1 秒后对整个进程组 SIGKILL。</li>
+<li><b>崩溃与卡死</b>：一次询问 1 秒没有答复视为卡死并杀掉；60 秒内崩溃 3 次则停用该引擎。</li>
+<li><b>退出</b>：收到 SIGTERM、SIGINT、SIGHUP 或正常结束时，结束系统日志订阅，并向主控发 <code>POST /accessory/exiting</code>（1 秒超时）。</li>
+<li><b>重启条件</b>：设置文件变化、用户引擎目录变化、非自带引擎的文件变化、<code>options.json</code> 变化、主控 Python 被替换（每 10 秒检查）。</li>
+</ul>
+
+<h2>引擎协议</h2>
+<p>版本 1。完整规格见 <code>luoke-ime/docs/引擎协议.md</code>。</p>
+<div class="tbl"><table>
+<tr><th>方向</th><th>消息</th></tr>
+<tr><td>壳 → 引擎</td><td><code>hello</code>、<code>query</code>（输入、前文、应用）、<code>committed</code>、<code>deleted</code>、<code>forget</code>、<code>forget_all</code>、<code>unforget</code>、<code>start</code> / <code>stop</code> / <code>cancel</code>（快捷键引擎）、<code>ask</code>、<code>reply</code></td></tr>
+<tr><td>引擎 → 壳</td><td><code>answer</code>（候选、<code>more</code>、<code>autocommit</code>）、<code>show</code>、<code>commit</code>、<code>end</code>、<code>ask</code>、<code>reply</code></td></tr>
+</table></div>
+<h3>引擎说明 <code>engine.json</code></h3>
+<ul>
+<li>必填 <code>protocol</code>（=1）、<code>name</code>、<code>kind</code>、<code>run</code>；打字引擎需 <code>input_keys</code>，快捷键引擎需 <code>hotkey</code>。</li>
+<li>可选 <code>context</code>（0–2000 字前文）、<code>app</code>、<code>feedback</code>、<code>forget_all</code>、<code>asks</code>（⊆ personal、hub）、<code>options</code>、<code>punctuation</code>。</li>
+<li><code>permissions</code>：<code>network</code>（none / local / any）、<code>write</code>（≤ 16 个路径）、<code>local_ports</code>、<code>microphone</code>、<code>camera</code>、<code>screen</code>、<code>gpu</code>、<code>memory</code>（只有个人化组件能声明）。</li>
+</ul>
+<h3>第三方引擎</h3>
+<ul>
+<li>声明联网、GPU 或写权限的第三方引擎不能启用。</li>
+<li>启用需要用户确认，确认记录绑定引擎说明的指纹（关键字段的 SHA-256），说明变化后需重新确认。</li>
+<li>不会被自动选中；与自带引擎同名时使用独立的数据目录 <code>&lt;id&gt;.third-party</code>。</li>
+<li>引擎只能向个人化组件请求 <code>score</code> 和 <code>ping</code>；<code>predict</code> 只有壳能发起。声明了 <code>asks: personal</code> 的引擎不能联网。</li>
+</ul>
+
+<h2>候选流程</h2>
+<ol>
+<li>按键经 <code>MacKeys.translate</code> 翻译，进入会话；空闲时按下输入键会读取前文（安全输入时不读）。</li>
+<li>壳向打字引擎发 <code>query</code>；只采用最新一次询问的答复，50 ms 内收到的最后一份直接显示。</li>
+<li>打字引擎先给快答复（改选过的词、苹果候选、RIME 补充），能重排时标 <code>more</code>；再经壳把 <code>score</code> 转给个人化组件，个人化组件转主控 <code>luoke-ime.rerank</code>，最多等 0.7 秒。</li>
+<li>逐词重排：模型得分须比苹果整句首选高出阈值（自然对数 3）才替换；换掉首选时补发答复，界面让新首选淡入。</li>
+<li>空格、数字、标点等收尾键在还没有任何答复时先等第一份答复，最多 1 秒（判定卡死）；卡死则按原始字母上屏，数字原样交给应用。之后最多再为补发等 150 ms。回车、Esc 不等。上屏后，空格或数字选中的会接着请求联想。</li>
+</ol>
+<h3>联想</h3>
+<ul>
+<li>在空格或数字选词、标点、快捷键引擎上屏后触发；需全局和当前应用都允许，且个人化组件在运行。上屏后 0.25 秒内没有按键才发出请求，期间按键即取消。</li>
+<li>个人化组件先从最近 5000 段上屏中找用户写过的接续（最多 3 个），再请主控续写（<code>/v1/continue</code>，k=8、6 个 token），首 token 是汉字且概率 ≥ 0.2 才采用，合计最多 5 个。</li>
+<li>发出后 1 秒内无答复则放弃；未激活时淡显 3 个，4 秒后收起；按 Tab 激活后可用数字、空格选择。</li>
+</ul>
+
+<h2>个人化组件</h2>
+<h3>决策表（<code>PersonalPolicy</code>）</h3>
+<div class="tbl"><table>
+<tr><th>情形</th><th>写入记忆</th><th>引擎学改选</th><th>打分和联想</th></tr>
+<tr><td>安全输入</td><td>否</td><td>否</td><td>否</td></tr>
+<tr><td>用户暂停或该应用禁止记录 · 自带组件</td><td>否</td><td>否</td><td>是</td></tr>
+<tr><td>用户暂停或该应用禁止记录 · 第三方组件</td><td>否</td><td>否</td><td>否</td></tr>
+<tr><td>记录未开启 · 自带组件</td><td>否</td><td>是</td><td>是</td></tr>
+<tr><td>记录未开启 · 第三方组件</td><td>否</td><td>是</td><td>否</td></tr>
+<tr><td>其余</td><td>是</td><td>是</td><td>是</td></tr>
+</table></div>
+<p>"记录开启"对自带组件默认为真（存储用户关闭的列表 <code>memory_off</code>），对第三方组件需用户同意（<code>memory_consent</code>）。</p>
+<h3>写入记忆的记录</h3>
+<div class="tbl"><table>
+<tr><th>topic</th><th>内容</th><th>data</th></tr>
+<tr><td><code>ime-commit</code></td><td>同一应用中连续上屏合成的一段（间隔 &gt; 60 秒、换应用或前文对不上时断段；停手 20 秒写入）</td><td><code>app</code>、<code>source</code>、<code>auto</code>、<code>context</code>（前文末 200 字，标为第三方）</td></tr>
+<tr><td><code>ime-correction</code></td><td>选了非首选、删掉刚上屏的字</td><td>选择或删除的明细</td></tr>
+<tr><td><code>ime-forget</code></td><td>用户在候选中删除某词</td><td><code>input</code>、<code>text</code></td></tr>
+</table></div>
+<ul>
+<li>凭证经 <code>mask_secrets</code> 只遮那一串；敏感类别（健康、法律纠纷、宗教、政治）按整段文字计算。</li>
+<li>保留期可选永久、365、90、30 天，每 6 小时清理一次（被理解引用的保留）。</li>
+<li>读取：最近 5000 段 <code>ime-commit</code>，用作联想素材。</li>
+</ul>
+
+<h2>主控任务</h2>
+<div class="tbl"><table>
+<tr><th>任务</th><th>端点</th><th>用途</th></tr>
+<tr><td><code>luoke-ime.rerank</code></td><td><code>POST /tasks/&lt;task&gt;/v1/score</code></td><td>候选打分（按任务参数分批，默认 16 个、前文 2000 字）</td></tr>
+<tr><td><code>luoke-ime.predict</code></td><td><code>POST /tasks/&lt;task&gt;/v1/continue</code></td><td>联想续写</td></tr>
+</table></div>
+<p>请求超时 2 秒。收到 <code>hello</code> 时对两个任务各预热一次。发布版只经主控打分，主控不可用时没有重排和联想。</p>
+
+<h2>设置和文件</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/.luoke/ime/settings.json</code></td><td>当前引擎、全局默认（英文、记住模式、内嵌、联想）、候选窗、键位、按应用覆盖、记录设置、确认过的第三方引擎、主控 socket；本版不认识的键（顶层和 <code>recording</code> 内）原样写回，配件回滚后再升级时不丢</td></tr>
+<tr><td><code>~/.luoke/ime/engines/&lt;id&gt;/</code></td><td>用户安装的引擎</td></tr>
+<tr><td><code>~/.luoke/ime/data/&lt;id&gt;/</code></td><td>引擎数据：<code>options.json</code>；小鹤另有 <code>memory.json</code>（改选、忘掉的词）和 <code>forgotten.json</code>（供设置窗口列出、撤销）</td></tr>
+<tr><td><code>~/.luoke/ime/records/</code></td><td>开发模式记录，留 7 天</td></tr>
+</table></div>
+
+<h2>安全</h2>
+<ul>
+<li><b>安全输入</b>（<code>IsSecureEventInputEnabled</code>）：不读前文、不写记忆、不打分；一段组字中碰到过安全输入，整段都按安全输入处理。</li>
+<li><b>沙盒</b>：默认拒绝；禁止读取钥匙、凭据、浏览器、邮件等 40 多个路径和整个 <code>~/.luoke</code>（只放行自己的文件夹）；不许创建符号链接；禁止借助 <code>open</code>、<code>osascript</code>、剪贴板等外发。</li>
+<li><b>拦截上报</b>：每条拒绝带标签，壳读取系统日志，严重的列入菜单。系统日志订阅（<code>log stream</code>）套在一个 sh 里，输入法退出（含被强制结束）时随之结束。</li>
+</ul>
+
+<h2>系统要求</h2>
+<p>主控只在 macOS 26 起安装输入法（清单 <code>min_macos</code> 26）；LuokeIME.app 本身的最低系统是 14.0，供手动安装验证旧系统。</p>
+
+<h2>已知限制</h2>
+<ul>
+<li>个人化组件不读记忆中的理解（常用说法等），打分没有个人化。</li>
+<li>候选窗不能用鼠标点选；引擎选项没有 A2UI 界面。</li>
+<li>快捷键引擎不检查冲突、停用不进菜单。</li>
+<li>个人化组件卡死不检测；转问没有限流。</li>
+</ul>
+</section>
+<section class="page" id="agent" data-title="agent「螺壳」">
+<h1>agent「螺壳」</h1>
+<p class="lede">螺壳里唯一主动找用户的组件。它把记忆的提问和建议、各工具要报的事合并成卡片和简报，挑时机告诉用户，并代表用户调用工具声明的能力。当前版本不使用模型。</p>
+<p class="src">仓库 <code>luoke-agent</code> · 核心 0.0.1 · 不在 v1 首发中</p>
+
+<h2>职责</h2>
+<ul>
+<li>从记忆读取待问的问题和建议（<code>asks</code>），从各工具读取待报事项（outbox），统一排序后在窗口、通知和简报中呈现。</li>
+<li>把用户的回答交回来源：交给记忆的经 <code>Memory.reply</code>，交给工具的经工具协议调用对应能力。</li>
+<li>只在用户点按卡片时发出会改动数据的调用。不自行推断用户信息，也不替工具执行动作。</li>
+</ul>
+
+<h2>进程模型</h2>
+<div class="tbl"><table>
+<tr><th>部分</th><th>实现</th><th>职责</th></tr>
+<tr><td>壳</td><td>Swift 应用（macOS 14+），菜单栏常驻，依赖 A2UI 渲染包</td><td>菜单栏、窗口、系统通知、卡片渲染、上报用户是否在场</td></tr>
+<tr><td>核心</td><td>Python 包 <code>luoke_agent</code>（仅标准库），运行在主控自带的 Python 上</td><td>读记忆、连接工具、事项库、决定何时说</td></tr>
+</table></div>
+<ul>
+<li><b>启动</b>：主控按配件清单（<code>resident: true</code>）拉起壳；壳以 <code>python -m luoke_agent serve --home H --memory M --parent-pid P</code> 启动核心，标准错误追加到 <code>&lt;home&gt;/logs/core.log</code>。</li>
+<li><b>存活</b>：核心意外退出时壳会重启它，间隔从 2 秒翻倍到 60 秒；核心每 2 秒检查父进程，壳退出时随之退出。</li>
+<li><b>壳与核心之间</b>：<code>&lt;home&gt;/run/agent.sock</code> 上的 HTTP/1.1，见「界面协议」。</li>
+<li><b>轮询</b>：核心每 5 秒一个周期；工具 outbox 每 60 秒读一次，记忆和主控每 300 秒各读一次，简报到点前会额外读一次记忆。</li>
+<li><b>使用的主控接口</b>：<code>GET /accessories</code> 发现已安装的工具；<code>GET /tasks</code> 取主控内置的 <code>luoke_mem</code> 路径，取不到时用自带的副本。</li>
+</ul>
+
+<h2>界面协议（核心 ↔ 壳）</h2>
+<div class="tbl"><table>
+<tr><th>方法</th><th>请求</th><th>答复</th></tr>
+<tr><td><code>GET /feed</code></td><td>Server-Sent Events，先推全部卡片，再推变化，每 15 秒心跳</td><td>事件 <code>a2ui</code>、<code>feed</code>、<code>notify</code>、<code>busy</code>、<code>result</code></td></tr>
+<tr><td><code>POST /action</code></td><td><code>{surfaceId, sourceComponentId, context}</code></td><td><code>{text, error}</code></td></tr>
+<tr><td><code>POST /presence</code></td><td><code>{idle, locked, asleep}</code>，壳每 30 秒和状态变化时上报</td><td><code>{}</code></td></tr>
+<tr><td><code>POST /window</code></td><td><code>{open}</code></td><td><code>{}</code></td></tr>
+<tr><td><code>GET /status</code></td><td>—</td><td>元数据</td></tr>
+<tr><td><code>POST /say</code></td><td>—</td><td>501（未实现对话）</td></tr>
+</table></div>
+
+<h2>工具协议</h2>
+<p>工具在配件清单的 <code>capabilities</code> 中声明协议版本（1）、socket 路径、可报事项（<code>reports[]</code>：kind、title、默认 urgency）和动作（<code>actions[]</code>），并在自己的 Unix socket 上提供 MCP 子集。完整规格见 <code>luoke-agent/docs/工具协议.md</code>。</p>
+<h3>传输</h3>
+<ul>
+<li>每个请求一条连接：<code>POST /mcp</code>，请求体为一条 JSON-RPC 2.0 消息，上限 1 MB；MCP 协议版本 <code>2026-07-28</code>，在 <code>params._meta</code> 中携带。</li>
+<li>超时：连接 10 秒；读 outbox、列工具 10 秒；只读调用 30 秒；写调用 300 秒。socket 不存在视为工具未运行，不算错误。</li>
+</ul>
+<h3>方法</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>用途</th></tr>
+<tr><td><code>server/discover</code></td><td>协议版本和服务能力</td></tr>
+<tr><td><code>resources/list</code>、<code>resources/read</code></td><td>读 outbox：<code>luoke://&lt;配件&gt;/outbox</code>，内容 <code>{items:[…]}</code></td></tr>
+<tr><td><code>tools/list</code></td><td>能力列表，带 <code>readOnlyHint</code>、<code>destructiveHint</code></td></tr>
+<tr><td><code>tools/call</code></td><td>调用能力；写调用必须在 <code>_meta</code> 中带 <code>ai.luoke/user-action</code>（<code>{surfaceId, componentId, at}</code>），否则工具返回 <code>needs_user_action</code></td></tr>
+</table></div>
+<ul>
+<li>outbox 事项字段：<code>id</code>、<code>kind</code>、<code>urgency</code>、<code>deadline</code>、<code>expires</code>、<code>created</code>、<code>why_now</code>、<code>title</code>、<code>summary</code>、<code>card</code>。outbox 是一份完整状态，上一轮有、这一轮没有的事项视为撤回。</li>
+<li>调用结果的 <code>structuredContent</code> 可带 <code>card</code>（更新原卡片）、<code>done</code>（事项完成，卡片保留 30 分钟以便撤销）、<code>drop</code>（立即撤下）。失败码：<code>needs_user_action</code>、<code>invalid</code>、<code>not_ready</code>、<code>needs_setup</code>、<code>stale</code>、<code>failed</code>。</li>
+<li>撤销是结果卡上的一个写按钮，走同一条点按路径。</li>
+</ul>
+<h3>卡片（A2UI）</h3>
+<ul>
+<li>A2UI v0.9，目录 <code>ai.luoke/a2ui/agent/1</code>，组件限于 Text、Row、Column、List、Card、Divider、Button、CheckBox、ChoicePicker、TextField、DateTimeInput、Icon。</li>
+<li>校验：根组件存在、可达组件 ≤ 200、累计 ≤ 1000、无环、单父、绑定路径存在、文字 ≤ 2000 字；未通过校验的卡片改为纯文本卡。</li>
+<li>agent 自己处理的动作：<code>agent.open_url</code>（仅 https，按钮文字后附域名）、<code>agent.dismiss</code>、<code>agent.remind</code>。</li>
+</ul>
+
+<h2>与记忆的交互</h2>
+<ul>
+<li>以 <code>Memory(path, tool="luoke-agent")</code> 打开记忆；文件不存在时不创建，遇到版本过新的库时提示更新。</li>
+<li>读取 <code>asks(status=["open"])</code>；带 <code>about_note</code> 的问题附上该理解的前 3 条依据原文（每条 120 字以内）。</li>
+<li>回答经 <code>reply(ask_id, choice, text)</code> 交回：</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>卡片</th><th>按钮 → choice</th></tr>
+<tr><td>处理习惯等是非类建议</td><td>好 → <code>useful</code> · 不用 → <code>useless</code> · 别再提 → <code>never</code></td></tr>
+<tr><td>信息性建议</td><td>知道了 → <code>useful</code> · 别再提 → <code>never</code></td></tr>
+<tr><td>关于某条理解的问题</td><td>对 → <code>yes</code> · 不对 → <code>no</code> · 以前是现在不是 → <code>past</code> · 按我改的 → <code>revise</code> · 以后再说 → <code>later</code>（3 天后再问）</td></tr>
+<tr><td>自由问题</td><td>交回 → <code>answer</code> · 以后再说 → <code>later</code></td></tr>
+</table></div>
+
+<h2>何时说</h2>
+<ul>
+<li><b>排序</b>：urgency（urgent、normal、low）→ deadline → 首次出现时间。</li>
+<li><b>每类的方式</b>（<code>modes</code>）：<code>now</code>、<code>brief</code>、<code>window</code>、<code>off</code>；未设置时 urgent 为 <code>now</code>，其余为 <code>brief</code>。</li>
+<li><b>急事</b>：用户在 Mac 前（120 秒内有上报、未锁屏、屏幕未睡、空闲 &lt; 180 秒）时立即通知，不受免打扰时段限制。</li>
+<li><b>简报</b>：第一件 normal 事项到达后 60 分钟发一份，需用户在场且不在免打扰时段；每份最多附 2 件 low；只有 low 时 24 小时最多一份；上一份未打开时新的一份静音。</li>
+<li><b>少说</b>：同一类连续 3 次没有回应，从 <code>brief</code> 降为 <code>window</code>，并给出一张"以后只放在窗口里"的卡片。</li>
+<li><b>清理</b>：过期事项撤下；完成的卡片 30 分钟后撤下；完成或撤回超过 30 天的记录删除。</li>
+</ul>
+
+<h2>数据和文件</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/.luoke/agent/</code></td><td>数据目录（700）</td></tr>
+<tr><td><code>state.db</code></td><td>表 <code>items</code>（事项状态）、<code>contents</code>（卡片内容，用于重启后恢复和撤销）、<code>settings</code>、<code>meta</code>、<code>reactions</code>（每类展示、回应、忽略的统计）、<code>put_off</code></td></tr>
+<tr><td><code>run/agent.sock</code></td><td>界面 socket（600）</td></tr>
+<tr><td><code>logs/core.log</code></td><td>只记元数据：版本、socket、异常类型、错误码</td></tr>
+</table></div>
+<p>设置默认值：<code>brief_minutes</code> 60、<code>away_seconds</code> 180、<code>ignore_limit</code> 3、<code>quiet</code> 无、<code>modes</code> 空。</p>
+
+<h2>安全</h2>
+<ul>
+<li>写调用只在 <code>POST /action</code>（用户点按）时发出，并附 user-action；方案编号、链接、问题编号等写死的值只认核心保存的卡片声明，不采用界面送来的同名值。</li>
+<li>工具和记忆送来的文字一律按纯文本渲染；每张卡片带来源前缀，按钮只转给出这张卡片的来源。</li>
+<li>socket 只靠文件权限（目录 700、文件 600）限定在当前账户内，不核对调用方身份。</li>
+</ul>
+
+<h2>已知限制</h2>
+<ul>
+<li>没有对话，不使用模型；outbox 靠轮询，未实现订阅。</li>
+<li>写调用只看 <code>tools/list</code> 的 <code>readOnlyHint</code>，不对照清单里声明的 <code>actions</code>。</li>
+<li><code>deadline</code> 只影响排序，过期不会标记；<code>off</code> 与 <code>window</code> 效果相同。</li>
+<li>从不发送 <code>outbox_ack state:"shown"</code>，工具无法据此停止自己的通知。</li>
+<li>设置没有界面；卡片上用户改过的选项只存在壳里，壳重启后丢失；<code>core.log</code> 不轮转。</li>
+<li>简报通知的正文包含事项标题。</li>
+</ul>
+</section>
+<section class="page" id="ref-api" data-title="主控任务接口">
+<h1>主控任务接口</h1>
+<p class="lede">主控在 Unix socket 上提供的 HTTP/1.1 接口，供配件调用。每次请求一条连接。</p>
+
+<h2>连接</h2>
+<ul>
+<li><b>socket</b>：<code>~/Library/Application Support/luoke-core/run/hub.sock</code>（目录 0700，文件 0600）。配件依次查找：显式路径 → 环境变量 <code>LUOKE_HUB_SOCKET</code> → 默认位置。</li>
+<li><b>身份</b>：请求头 <code>X-Luoke-Accessory: &lt;配件&gt;/&lt;版本&gt;</code>。版本须在配方 <code>verified</code> 中，或本机放行，或是本机 <code>verified-history.json</code> 中有记录的已安装版本（换回的上一版，只能用记录中的任务）；带任务名的请求还要求任务存在且属于该配件。</li>
+<li><b>响应头</b>：<code>X-Luoke-Contract: 1</code>、<code>X-Luoke-Tasks-Version</code>（配方、档、模型分配、引擎版本、任务参数的摘要，变化即应重读 <code>/tasks</code>）。</li>
+<li><b>请求体</b>上限 32 MB。</li>
+</ul>
+
+<h2>错误</h2>
+<p>错误体为 <code>{"code", "message", "retry_after", …}</code>；有 <code>retry_after</code> 时同时给 <code>Retry-After</code> 头。</p>
+<div class="tbl"><table>
+<tr><th>HTTP</th><th>code</th><th>含义</th></tr>
+<tr><td>400</td><td><code>invalid_request</code></td><td>请求格式或参数不合法</td></tr>
+<tr><td>403</td><td><code>unknown_accessory</code></td><td>配件或版本未通过验证，或任务不属于该配件</td></tr>
+<tr><td>403</td><td><code>forbidden</code></td><td>主控本体专用的路由，对端不是本体（或允许的命令行）</td></tr>
+<tr><td>404</td><td><code>task_unavailable</code>、<code>unsupported</code></td><td>任务不存在；本档不支持该任务；换回的上一版调用其记录外的任务</td></tr>
+<tr><td>413</td><td><code>input_too_long</code></td><td>超过任务的 <code>max_chars</code></td></tr>
+<tr><td rowspan="5">503</td><td><code>busy</code></td><td>暂时不能接纳，附 <code>reason</code>（见主控 · 后台接纳）</td></tr>
+<tr><td><code>paused</code></td><td>全机后台暂停或本档放不下</td></tr>
+<tr><td><code>not_ready</code></td><td>模型正在加载或工作进程按需重起（retry_after 2）；内存不够或内存压力 critical 后暂不启动工作进程（retry_after 30）</td></tr>
+<tr><td><code>needs_user</code></td><td>用户在等但内存放不下，附 <code>occupants</code>（占用内存的进程）</td></tr>
+<tr><td><code>engine_failed</code></td><td>引擎或工作进程出错</td></tr>
+</table></div>
+<p>流式生成过程中的错误以 <code>event: luoke.error</code> 事件给出，另有 <code>interrupted</code>（后台请求被用户请求打断）。</p>
+
+<h2>任务</h2>
+<h3><code>GET /tasks</code></h3>
+<p>返回 <code>{contract, hub_version, tier, tasks_version, background: {state, reasons}, tasks: {&lt;名&gt;: {kind, status, reason, progress, slow, combo, params, vector_space?}}, luoke_mem?: {path, version}}</code>。只列出请求方自己的任务；<code>luoke_mem</code> 给出主控内置的记忆库路径。</p>
+<h3>生成 <code>POST /tasks/&lt;task&gt;/v1/chat/completions</code></h3>
+<ul>
+<li>任务 kind 为 <code>generate</code>。请求为 OpenAI 格式的 <code>messages</code>，必须 <code>stream: true</code>，带 <code>luoke_items</code>（本批条目数，≤ <code>batch</code>）；<code>response_format</code> 可用 <code>json_schema</code> 或 <code>json_object</code>。</li>
+<li>请求头 <code>X-Luoke-Priority</code> 必填（<code>user-waiting</code> 或 <code>background</code>）；<code>X-Luoke-Allow-Battery: 1</code> 可选。</li>
+<li>主控覆盖：<code>max_tokens = item_tokens × luoke_items + fixed_tokens</code>；采样参数取配方；中和消息中的模型特殊 token；答复中的 <code>model</code> 改写为组合名。</li>
+<li>SSE 流中另有 <code>event: luoke.progress</code>（<code>queued</code>、<code>loading</code>、<code>running</code>）。</li>
+</ul>
+<h3>打分 <code>POST /tasks/&lt;task&gt;/v1/score</code></h3>
+<p>kind <code>score</code>。请求 <code>{context, candidates}</code>（候选 ≤ <code>batch</code>，默认 16；前文 ≤ <code>max_chars</code>，默认 2000）；答复 <code>{logprobs, model, cache_hit, ms}</code>。超时 10 秒。</p>
+<h3>续写 <code>POST /tasks/&lt;task&gt;/v1/continue</code></h3>
+<p>kind <code>predict</code>。请求 <code>{context, k?, max_tokens?, stop?}</code>；答复 <code>{branches: [{tokens: [{text, logprob}], finish}], model, cache_hit, ms}</code>。旧接口 <code>/v1/predict</code> 仍保留。</p>
+<h3>嵌入 <code>POST /tasks/&lt;task&gt;/v1/embed</code></h3>
+<p>kind <code>embed</code>。请求 <code>{texts: [...]}</code>（任务参数允许时可用多模态 <code>inputs</code>）；答复 <code>{vectors, dims, model, vector_space, ms}</code>。默认每批 32 条、单条 32000 字、合计 320000 字。后台请求走专用模型通道，被挡回时返回 <code>lane_busy</code> 并附 <code>retry_after_ms</code>。</p>
+<h3>预热 <code>POST /warmup</code></h3>
+<p>请求 <code>{task, lease_id?}</code>；答复 <code>{accepted, lease_id, expires_in: 600}</code>，或 <code>{accepted: false, code}</code>（<code>task_unavailable</code>、<code>unsupported</code>、<code>deferred</code>）。新的预热算作交互，续期不算。打分、联想、嵌入任务的预热会启动工作进程；内存不够时照样答应，真正请求时答 <code>not_ready</code>。</p>
+
+<h2>配件管理</h2>
+<div class="tbl"><table>
+<tr><th>路由</th><th>说明</th></tr>
+<tr><td><code>GET /accessories</code></td><td>已安装配件的公开字段：accessory、bundle_id、name、version、type、resident、memory、tasks、capabilities、jobs</td></tr>
+<tr><td><code>PUT /accessory/resident</code></td><td><code>{resident}</code>，声明是否常驻</td></tr>
+<tr><td><code>POST /accessory/exiting</code></td><td>配件主动退出前通知，主控停止只由它使用的工作进程</td></tr>
+</table></div>
+
+<h2>主控本体专用</h2>
+<p>以下路由要求身份为 <code>luoke-core</code>，并按内核报告的对端 PID 核对对端是主控进程的父进程（即本体）。<code>/settings</code> 和 <code>/endpoint*</code> 另外接受主控自带的命令行 <code>luoke</code>（与主控同一个 Python 可执行文件、参数为 <code>-m luoke_core.cli</code>）。不符时答 <code>forbidden</code>。</p>
+<div class="tbl"><table>
+<tr><th>路由</th><th>说明</th></tr>
+<tr><td><code>GET /status</code></td><td>运行状态（不要求身份）：档、底座、引擎、交互、后台、冒烟、设置、下载、空闲任务、端点（不含密钥）等</td></tr>
+<tr><td><code>GET/POST /downloads</code></td><td>缺少的下载项和进度；POST 开始下载</td></tr>
+<tr><td><code>GET/PUT /settings</code></td><td><code>power_mode</code>、<code>background_on_battery</code>、<code>tier</code>、<code>endpoint_enabled</code>、<code>endpoint_port</code>、<code>endpoint_key</code></td></tr>
+<tr><td><code>GET /endpoint</code>、<code>POST /endpoint/key</code></td><td>端点状态和密钥；生成新密钥</td></tr>
+<tr><td><code>POST /endpoint/models</code>、<code>/endpoint/models/remove</code></td><td>登记、撤销用户自己的模型</td></tr>
+<tr><td><code>POST /smoke</code></td><td>重新做冒烟检查</td></tr>
+<tr><td><code>POST /uninstall</code></td><td><code>{accessory, data?, forget?, dry_run?}</code>；也删除 <code>previous.noindex</code> 里该配件的旧版（答复 <code>previous</code>）</td></tr>
+<tr><td><code>GET /accessories/previous</code></td><td>留有旧版的配件：<code>{accessories: [{accessory, name, type, bundle_id, current, previous, verified, release}]}</code>；<code>verified</code> 为假的不能换回</td></tr>
+<tr><td><code>POST /accessories/rollback</code></td><td><code>{accessory}</code> → <code>{accessory, from, to, type, bundle_id}</code>；无旧版或无验证记录 <code>unsupported</code>，签名不过 <code>invalid_request</code>，对调失败 <code>engine_failed</code></td></tr>
+<tr><td><code>POST /jobs/run</code></td><td>让某个空闲任务在下一个安静时刻立即运行（只在内部版、本机版和实验室版可用）</td></tr>
+</table></div>
+
+<h2>高级用户端点</h2>
+<ul>
+<li>默认关；开启后监听 127.0.0.1，默认端口 17860（被占则向后找）。</li>
+<li>检查：Host 必须是 <code>127.0.0.1</code> 或 <code>localhost</code>；带 <code>Origin</code> 头一律拒绝；密钥非空时校验 <code>Authorization: Bearer</code>（用户可自定义或留空）。</li>
+<li><code>GET /v1/models</code>：底座名和 <code>user/&lt;名字&gt;</code>（用户登记的模型）。<code>POST /v1/chat/completions</code>：按"用户在等"调度。</li>
+<li>错误：<code>model_not_found</code>（404）、<code>too_large</code>（507，超过独占上限：内存 − 8%（3–8 GB）− 常驻专用模型 − 1 GB）、<code>not_ready</code>、<code>busy</code>、<code>engine_failed</code>（503）。</li>
+<li>命令行 <code>luoke launch pi [--model M]</code> 自动读取端口和密钥，在 pi 的配置中写入 <code>luoke</code> provider 并启动 pi。</li>
+</ul>
+</section>
+<section class="page" id="ref-manifest" data-title="配件清单与配方">
+<h1>配件清单与配方</h1>
+
+<h2>配件清单 <code>luoke-accessory.json</code></h2>
+<p>位于配件 .app 的 <code>Contents/Resources/</code>。主控只加载 <code>contract == 1</code> 且有 <code>accessory</code>、<code>bundle_id</code> 的清单。</p>
+<div class="tbl"><table>
+<tr><th>字段</th><th>说明</th></tr>
+<tr><td><code>contract</code>、<code>accessory</code>、<code>bundle_id</code></td><td>必填</td></tr>
+<tr><td><code>name</code>、<code>version</code></td><td>显示名和版本；升级只换比清单旧的版本（按数字比较，不降级）</td></tr>
+<tr><td><code>type</code></td><td><code>app</code>（装在 <code>~/Applications</code>）、<code>input-method</code>（装在 <code>~/Library/Input Methods</code>）、<code>component</code>；只有 app 可常驻</td></tr>
+<tr><td><code>entry</code></td><td>交给自带 Python 的入口参数</td></tr>
+<tr><td><code>resident</code></td><td>是否常驻（配件也可经 <code>PUT /accessory/resident</code> 声明）</td></tr>
+<tr><td><code>memory</code></td><td>是否读写记忆；决定卸载时能否"一起忘掉"、首次运行是否需要记忆</td></tr>
+<tr><td><code>tasks</code></td><td>需要主控提供的任务（名、kind）</td></tr>
+<tr><td><code>jobs</code></td><td>空闲任务：<code>name</code>、<code>command</code>（可用占位符 <code>{memory}</code>、<code>{tool}</code>）、<code>min_interval_minutes</code>（默认 120）、<code>allow_battery</code>（默认否）、<code>timeout_minutes</code>（默认 30）</td></tr>
+<tr><td><code>capabilities</code></td><td>给 agent 的能力声明，主控原样转交（规格见 agent 的工具协议）</td></tr>
+<tr><td><code>data</code></td><td>卸载时可删除的数据路径，只接受与配件自身标识绑定的形式</td></tr>
+<tr><td><code>commands</code></td><td><code>uninstall</code>（删除数据前运行）、<code>forget-tool</code>（从记忆中忘掉本工具写入的内容）</td></tr>
+<tr><td><code>icon</code>、<code>ui_element</code></td><td>打包用</td></tr>
+</table></div>
+
+<h3>打包布局</h3>
+<pre class="mono">&lt;名字&gt;.app/Contents/MacOS/&lt;配件标识&gt;             启动器
+&lt;名字&gt;.app/Contents/Resources/luoke-accessory.json
+&lt;名字&gt;.app/Contents/Resources/python/bin/python3   钉住版本的 python-build-standalone
+&lt;名字&gt;.app/Contents/Resources/python/lib/python3.X/site-packages/&lt;包&gt;</pre>
+<p>由 <code>luoke-core/tools/package_python_app.py</code> 生成。</p>
+
+<h3>校验</h3>
+<ul>
+<li><b>调用时</b>：版本在配方 <code>verified</code> 中，或在内部版、本机版主控上被本机放行（<code>tools/local_allow.py</code>，只放行配方中已有配件的新版本）；或是本机 <code>verified-history.json</code> 中记录过的已安装版本（只限记录中的任务）。</li>
+<li><b>安装时</b>：代码签名、Team ID <code>NJQ5W3T9K5</code>、bundle id 与清单一致、公证票据有效。</li>
+<li><b>回滚时</b>：旧版同样核签名、Team ID、bundle id、公证票据，不运行它，版本从其清单读取。</li>
+</ul>
+
+<h2>配方 <code>recipe.json</code></h2>
+<div class="tbl"><table>
+<tr><th>字段</th><th>说明</th></tr>
+<tr><td><code>tiers.&lt;档&gt;</code></td><td><code>min_gb</code>、<code>max_gb</code>、<code>guard_gb</code>（引擎内存上限）、<code>base_resident</code>（底座是否常驻）、<code>idle_unload_secs</code></td></tr>
+<tr><td><code>models.&lt;名&gt;</code></td><td><code>dir</code>、<code>kind</code>（base / special）、<code>wired_gb</code>、<code>size_gb</code>、速度、<code>vector_space</code>（嵌入）等</td></tr>
+<tr><td><code>assignment.&lt;档&gt;</code></td><td><code>{base, special: {&lt;任务&gt;: &lt;模型&gt;}}</code></td></tr>
+<tr><td><code>engine</code></td><td>引擎版本和位置</td></tr>
+<tr><td><code>tasks.&lt;名&gt;</code></td><td><code>accessory</code>、<code>kind</code>（generate / score / predict / embed）、<code>params</code>（<code>"*"</code> 加按档覆盖）、<code>base_params</code>（采样）、<code>latency_ms</code>、<code>tiers</code>（开启的档）</td></tr>
+<tr><td><code>verified.&lt;配件&gt;</code></td><td><code>versions</code>（允许接入的版本）和各任务的评测证据</td></tr>
+<tr><td><code>evidence</code></td><td>评测记录：配件、版本、任务、模型、档、结论、评测集和证据的 sha256</td></tr>
+<tr><td><code>expectations</code></td><td>首次运行按档和芯片向用户说明的体验</td></tr>
+</table></div>
+
+<h3>任务参数</h3>
+<div class="tbl"><table>
+<tr><th>kind</th><th>参数（默认）</th></tr>
+<tr><td>generate</td><td><code>item_tokens</code>（200）、<code>fixed_tokens</code>、<code>batch</code>、<code>max_chars</code>、<code>think</code>；配件自定义的参数原样转交（如 <code>sender_verdict</code>）</td></tr>
+<tr><td>score</td><td><code>batch</code>（16）、<code>max_chars</code>（2000）、<code>prefix_snapshots</code>（16）、<code>probe</code></td></tr>
+<tr><td>predict</td><td><code>k</code>（8）、<code>n</code>（6）、<code>max_tokens</code>、<code>max_chars</code>、<code>probe</code></td></tr>
+<tr><td>embed</td><td><code>batch</code>（32）、<code>max_tokens</code>（2048）、<code>max_chars</code>（32000）、<code>max_total_chars</code>（320000）；多模态另有图片、音频的批量和大小限制</td></tr>
+</table></div>
+
+<h3>硬件档</h3>
+<div class="tbl"><table>
+<tr><th>档</th><th>内存</th><th>引擎上限</th><th>底座</th><th>底座常驻</th></tr>
+<tr><td>16</td><td>&lt; 24 GB</td><td class="num">10 GB</td><td>qwen3.5-9b-4bit</td><td>否（用完即卸，打字时让路）</td></tr>
+<tr><td>32</td><td>24–64 GB</td><td class="num">20 GB</td><td>qwen3.5-9b-4bit</td><td>是</td></tr>
+<tr><td>128</td><td>≥ 64 GB</td><td class="num">100 GB</td><td>gemma-4-26b-8bit（可选省空间用 9B）</td><td>是</td></tr>
+</table></div>
+<p>所有档的打分和联想模型为 qwen3.5-0.8b-base-4bit（独立进程，约 2.7 GB）。</p>
+
+<h2>发布清单 <code>release.json</code></h2>
+<p><code>{contract, release, built_at, items: {&lt;名&gt;: {kind: model | engine | accessory | hub, version, dir, files: [{path, size, sha256}], urls, bundle_id?, type?, installer?, min_macos?}}}</code>。模型有 ModelScope 和 Hugging Face 两个镜像，安装包放在 GitHub 的 <code>luokelabs/luoke-releases</code>。主控的"检查更新"从 <code>items.hub</code> 取 DMG。</p>
+</section>
+<section class="page" id="ref-mem" data-title="记忆接口与表结构">
+<h1>记忆接口与表结构</h1>
+<p class="lede">Python 包 <code>luoke_mem</code>（仅标准库，3.9+）。工具只需 <code>__init__</code>、<code>memory</code>、<code>sensitive</code> 三个模块；运行在主控里的配件应使用 <code>GET /tasks</code> 返回的 <code>luoke_mem.path</code>。</p>
+
+<h2>打开</h2>
+<ul>
+<li><code>Memory(path=None, tool="luoke")</code>：工具使用。默认路径 <code>$LUOKE_HOME/mem.db</code>，未设置时为 <code>~/.luoke/mem.db</code>。文件 0600，目录 0700；记忆文件或其 <code>-wal</code>、<code>-shm</code> 是符号链接时拒绝打开。</li>
+<li><code>WholeMemory(path=None)</code>：整份记忆，供记忆自己的界面、命令行和归纳任务使用；打开时执行重新定档和合并。</li>
+<li>文件 schema 比库新得多（千位不同）时抛 <code>TooNew</code>。</li>
+</ul>
+
+<h2>工具接口</h2>
+<h3>记录</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>record(speaker, kind, text, *, topic, data, ref, happened_at, sensitive)</code></td><td>写一条记录；正文和 <code>data</code> 中的字符串先遮去凭证</td></tr>
+<tr><td><code>redate(rid, happened_at)</code></td><td>修正本工具一条记录的发生时间</td></tr>
+<tr><td><code>records(*, tool="", topic, kind, speaker, ref, since, limit)</code></td><td><code>tool=""</code> 为本工具，传工具名读该工具，<code>None</code> 读全部</td></tr>
+<tr><td><code>forget_records(*, topics, since, until, match, keep_cited)</code></td><td>删除本工具的部分记录，只依赖这些记录的理解一并删除</td></tr>
+<tr><td><code>forget_tool(tool=None, *, dry_run)</code></td><td>删除本工具写入的全部内容；用户说过的话和表过态的理解转到记忆名下保留</td></tr>
+</table></div>
+<h3>理解</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>state(kind, text, …)</code></td><td>用户亲口说的，直接为"确定"</td></tr>
+<tr><td><code>propose(kind, text, cites, …)</code></td><td>推测；按定档规则可能直接生效</td></tr>
+<tr><td><code>conclude(kind, text, cites, …)</code></td><td>由用户自己的记录得出；依据须全部来自用户，按定档规则为比较确定或猜测</td></tr>
+<tr><td><code>confirm(nid)</code> / <code>reject(nid)</code> / <code>was(nid)</code> / <code>later(nid)</code> / <code>revise(nid, text)</code></td><td>用户的决定：确认、否定、以前是、以后再说、改写</td></tr>
+<tr><td><code>notes(kinds, status, tool, confidence)</code></td><td>默认只返回生效的（比较确定和确定）；每条带 <code>confidence</code>、<code>data</code>、<code>auto</code>、<code>fresh</code></td></tr>
+<tr><td><code>note(nid)</code></td><td>一条理解及其全部依据（含原文）</td></tr>
+<tr><td><code>recent(since, limit)</code></td><td>未经用户表态而直接生效的推断</td></tr>
+<tr><td><code>context(kinds, limit=600)</code></td><td>按类别拼成供模型使用的一段文字</td></tr>
+<tr><td><code>forget(nid)</code></td><td>删除理解、其历史版本及只被它引用的记录</td></tr>
+</table></div>
+<h3>想问的和建议</h3>
+<div class="tbl"><table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>asks(status=["open"], *, tool)</code></td><td>未过期的问题和建议；<code>tool</code> 筛出与某工具相关的</td></tr>
+<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code> / <code>answer</code>；建议 <code>useful</code> / <code>useless</code> / <code>never</code></td></tr>
+</table></div>
+<h3>工具函数</h3>
+<p><code>mask_secrets(text)</code>（遮去密码、验证码、密钥、通过 Luhn 校验的卡号、证件号）、<code>find_secrets</code>、<code>sensitive_kinds(text)</code>（健康、法律、宗教政治）、<code>confidence(note)</code>、<code>default_path()</code>。</p>
+
+<h2>表结构（schema 7）</h2>
+<div class="tbl"><table>
+<tr><th>表</th><th>列</th></tr>
+<tr><td><code>records</code></td><td>id、tool、speaker、kind、topic、text、data_json、ref、happened_at、recorded_at、sensitive</td></tr>
+<tr><td><code>notes</code></td><td>id、tool、kind、text、origin（user / inferred）、status、superseded_by、valid_from、valid_to、formed_at、decided_at、why、topic、sensitive、data_json</td></tr>
+<tr><td><code>cites</code></td><td>(note_id, record_id)</td></tr>
+<tr><td><code>asks</code></td><td>id、tool、kind（question / suggestion）、text、why、about_note、about_kind、urgency、answer（JSON）、status、created_at、expires_at、decided_at、answer_record、sensitive、evidence、rank、action（JSON）、key</td></tr>
+<tr><td><code>candidates</code></td><td>id、kind、text、record_ids、first_seen、last_seen（归纳中积累的候选）</td></tr>
+<tr><td><code>learning</code></td><td>name、value（归纳进度、反刍结果、一次性修复标记）</td></tr>
+<tr><td><code>grants</code></td><td>遗留，不再使用</td></tr>
+</table></div>
+<p>升级只加不改：新表、可空的新列、新索引。版本存于 <code>PRAGMA user_version</code>。</p>
+
+<h2>取值</h2>
+<div class="tbl"><table>
+<tr><th>字段</th><th>取值</th></tr>
+<tr><td>records.speaker</td><td><code>user</code>、<code>third_party</code>、<code>system</code></td></tr>
+<tr><td>records.kind</td><td><code>statement</code>、<code>activity</code>、<code>receipt</code></td></tr>
+<tr><td>notes.kind</td><td><code>fact</code>、<code>interest</code>、<code>dislike</code>、<code>preference</code>、<code>term</code>、<code>taste</code></td></tr>
+<tr><td>notes.status</td><td><code>proposed</code>、<code>active</code>、<code>rejected</code>、<code>superseded</code>、<code>observed</code>（只读不产生）、<code>past</code></td></tr>
+<tr><td>asks.status</td><td><code>open</code>、<code>answered</code>、<code>dismissed</code>、<code>withdrawn</code>、<code>later</code>、<code>never</code></td></tr>
+<tr><td>preference 的 data</td><td><code>{account, sender, action, name, category, label | filter}</code>；可自动执行的动作 <code>archive</code>、<code>read</code>、<code>label</code>、<code>filter</code></td></tr>
+</table></div>
+
+<h2>记录话题一览</h2>
+<div class="tbl"><table>
+<tr><th>工具</th><th>topic</th></tr>
+<tr><td>邮件助手</td><td><code>mail-read</code>、<code>mail-acted</code>、<code>mail-override</code>、<code>mail-auto</code>、<code>mail-undo-auto</code>、<code>mail-cleared</code>、<code>sent-mail</code>、<code>received-mail</code>、<code>own-label</code>、<code>own-site</code>、<code>digest-open</code>、<code>digest-feedback</code></td></tr>
+<tr><td>输入法</td><td><code>ime-commit</code>、<code>ime-correction</code>、<code>ime-forget</code></td></tr>
+<tr><td>记忆</td><td><code>note:&lt;kind&gt;</code>（用户亲口说的）、<code>note-decision</code>、<code>note-later</code>、<code>ask-answer</code>、<code>ask-dismissed</code></td></tr>
+</table></div>
+
+<h2>命令行</h2>
+<div class="tbl"><table>
+<tr><th>命令</th><th>说明</th></tr>
+<tr><td><code>python -m luoke_mem [--path P] sources</code></td><td>各工具写入的条数</td></tr>
+<tr><td><code>forget-tool &lt;tool&gt; [--dry-run]</code></td><td>忘掉某工具写入的内容</td></tr>
+<tr><td><code>ui [--open] [--note N] [--view recent]</code></td><td>打印界面地址</td></tr>
+<tr><td><code>app [--note N] [--view recent]</code></td><td>在浏览器中打开界面（<code>luoke://memory</code> 的入口）</td></tr>
+<tr><td><code>learn [--force] [--again] [--hub SOCK]</code></td><td>运行一次归纳；<code>--again</code> 从头重新归纳</td></tr>
+</table></div>
+
+<h2>界面</h2>
+<p>独立进程，监听 127.0.0.1 随机端口；页面令牌在 <code>?t=</code>，接口令牌在 <code>X-Luoke-Token</code>；校验 Host 和 Origin；600 秒无请求退出。路由：<code>/api/summary</code>、<code>/api/overview</code>、<code>/api/records</code>、<code>/api/notes</code>、<code>/api/note</code>、<code>/api/recent</code>；修改用 <code>POST /api/change</code>（confirm、reject、forget、revise）、<code>/api/forget-tool</code>、<code>/api/forget-all</code>。</p>
+</section>
+<section class="page" id="ref-tasks" data-title="任务与提示词">
+<h1>任务与提示词</h1>
+<p class="lede">所有经主控调用模型的任务：所属配件、种类、各硬件档是否开启、提示词位置。档位以发布时的支持台账为准，下表为当前主线配方的状态。</p>
+
+<div class="tbl"><table>
+<tr><th>任务</th><th>kind</th><th>16</th><th>32</th><th>128</th><th>提示词 / 实现</th></tr>
+<tr><td><code>luoke-mail.triage</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.draft</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.cleanup</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.senders</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.digest-read</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/digest.py</code></td></tr>
+<tr><td><code>luoke-mail.digest-pick</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/editor.py</code></td></tr>
+<tr><td><code>luoke-mail.learn-sent</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
+<tr><td><code>luoke-mail.learn-orgs</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
+<tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>关</td><td>关</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
+<tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code></td></tr>
+<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>评测中</td><td>评测中</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
+<tr><td><code>luoke-ime.rerank</code></td><td>score</td><td>开</td><td>开</td><td>开</td><td>无提示词（打分）</td></tr>
+<tr><td><code>luoke-ime.predict</code></td><td>predict</td><td>开</td><td>开</td><td>开</td><td>无提示词（续写）</td></tr>
+<tr><td><code>digup.embed</code></td><td>embed</td><td>关</td><td>关</td><td>关</td><td>—</td></tr>
+</table></div>
+
+<h2>提示词约定</h2>
+<ul>
+<li>提示词写在调用方配件里，随请求发给主控；主控不保存、不记录请求文字。</li>
+<li>输出一律用 JSON schema 约束；配件负责解析和校验，失败时有明确的退路（重问一次、判为保留、跳过）。</li>
+<li>邮件、网页、打的字等输入一律声明为数据，其中给 AI 的指令不执行。</li>
+<li>结果的数量、依据和把握程度由代码判定，模型只负责提名。</li>
+</ul>
+
+<h2>评测</h2>
+<ul>
+<li>每个任务有评测集和硬性条目，评测结果写入配方的 <code>evidence</code>，并决定各档开关。</li>
+<li>分拣的硬性条目：正常邮件零误报，可疑邮件最多漏 1 封。</li>
+<li>往来邮件：已了结的不能报为"等你"，"等你"的漏报不超过 1 个。</li>
+<li>话题归纳：只写品牌名或来源名即为失败；另记是否有具体对象。</li>
+</ul>
+</section>
+<section class="page" id="ref-files" data-title="文件位置">
+<h1>文件位置</h1>
+
+<h2>应用</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/Applications/螺壳主控.app</code></td><td>主控（内含自带 Python、记忆代码、<code>luoke</code> 命令行）</td></tr>
+<tr><td><code>~/Applications/螺壳邮件助手.app</code></td><td>邮件助手</td></tr>
+<tr><td><code>~/Applications/螺壳.app</code></td><td>agent</td></tr>
+<tr><td><code>~/Library/Input Methods/LuokeIME.app</code></td><td>输入法</td></tr>
+<tr><td><code>$TMPDIR/ai.luoke.inputmethod.Luoke.lock</code></td><td>输入法单实例锁</td></tr>
+<tr><td><code>~/.local/bin/luoke</code></td><td>命令行链接（可选安装）</td></tr>
+</table></div>
+
+<h2>主控 <code>~/Library/Application Support/luoke-core/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
+<tr><td><code>logs/hub.log</code>、<code>logs/app.log</code>、<code>logs/jobs/</code></td><td>日志（只记元数据）</td></tr>
+<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包；引擎运行目录</td></tr>
+<tr><td><code>models/</code></td><td>模型；用户登记的模型在 <code>user-&lt;名字&gt;</code></td></tr>
+<tr><td><code>downloads/</code></td><td>下载暂存</td></tr>
+<tr><td><code>state.json</code></td><td>运行状态：常驻、冒烟、探针、空闲任务、端点用量</td></tr>
+<tr><td><code>settings.json</code></td><td>功耗、电池、档、端点</td></tr>
+<tr><td><code>endpoint-key</code>、<code>user-models.json</code></td><td>端点密钥（0600）；登记的模型</td></tr>
+<tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
+<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
+<tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包和挂载记录，新主控启动后清除</td></tr>
+<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「配件回到上一版…」换回，卸载配件时一并删除</td></tr>
+</table></div>
+
+<h2>记忆 <code>~/.luoke/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>mem.db</code>（及 <code>-wal</code>、<code>-shm</code>）</td><td>记忆，0600；可用 <code>LUOKE_HOME</code> 换位置</td></tr>
+<tr><td><code>mem.db-ui.json</code>、<code>mem.db-learn.lock</code></td><td>界面进程状态；归纳任务锁</td></tr>
+<tr><td><code>agent/</code></td><td>agent 的 <code>state.db</code>、socket、日志</td></tr>
+<tr><td><code>ime/</code></td><td>输入法的设置、用户引擎、引擎数据、开发记录</td></tr>
+</table></div>
+
+<h2>邮件助手 <code>~/.luoke-mail/</code></h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>config.json</code></td><td>设置</td></tr>
+<tr><td><code>luoke.db</code></td><td>邮件、建议、规则、清理、操作记录、精选</td></tr>
+<tr><td><code>token</code></td><td>页面令牌</td></tr>
+<tr><td><code>service.log</code>、<code>app.log</code></td><td>日志</td></tr>
+</table></div>
+
+<h2>钥匙串</h2>
+<p><code>luoke-mail:imap</code>（邮箱授权码）、<code>luoke-mail:engine</code>（直连模型服务的密钥）。</p>
+
+<h2>环境变量</h2>
+<div class="tbl"><table>
+<tr><th>变量</th><th>作用</th></tr>
+<tr><td><code>LUOKE_HUB_SOCKET</code></td><td>指定主控 socket（指定后不回退默认位置）</td></tr>
+<tr><td><code>LUOKE_HOME</code></td><td>记忆所在目录</td></tr>
+<tr><td><code>LUOKE_MAIL_HOME</code></td><td>邮件助手数据目录</td></tr>
+<tr><td><code>PI_CODING_AGENT_DIR</code></td><td><code>luoke launch pi</code> 写入配置的位置</td></tr>
+</table></div>
+</section>
+<section class="page" id="ops" data-title="运行与发布">
+<h1>运行与发布</h1>
+
+<h2>版本</h2>
+<div class="tbl"><table>
+<tr><th>类型</th><th>标签</th><th>说明</th></tr>
+<tr><td>内部版</td><td><code>internal-MMDD</code></td><td>每天固定时间把各组件主线的提交钉在顶层仓库并打标签；出版流程在三个硬件档上评测，签名公证后发布为预发布版</td></tr>
+<tr><td>本机版</td><td><code>local-MMDD-HHMM</code></td><td>只在一台机器的档上评测，签名公证、不上传，用于开发机上的快速验证</td></tr>
+<tr><td>beta / 正式</td><td><code>beta*</code></td><td>封闭测试和公开发布</td></tr>
+</table></div>
+<p>安装包发布在 <code>luokelabs/luoke-releases</code>，模型在 ModelScope 和 Hugging Face 各有一份。</p>
+
+<h2>出版流程</h2>
+<ol>
+<li>读取钉住的各组件提交，打包配件 .app。</li>
+<li>按配方在各档评测每个任务；已有且未变化的证据复用。</li>
+<li>按支持台账决定各档开关，生成配方和差异报告；有回退则停止。</li>
+<li>签名、公证、生成 DMG 和发布清单，上传。</li>
+</ol>
+<p>每一步记录在 <code>steps.json</code> 中，失败后可以从中断处继续。</p>
+
+<h2>换装与回滚</h2>
+<ul>
+<li>用户：主控菜单「检查更新…」下载并核对新版后原地升级，或手动打开新版安装器；数据和模型保留；旧版保存在 <code>previous.noindex</code>，可回到上一版。单个配件可经「配件回到上一版…」换回旧版，主控按那一版当时的验证接受它。</li>
+<li>开发：本机版用同样的安装器升级；配件的新版本可经"本机放行"在内部版或本机版主控上先行使用。</li>
+</ul>
+
+<h2>测试机器</h2>
+<div class="tbl"><table>
+<tr><th>机器</th><th>配置</th><th>用途</th></tr>
+<tr><td>开发机</td><td>Apple M5 Max · 128 GB</td><td>128 档评测、日常试用</td></tr>
+<tr><td>16 GB 测试机</td><td>Mac mini M1 · 16 GB</td><td>16 档评测、干净机首次运行</td></tr>
+<tr><td>32 GB 测试机</td><td>32 GB</td><td>32 档评测、实验</td></tr>
+</table></div>
+
+<h2>诊断</h2>
+<ul>
+<li>主控设置中可导出诊断：机型、芯片、内存、首次运行各步时刻、运行状态和日志尾部，只含元数据。</li>
+<li>主控日志 <code>logs/hub.log</code>；空闲任务的标准错误在 <code>logs/jobs/</code>，最后 4 KB 也记在 <code>state.json</code>。</li>
+<li>输入法的沙盒拦截在输入法菜单中列出。</li>
+</ul>
+</section>
+<section class="page" id="decisions" data-title="决策">
+<h1>决策</h1>
+<p class="lede">影响多个组件的设计决策以 ADR（Architecture Decision Record）记录，原文保存在顶层仓库 <code>docs/adr/</code>。0001–0012 已归档，下列为当前有效的决策。</p>
+
+<div class="tbl"><table>
+<tr><th>编号</th><th>决策</th><th>要点</th></tr>
+<tr><td>0013</td><td>本机就是边界</td><td>数据不离开用户自己的设备（设备之间端到端加密）；本机组件之间不为隐私设限；凭证不进记忆，走钥匙串；高级用户端点的密钥可自定义或留空</td></tr>
+<tr><td>0014</td><td>分工</td><td>模型在主控，理解在记忆，事情在工具，沟通在 agent；工具之间不互相调用，只有 agent 调用工具的能力；高级用户端点经主控调度</td></tr>
+<tr><td>0015</td><td>记忆如何形成理解</td><td>工具只记录、记忆读原文下结论；三档把握程度；合理默认、按反馈调整；看依据的时间；空闲时反刍产出提问和建议；不按上下文隔离</td></tr>
+<tr><td>0016</td><td>替用户做事</td><td>能撤回的在确认习惯后自动执行并提示，事后每日复查；不可逆或对外的始终由用户点按；agent 自己的邮箱可按类型放开外发</td></tr>
+<tr><td>0017</td><td>v1 首发</td><td>首发邮件助手和输入法，主控和记忆随装；Apple 芯片、16 GB 起、macOS 26.2+；先封闭测试再公开</td></tr>
+<tr><td>0018</td><td>推理和权重归主控</td><td>体系内没有脱离主控的模型运行实例；垂类模型也做成主控的任务</td></tr>
+</table></div>
+
+<h2>设计原则</h2>
+<ul>
+<li><b>合理默认，按反馈逼近</b>：不要求用户事先设定规则或逐条审阅；用户的确认、否定和撤销就是调整的依据。</li>
+<li><b>测试版不过度保守</b>：能撤回的能力默认开启，配上提示和撤销，通过真实使用检验。</li>
+<li><b>本地优势不打折</b>：在本机内部充分使用数据，体验才能弥补本地模型和算力的差距。</li>
+<li><b>产出要像用心的助理</b>：理解要说清领域和具体对象，不照搬标题或品牌名。</li>
+</ul>
+</section>
+<section class="page" id="open" data-title="已知问题">
+<h1>已知问题</h1>
+<p class="lede">跨组件的未决事项和已发现但未修复的问题。各组件自身的限制见对应章节的"已知限制"。</p>
+
+<h2>功能缺口</h2>
+<ul>
+<li>记忆没有向工具索取更多原文的通道；话题归纳只读记录中已有的原文。</li>
+<li>输入法的个人化组件不读记忆中的理解，打分没有个人化。</li>
+<li>agent 没有对话能力，不使用模型；不在 v1 首发中。</li>
+<li>配方不支持撤回已发布版本。</li>
+<li>Gmail 转发过滤器的一键生成未完成；规则导出的过滤器未在真实 Gmail 上验证导入。</li>
+</ul>
+
+<h2>质量</h2>
+<ul>
+<li>话题归纳（<code>luoke-mem.topics</code>）在 128 档的评测分数偏低，16、32 档仍在评测。</li>
+<li>16 GB 档的打字归纳未通过评测，暂不开启。</li>
+</ul>
+
+<h2>缺陷</h2>
+<p>暂无已知未修复的缺陷。</p>
+
+<h2>待讨论</h2>
+<ul>
+<li>社区和第三方配件的接入流程、审核与安全边界。</li>
+<li>agent 何时使用模型、第三方工具规则、手机端。</li>
+</ul>
+</section>
+<section class="page" id="glossary" data-title="术语表">
+<h1>术语表</h1>
+<div class="tbl"><table>
+<tr><th>术语</th><th>含义</th></tr>
+<tr><td>主控（luoke-core）</td><td>本机推理入口和安装器</td></tr>
+<tr><td>配件</td><td>由主控安装和管理的应用：邮件助手、输入法、agent</td></tr>
+<tr><td>任务</td><td>配件向主控请求推理的单位，形如 <code>luoke-mail.triage</code></td></tr>
+<tr><td>底座</td><td>每档用于生成任务的主模型</td></tr>
+<tr><td>专用模型</td><td>只服务某类任务的小模型，如打分、嵌入</td></tr>
+<tr><td>硬件档</td><td>按内存划分的 16 / 32 / 128 三档</td></tr>
+<tr><td>配方</td><td>描述各档模型、任务参数和允许接入版本的 <code>recipe.json</code></td></tr>
+<tr><td>支持台账</td><td>出版时记录每个任务在每档开或关的依据</td></tr>
+<tr><td>冒烟检查</td><td>引擎启动后的实测，得出本机速度</td></tr>
+<tr><td>空闲任务</td><td>配件登记、由主控在安静时刻启动的命令</td></tr>
+<tr><td>安静时刻</td><td>距最近一次用户在等的请求满 5 分钟</td></tr>
+<tr><td>用户在等</td><td>用户正在等待结果的请求等级</td></tr>
+<tr><td>记录</td><td>写入记忆的"发生了什么"</td></tr>
+<tr><td>理解</td><td>记忆从记录形成的关于用户的认识</td></tr>
+<tr><td>把握程度</td><td>理解的三档：猜测、比较确定、确定</td></tr>
+<tr><td>以前的事</td><td>会变、且长期没有新依据的理解</td></tr>
+<tr><td>反刍</td><td>记忆在空闲时整理理解、产出提问和建议的过程</td></tr>
+<tr><td>处理习惯</td><td>"某发件人的某类邮件通常这样处理"的理解</td></tr>
+<tr><td>今日处理</td><td>邮件助手中复查当天全部处理结果的页面</td></tr>
+<tr><td>螺壳自己的邮箱</td><td>用户为 agent 开设、由邮件助手全自动处理的邮箱</td></tr>
+<tr><td>能力</td><td>工具声明给 agent 的可报事项和可执行动作</td></tr>
+<tr><td>个人化组件</td><td>输入法中负责写记忆、转发打分和联想的组件</td></tr>
+<tr><td>引擎（输入法）</td><td>沙盒中给出候选的子进程，如小鹤双拼</td></tr>
+<tr><td>本机放行</td><td>在内部版或本机版主控上允许尚未进入配方的配件新版本接入</td></tr>
+<tr><td>高级用户端点</td><td>主控提供给外部工具的 OpenAI 兼容接口</td></tr>
+</table></div>
+</section>
+<section class="page" id="changelog" data-title="文档修订">
+<h1>文档修订</h1>
+
+<h2>2026-10-20</h2>
+<ul>
+<li>按项目文档的方式重写：分为概览、组件、参考、运维四部分；组件章节按职责、运行形态、接口、数据、故障、限制组织；新增核心概念、数据流、主控任务接口、配件清单与配方、记忆接口与表结构、任务与提示词、文件位置、术语表。</li>
+<li>各组件内容按代码逐项核对（luoke-core 756d33a、luoke-mem 0.23.1、luoke-mail 0.15.0、luoke-ime 0.1.6、luoke-agent 0.0.1）。</li>
+<li>正文不再记录讨论过程；决策见"决策"页。</li>
+<li>主控补检查更新、配件回滚、专用模型进程的空闲停止与内存检查、引擎内存拒绝后的重试、端点独占上限；输入法补单实例、退出通知、收尾键等待、联想停顿、引擎评测选项（luoke-core fad536a、luoke-ime 0.1.9）。</li>
+<li>已知问题：去掉记忆的三条缺陷（luoke-mem 0.23.2 已修）和输入法的两条（隐私说明已改；最低系统版本不同是有意的，见输入法章节）。</li>
+<li>主控本体专用路由改为按对端进程核对，<code>forbidden</code> 为 403（luoke-core f5850c1）；已知问题中主控的两条去掉。</li>
+<li>邮件助手 0.15.2：自动标已读进入操作记录、可整批撤销；agent 应用方案只在批量移到垃圾箱或垃圾邮件时要处理模式；已知问题中邮件助手的两条去掉。</li>
+</ul>
+
+<h2>2026-10-19</h2>
+<ul>
+<li>第一版。更正：顶层 ADR 重新编号时误改了 luoke-core 自己的 ADR 编号，已改回。</li>
+</ul>
+</section>
+<footer>内容按代码核对；修订见"文档修订"。</footer>
+</main>
+</div>
+<script>
+(function(){
+  var pages=[].slice.call(document.querySelectorAll('.page'));
+  var links=[].slice.call(document.querySelectorAll('nav.rail a[data-page]'));
+  var picker=document.getElementById('pagepicker');
+  function show(id){
+    var found=pages.some(function(p){return p.id===id}); if(!found) id=pages[0].id;
+    pages.forEach(function(p){p.classList.toggle('show',p.id===id)});
+    links.forEach(function(a){a.classList.toggle('on',a.dataset.page===id)});
+    picker.value=id; window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange',function(){show(location.hash.slice(1))});
+  picker.addEventListener('change',function(){location.hash=picker.value});
+  show(location.hash.slice(1));
+  if(!window.claude && document.querySelector('pre.mermaid')){
+    var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js';
+    s.onload=function(){try{mermaid.initialize({startOnLoad:false,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral'});mermaid.run()}catch(e){}};
+    document.head.appendChild(s);
+  }
+})();
+</script>
+
+</body>
+</html>

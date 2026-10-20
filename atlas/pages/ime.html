@@ -1,0 +1,119 @@
+<!-- id: ime | nav: 输入法 luoke-ime | group: 组件 -->
+<h1>输入法</h1>
+<p class="lede">macOS 输入法。壳负责按键、组字、候选窗和上屏；候选全部由沙盒里的引擎子进程给出。个人化组件把上屏写入记忆，并把打分和联想请求转给主控。</p>
+<p class="src">仓库 <code>luoke-ime</code> · 版本 0.1.9 · bundle id <code>ai.luoke.inputmethod.Luoke</code></p>
+
+<h2>结构</h2>
+<div class="tbl"><table>
+<tr><th>部分</th><th>实现</th><th>职责</th></tr>
+<tr><td>壳</td><td>Swift：<code>LuokeShell</code>（平台无关的状态机和引擎宿主）+ <code>LuokeIME</code>（InputMethodKit 外壳）；另有共用状态机的命令行版</td><td>按键、组字、候选窗、上屏、沙盒、转问</td></tr>
+<tr><td>打字引擎</td><td>自带小鹤双拼 <code>xiaohe</code>、全拼 <code>quanpin</code>（苹果转换引擎和 RIME 出候选）</td><td>出候选，经个人化组件请求打分后重排。小鹤、全拼有评测用的选项 <code>pause</code>（毫秒，默认 0）和 <code>pause_when</code>（<code>slow</code> / <code>always</code>）：键后停顿够久才重排；默认关。</td></tr>
+<tr><td>个人化组件</td><td><code>engines/personal</code>（Python，仅标准库），运行在主控自带的 Python 上</td><td>写入记忆；把打分和联想转给主控</td></tr>
+</table></div>
+
+<h2>进程模型</h2>
+<ul>
+<li><b>壳</b>由系统拉起（菜单栏不显示）。每个输入框一个 <code>Session</code>；全进程一个 <code>EngineManager</code>，主线程每秒轮询配置和引擎状态。只运行一份：父进程不是 launchd 时直接退出；用 <code>$TMPDIR/ai.luoke.inputmethod.Luoke.lock</code> 文件锁占位（最多等 3 秒），已有一份时退出。</li>
+<li><b>引擎</b>以 <code>posix_spawn</code> 在独立进程组中启动，命令为 <code>/usr/bin/sandbox-exec -p &lt;模板&gt; …</code>，工作目录是引擎文件夹。<code>run[0]</code> 为 <code>luoke-python</code> 时使用主控 .app 内的 Python。自带引擎用固定 PATH；第三方引擎第一次启动时才解析登录 shell 的 PATH（最多 3 秒）。</li>
+<li><b>通信</b>：标准输入输出上每行一个 JSON，第一条必定是 <code>hello</code>；写入走每个引擎自己的串行队列。</li>
+<li><b>停止</b>：关闭 stdin，1 秒后对整个进程组 SIGKILL。</li>
+<li><b>崩溃与卡死</b>：一次询问 1 秒没有答复视为卡死并杀掉；60 秒内崩溃 3 次则停用该引擎。</li>
+<li><b>退出</b>：收到 SIGTERM、SIGINT、SIGHUP 或正常结束时，结束系统日志订阅，并向主控发 <code>POST /accessory/exiting</code>（1 秒超时）。</li>
+<li><b>重启条件</b>：设置文件变化、用户引擎目录变化、非自带引擎的文件变化、<code>options.json</code> 变化、主控 Python 被替换（每 10 秒检查）。</li>
+</ul>
+
+<h2>引擎协议</h2>
+<p>版本 1。完整规格见 <code>luoke-ime/docs/引擎协议.md</code>。</p>
+<div class="tbl"><table>
+<tr><th>方向</th><th>消息</th></tr>
+<tr><td>壳 → 引擎</td><td><code>hello</code>、<code>query</code>（输入、前文、应用）、<code>committed</code>、<code>deleted</code>、<code>forget</code>、<code>forget_all</code>、<code>unforget</code>、<code>start</code> / <code>stop</code> / <code>cancel</code>（快捷键引擎）、<code>ask</code>、<code>reply</code></td></tr>
+<tr><td>引擎 → 壳</td><td><code>answer</code>（候选、<code>more</code>、<code>autocommit</code>）、<code>show</code>、<code>commit</code>、<code>end</code>、<code>ask</code>、<code>reply</code></td></tr>
+</table></div>
+<h3>引擎说明 <code>engine.json</code></h3>
+<ul>
+<li>必填 <code>protocol</code>（=1）、<code>name</code>、<code>kind</code>、<code>run</code>；打字引擎需 <code>input_keys</code>，快捷键引擎需 <code>hotkey</code>。</li>
+<li>可选 <code>context</code>（0–2000 字前文）、<code>app</code>、<code>feedback</code>、<code>forget_all</code>、<code>asks</code>（⊆ personal、hub）、<code>options</code>、<code>punctuation</code>。</li>
+<li><code>permissions</code>：<code>network</code>（none / local / any）、<code>write</code>（≤ 16 个路径）、<code>local_ports</code>、<code>microphone</code>、<code>camera</code>、<code>screen</code>、<code>gpu</code>、<code>memory</code>（只有个人化组件能声明）。</li>
+</ul>
+<h3>第三方引擎</h3>
+<ul>
+<li>声明联网、GPU 或写权限的第三方引擎不能启用。</li>
+<li>启用需要用户确认，确认记录绑定引擎说明的指纹（关键字段的 SHA-256），说明变化后需重新确认。</li>
+<li>不会被自动选中；与自带引擎同名时使用独立的数据目录 <code>&lt;id&gt;.third-party</code>。</li>
+<li>引擎只能向个人化组件请求 <code>score</code> 和 <code>ping</code>；<code>predict</code> 只有壳能发起。声明了 <code>asks: personal</code> 的引擎不能联网。</li>
+</ul>
+
+<h2>候选流程</h2>
+<ol>
+<li>按键经 <code>MacKeys.translate</code> 翻译，进入会话；空闲时按下输入键会读取前文（安全输入时不读）。</li>
+<li>壳向打字引擎发 <code>query</code>；只采用最新一次询问的答复，50 ms 内收到的最后一份直接显示。</li>
+<li>打字引擎先给快答复（改选过的词、苹果候选、RIME 补充），能重排时标 <code>more</code>；再经壳把 <code>score</code> 转给个人化组件，个人化组件转主控 <code>luoke-ime.rerank</code>，最多等 0.7 秒。</li>
+<li>逐词重排：模型得分须比苹果整句首选高出阈值（自然对数 3）才替换；换掉首选时补发答复，界面让新首选淡入。</li>
+<li>空格、数字、标点等收尾键在还没有任何答复时先等第一份答复，最多 1 秒（判定卡死）；卡死则按原始字母上屏，数字原样交给应用。之后最多再为补发等 150 ms。回车、Esc 不等。上屏后，空格或数字选中的会接着请求联想。</li>
+</ol>
+<h3>联想</h3>
+<ul>
+<li>在空格或数字选词、标点、快捷键引擎上屏后触发；需全局和当前应用都允许，且个人化组件在运行。上屏后 0.25 秒内没有按键才发出请求，期间按键即取消。</li>
+<li>个人化组件先从最近 5000 段上屏中找用户写过的接续（最多 3 个），再请主控续写（<code>/v1/continue</code>，k=8、6 个 token），首 token 是汉字且概率 ≥ 0.2 才采用，合计最多 5 个。</li>
+<li>发出后 1 秒内无答复则放弃；未激活时淡显 3 个，4 秒后收起；按 Tab 激活后可用数字、空格选择。</li>
+</ul>
+
+<h2>个人化组件</h2>
+<h3>决策表（<code>PersonalPolicy</code>）</h3>
+<div class="tbl"><table>
+<tr><th>情形</th><th>写入记忆</th><th>引擎学改选</th><th>打分和联想</th></tr>
+<tr><td>安全输入</td><td>否</td><td>否</td><td>否</td></tr>
+<tr><td>用户暂停或该应用禁止记录 · 自带组件</td><td>否</td><td>否</td><td>是</td></tr>
+<tr><td>用户暂停或该应用禁止记录 · 第三方组件</td><td>否</td><td>否</td><td>否</td></tr>
+<tr><td>记录未开启 · 自带组件</td><td>否</td><td>是</td><td>是</td></tr>
+<tr><td>记录未开启 · 第三方组件</td><td>否</td><td>是</td><td>否</td></tr>
+<tr><td>其余</td><td>是</td><td>是</td><td>是</td></tr>
+</table></div>
+<p>"记录开启"对自带组件默认为真（存储用户关闭的列表 <code>memory_off</code>），对第三方组件需用户同意（<code>memory_consent</code>）。</p>
+<h3>写入记忆的记录</h3>
+<div class="tbl"><table>
+<tr><th>topic</th><th>内容</th><th>data</th></tr>
+<tr><td><code>ime-commit</code></td><td>同一应用中连续上屏合成的一段（间隔 &gt; 60 秒、换应用或前文对不上时断段；停手 20 秒写入）</td><td><code>app</code>、<code>source</code>、<code>auto</code>、<code>context</code>（前文末 200 字，标为第三方）</td></tr>
+<tr><td><code>ime-correction</code></td><td>选了非首选、删掉刚上屏的字</td><td>选择或删除的明细</td></tr>
+<tr><td><code>ime-forget</code></td><td>用户在候选中删除某词</td><td><code>input</code>、<code>text</code></td></tr>
+</table></div>
+<ul>
+<li>凭证经 <code>mask_secrets</code> 只遮那一串；敏感类别（健康、法律纠纷、宗教、政治）按整段文字计算。</li>
+<li>保留期可选永久、365、90、30 天，每 6 小时清理一次（被理解引用的保留）。</li>
+<li>读取：最近 5000 段 <code>ime-commit</code>，用作联想素材。</li>
+</ul>
+
+<h2>主控任务</h2>
+<div class="tbl"><table>
+<tr><th>任务</th><th>端点</th><th>用途</th></tr>
+<tr><td><code>luoke-ime.rerank</code></td><td><code>POST /tasks/&lt;task&gt;/v1/score</code></td><td>候选打分（按任务参数分批，默认 16 个、前文 2000 字）</td></tr>
+<tr><td><code>luoke-ime.predict</code></td><td><code>POST /tasks/&lt;task&gt;/v1/continue</code></td><td>联想续写</td></tr>
+</table></div>
+<p>请求超时 2 秒。收到 <code>hello</code> 时对两个任务各预热一次。发布版只经主控打分，主控不可用时没有重排和联想。</p>
+
+<h2>设置和文件</h2>
+<div class="tbl"><table>
+<tr><th>位置</th><th>内容</th></tr>
+<tr><td><code>~/.luoke/ime/settings.json</code></td><td>当前引擎、全局默认（英文、记住模式、内嵌、联想）、候选窗、键位、按应用覆盖、记录设置、确认过的第三方引擎、主控 socket；本版不认识的键（顶层和 <code>recording</code> 内）原样写回，配件回滚后再升级时不丢</td></tr>
+<tr><td><code>~/.luoke/ime/engines/&lt;id&gt;/</code></td><td>用户安装的引擎</td></tr>
+<tr><td><code>~/.luoke/ime/data/&lt;id&gt;/</code></td><td>引擎数据：<code>options.json</code>；小鹤另有 <code>memory.json</code>（改选、忘掉的词）和 <code>forgotten.json</code>（供设置窗口列出、撤销）</td></tr>
+<tr><td><code>~/.luoke/ime/records/</code></td><td>开发模式记录，留 7 天</td></tr>
+</table></div>
+
+<h2>安全</h2>
+<ul>
+<li><b>安全输入</b>（<code>IsSecureEventInputEnabled</code>）：不读前文、不写记忆、不打分；一段组字中碰到过安全输入，整段都按安全输入处理。</li>
+<li><b>沙盒</b>：默认拒绝；禁止读取钥匙、凭据、浏览器、邮件等 40 多个路径和整个 <code>~/.luoke</code>（只放行自己的文件夹）；不许创建符号链接；禁止借助 <code>open</code>、<code>osascript</code>、剪贴板等外发。</li>
+<li><b>拦截上报</b>：每条拒绝带标签，壳读取系统日志，严重的列入菜单。系统日志订阅（<code>log stream</code>）套在一个 sh 里，输入法退出（含被强制结束）时随之结束。</li>
+</ul>
+
+<h2>系统要求</h2>
+<p>主控只在 macOS 26 起安装输入法（清单 <code>min_macos</code> 26）；LuokeIME.app 本身的最低系统是 14.0，供手动安装验证旧系统。</p>
+
+<h2>已知限制</h2>
+<ul>
+<li>个人化组件不读记忆中的理解（常用说法等），打分没有个人化。</li>
+<li>候选窗不能用鼠标点选；引擎选项没有 A2UI 界面。</li>
+<li>快捷键引擎不检查冲突、停用不进菜单。</li>
+<li>个人化组件卡死不检测；转问没有限流。</li>
+</ul>

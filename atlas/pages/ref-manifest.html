@@ -1,0 +1,68 @@
+<!-- id: ref-manifest | nav: 配件清单与配方 | group: 参考 -->
+<h1>配件清单与配方</h1>
+
+<h2>配件清单 <code>luoke-accessory.json</code></h2>
+<p>位于配件 .app 的 <code>Contents/Resources/</code>。主控只加载 <code>contract == 1</code> 且有 <code>accessory</code>、<code>bundle_id</code> 的清单。</p>
+<div class="tbl"><table>
+<tr><th>字段</th><th>说明</th></tr>
+<tr><td><code>contract</code>、<code>accessory</code>、<code>bundle_id</code></td><td>必填</td></tr>
+<tr><td><code>name</code>、<code>version</code></td><td>显示名和版本；升级只换比清单旧的版本（按数字比较，不降级）</td></tr>
+<tr><td><code>type</code></td><td><code>app</code>（装在 <code>~/Applications</code>）、<code>input-method</code>（装在 <code>~/Library/Input Methods</code>）、<code>component</code>；只有 app 可常驻</td></tr>
+<tr><td><code>entry</code></td><td>交给自带 Python 的入口参数</td></tr>
+<tr><td><code>resident</code></td><td>是否常驻（配件也可经 <code>PUT /accessory/resident</code> 声明）</td></tr>
+<tr><td><code>memory</code></td><td>是否读写记忆；决定卸载时能否"一起忘掉"、首次运行是否需要记忆</td></tr>
+<tr><td><code>tasks</code></td><td>需要主控提供的任务（名、kind）</td></tr>
+<tr><td><code>jobs</code></td><td>空闲任务：<code>name</code>、<code>command</code>（可用占位符 <code>{memory}</code>、<code>{tool}</code>）、<code>min_interval_minutes</code>（默认 120）、<code>allow_battery</code>（默认否）、<code>timeout_minutes</code>（默认 30）</td></tr>
+<tr><td><code>capabilities</code></td><td>给 agent 的能力声明，主控原样转交（规格见 agent 的工具协议）</td></tr>
+<tr><td><code>data</code></td><td>卸载时可删除的数据路径，只接受与配件自身标识绑定的形式</td></tr>
+<tr><td><code>commands</code></td><td><code>uninstall</code>（删除数据前运行）、<code>forget-tool</code>（从记忆中忘掉本工具写入的内容）</td></tr>
+<tr><td><code>icon</code>、<code>ui_element</code></td><td>打包用</td></tr>
+</table></div>
+
+<h3>打包布局</h3>
+<pre class="mono">&lt;名字&gt;.app/Contents/MacOS/&lt;配件标识&gt;             启动器
+&lt;名字&gt;.app/Contents/Resources/luoke-accessory.json
+&lt;名字&gt;.app/Contents/Resources/python/bin/python3   钉住版本的 python-build-standalone
+&lt;名字&gt;.app/Contents/Resources/python/lib/python3.X/site-packages/&lt;包&gt;</pre>
+<p>由 <code>luoke-core/tools/package_python_app.py</code> 生成。</p>
+
+<h3>校验</h3>
+<ul>
+<li><b>调用时</b>：版本在配方 <code>verified</code> 中，或在内部版、本机版主控上被本机放行（<code>tools/local_allow.py</code>，只放行配方中已有配件的新版本）；或是本机 <code>verified-history.json</code> 中记录过的已安装版本（只限记录中的任务）。</li>
+<li><b>安装时</b>：代码签名、Team ID <code>NJQ5W3T9K5</code>、bundle id 与清单一致、公证票据有效。</li>
+<li><b>回滚时</b>：旧版同样核签名、Team ID、bundle id、公证票据，不运行它，版本从其清单读取。</li>
+</ul>
+
+<h2>配方 <code>recipe.json</code></h2>
+<div class="tbl"><table>
+<tr><th>字段</th><th>说明</th></tr>
+<tr><td><code>tiers.&lt;档&gt;</code></td><td><code>min_gb</code>、<code>max_gb</code>、<code>guard_gb</code>（引擎内存上限）、<code>base_resident</code>（底座是否常驻）、<code>idle_unload_secs</code></td></tr>
+<tr><td><code>models.&lt;名&gt;</code></td><td><code>dir</code>、<code>kind</code>（base / special）、<code>wired_gb</code>、<code>size_gb</code>、速度、<code>vector_space</code>（嵌入）等</td></tr>
+<tr><td><code>assignment.&lt;档&gt;</code></td><td><code>{base, special: {&lt;任务&gt;: &lt;模型&gt;}}</code></td></tr>
+<tr><td><code>engine</code></td><td>引擎版本和位置</td></tr>
+<tr><td><code>tasks.&lt;名&gt;</code></td><td><code>accessory</code>、<code>kind</code>（generate / score / predict / embed）、<code>params</code>（<code>"*"</code> 加按档覆盖）、<code>base_params</code>（采样）、<code>latency_ms</code>、<code>tiers</code>（开启的档）</td></tr>
+<tr><td><code>verified.&lt;配件&gt;</code></td><td><code>versions</code>（允许接入的版本）和各任务的评测证据</td></tr>
+<tr><td><code>evidence</code></td><td>评测记录：配件、版本、任务、模型、档、结论、评测集和证据的 sha256</td></tr>
+<tr><td><code>expectations</code></td><td>首次运行按档和芯片向用户说明的体验</td></tr>
+</table></div>
+
+<h3>任务参数</h3>
+<div class="tbl"><table>
+<tr><th>kind</th><th>参数（默认）</th></tr>
+<tr><td>generate</td><td><code>item_tokens</code>（200）、<code>fixed_tokens</code>、<code>batch</code>、<code>max_chars</code>、<code>think</code>；配件自定义的参数原样转交（如 <code>sender_verdict</code>）</td></tr>
+<tr><td>score</td><td><code>batch</code>（16）、<code>max_chars</code>（2000）、<code>prefix_snapshots</code>（16）、<code>probe</code></td></tr>
+<tr><td>predict</td><td><code>k</code>（8）、<code>n</code>（6）、<code>max_tokens</code>、<code>max_chars</code>、<code>probe</code></td></tr>
+<tr><td>embed</td><td><code>batch</code>（32）、<code>max_tokens</code>（2048）、<code>max_chars</code>（32000）、<code>max_total_chars</code>（320000）；多模态另有图片、音频的批量和大小限制</td></tr>
+</table></div>
+
+<h3>硬件档</h3>
+<div class="tbl"><table>
+<tr><th>档</th><th>内存</th><th>引擎上限</th><th>底座</th><th>底座常驻</th></tr>
+<tr><td>16</td><td>&lt; 24 GB</td><td class="num">10 GB</td><td>qwen3.5-9b-4bit</td><td>否（用完即卸，打字时让路）</td></tr>
+<tr><td>32</td><td>24–64 GB</td><td class="num">20 GB</td><td>qwen3.5-9b-4bit</td><td>是</td></tr>
+<tr><td>128</td><td>≥ 64 GB</td><td class="num">100 GB</td><td>gemma-4-26b-8bit（可选省空间用 9B）</td><td>是</td></tr>
+</table></div>
+<p>所有档的打分和联想模型为 qwen3.5-0.8b-base-4bit（独立进程，约 2.7 GB）。</p>
+
+<h2>发布清单 <code>release.json</code></h2>
+<p><code>{contract, release, built_at, items: {&lt;名&gt;: {kind: model | engine | accessory | hub, version, dir, files: [{path, size, sha256}], urls, bundle_id?, type?, installer?, min_macos?}}}</code>。模型有 ModelScope 和 Hugging Face 两个镜像，安装包放在 GitHub 的 <code>luokelabs/luoke-releases</code>。主控的"检查更新"从 <code>items.hub</code> 取 DMG。</p>

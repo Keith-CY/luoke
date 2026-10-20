@@ -1,0 +1,111 @@
+<!-- id: core | nav: 主控 luoke-core | group: 组件 -->
+<h1>主控</h1>
+<p class="lede">本机所有模型推理的唯一入口，也是螺壳的安装器。它按配方为每个硬件档选择模型，调度各配件的请求和空闲任务，监管推理引擎和专用模型进程，并负责下载、升级和卸载。</p>
+<p class="src">仓库 <code>luoke-core</code> · bundle id <code>ai.luoke.core</code> · 接口细节见「参考 · 主控任务接口」「参考 · 配件清单与配方」</p>
+
+<h2>组成</h2>
+<div class="tbl"><table>
+<tr><th>进程</th><th>谁启动</th><th>说明</th></tr>
+<tr><td>菜单栏本体 <code>螺壳主控.app</code></td><td>用户、登录项或 <code>luoke://</code></td><td>Swift：状态灯、设置、首次运行、安装器、检查更新、升级、配件回滚、卸载、打开记忆界面</td></tr>
+<tr><td>主控进程</td><td>本体</td><td>自带 Python：<code>python -m luoke_core serve</code>，在 Unix socket <code>run/hub.sock</code> 上提供任务层；父进程退出时随之退出</td></tr>
+<tr><td>推理引擎</td><td>主控</td><td>oMLX（引擎包内的 <code>omlx-cli serve</code>），只监听 127.0.0.1 随机端口并带随机密钥；运行底座模型</td></tr>
+<tr><td>打分 / 联想工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td>引擎包 Python 运行 <code>score_worker.py</code>，经管道通信，不监听端口</td></tr>
+<tr><td>嵌入工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td><code>embed_worker.py</code>，同上</td></tr>
+<tr><td>空闲任务</td><td>主控</td><td>配件 .app 自带的 Python 运行清单中 <code>jobs</code> 的命令，环境带 <code>LUOKE_HUB_SOCKET</code></td></tr>
+<tr><td>常驻配件</td><td>本体</td><td>以 <code>--resident</code> 启动；10 分钟内最多自动重启 3 次</td></tr>
+<tr><td>记忆界面</td><td>本体</td><td>用主控自带的 Python 运行记忆的入口</td></tr>
+<tr><td>高级用户端点</td><td>主控内的线程</td><td>OpenAI 兼容，127.0.0.1:17860 起</td></tr>
+</table></div>
+
+<h2>生命周期</h2>
+<h3>启动</h3>
+<ol>
+<li>本体判断是否以安装器身份运行（文件名不是 <code>螺壳主控.app</code>、位于 <code>/Volumes/</code> 或被系统隔离），是则进入安装流程。</li>
+<li>首次运行未完成时显示首次运行向导；否则启动主控进程，有升级标记时显示升级页，然后拉起常驻配件；清理上次经"检查更新"升级时挂载的安装包。</li>
+<li>主控先绑定 socket 并应答（启动期间除 <code>/tasks</code>、<code>/status</code>、<code>/downloads</code> 外答 <code>busy</code>），再启动引擎：清理上次留下的孤儿进程、等待底座出现、做冒烟检查。</li>
+<li>启动采样线程，进入运行状态；设置中开启了端点则开启端点。</li>
+</ol>
+<h3>运行</h3>
+<p>采样线程每 5 秒检查引擎是否崩溃，刷新电源、温度和内存压力，按需打断后台工作、卸载闲置底座、跑探针、每 60 秒重扫配件清单、调度空闲任务，并写入 <code>state.json</code>。本体每 3 秒轮询一次 <code>/status</code>。空闲超过 10 分钟的专用模型工作进程停掉；内存压力 critical 时全部停掉，30 秒内不起。</p>
+<h3>退出</h3>
+<p>本体发 SIGTERM，等待 40 秒。主控依次停止端点、空闲任务（SIGTERM，15 秒后 SIGKILL）、工作进程、引擎，最后删除自己绑定的 socket。</p>
+
+<h2>调度</h2>
+<h3>请求等级</h3>
+<div class="tbl"><table>
+<tr><th>等级</th><th>来源</th><th>待遇</th></tr>
+<tr><td>打字</td><td>打分、联想（输入法）</td><td>立即处理；记为交互；16 GB 档会立即卸载底座让出内存</td></tr>
+<tr><td>用户在等</td><td>生成请求带 <code>X-Luoke-Priority: user-waiting</code>；端点请求</td><td>优先；正在运行的后台工作若预计剩余超过 11 秒则被打断（返回 <code>interrupted</code>）</td></tr>
+<tr><td>后台</td><td><code>X-Luoke-Priority: background</code>；空闲任务</td><td>需通过后台接纳</td></tr>
+</table></div>
+<p><b>交互中</b>指最近 60 秒内有过用户在等的请求或新的预热；<b>安静时刻</b>指距最近一次此类事件满 5 分钟。</p>
+<h3>后台接纳</h3>
+<p>按顺序检查，第一条不满足即挡回：</p>
+<div class="tbl"><table>
+<tr><th>条件</th><th>返回</th><th>原因</th></tr>
+<tr><td>全机后台已暂停（电池、低电量模式、过热、内存压力）</td><td><code>paused</code></td><td>各原因</td></tr>
+<tr><td>底座放不下</td><td><code>paused</code></td><td><code>memory</code></td></tr>
+<tr><td>交互中</td><td><code>busy</code></td><td><code>interactive</code></td></tr>
+<tr><td>最近 180 秒打过分</td><td><code>busy</code></td><td><code>scored_recently</code></td></tr>
+<tr><td>16 GB 档且不在安静时刻</td><td><code>busy</code></td><td><code>not_quiet</code></td></tr>
+<tr><td>别的配件的空闲任务在运行</td><td><code>busy</code></td><td><code>idle_job</code></td></tr>
+<tr><td>引擎里已有一项后台工作</td><td><code>busy</code></td><td><code>engine_busy</code></td></tr>
+<tr><td>功耗间歇中（空闲任务所属配件豁免）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
+</table></div>
+<p><b>功耗档</b>：全速、均衡、安静；每项后台工作结束后按占用时长的 0、1、3 倍歇息。<b>专用模型通道</b>（嵌入）每个任务有独立通道和间歇，不占用引擎的后台名额；用户在等的嵌入查询插在后台批（每 8 条）之间。</p>
+<h3>内存</h3>
+<ul>
+<li>模型能否加载要过两道检查：大小不超过引擎上限 <code>(guard_gb − 2) × 0.95</code>；且不超过 Metal 可用上限减去当前 wired 内存（按物理内存的 74%–84% 估算）。端点的用户模型独占引擎时，上限改为 内存 − 8%（3–8 GB）− 常驻专用模型 − 1 GB，换回底座时还原。</li>
+<li>起专用模型工作进程前先算剩余内存（Metal 上限 − wired + 已加载的底座），装不下它的 <code>wired_gb</code> 就不起，答 <code>not_ready</code>（retry_after 30）。</li>
+<li>引擎上限随正在运行的工作进程动态调整。</li>
+<li>引擎同时只有一个"当前模型"；端点登记的小模型放得下时与底座同时加载，放不下则独占（先卸掉其他模型）。</li>
+<li>底座闲置超过本档 <code>idle_unload_secs</code> 后卸载；有后台工作或有效的预热租约时不卸。</li>
+</ul>
+<h3>空闲任务</h3>
+<p>同一时间只运行一个。启动条件：主控空闲、处于安静时刻、后台未暂停（清单可声明允许电池）、距上次启动满 <code>min_interval_minutes</code>（上次被收尾时缩短为 10 分钟）。用户回来、超时、后台暂停或卸载配件时收尾。</p>
+
+<h2>配方和档位</h2>
+<ul>
+<li><b>配方</b>（<code>recipe.json</code>）定义硬件档（内存范围、引擎上限、底座是否常驻）、模型（目录、类型、常驻内存）、每档的模型分配、引擎版本、每个任务的参数、允许接入的配件版本和评测证据。</li>
+<li><b>选档</b>：取第一个满足 <code>min_gb ≤ 内存 &lt; max_gb</code> 的档；用户可在设置中选择更低的档（如 128 档的"省空间"）。</li>
+<li><b>任务开关</b>：每个任务在哪一档开启由出版流程的支持台账决定：未开启的档须连续 3 遍评测全部通过才开启，开启的档一遍不过即关闭。</li>
+<li><b>冒烟检查</b>：引擎启动后测一次实际的预填和生成速度，后台估时使用实测值。</li>
+<li><b>探针</b>：打分、联想工作进程就绪后测 p90 延迟，超过配方 <code>latency_ms</code> 时把任务标为较慢。</li>
+</ul>
+
+<h2>下载、安装、升级、卸载</h2>
+<ul>
+<li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。</li>
+<li><b>配件安装校验</b>：<code>codesign --verify --deep --strict</code>、Team ID、bundle id 与清单一致、公证票据有效。</li>
+<li><b>首次运行</b>：预检（档位、磁盘、系统版本、照实说明体验）→ 选择应用 → 确认下载计划 → 下载 → 本机检查 → 完成（注册登录项；输入法未启用时调一次它的 <code>--register</code>，每秒检查是否已添加，添加后改提示）。</li>
+<li><b>升级</b>：新安装器的 <code>built_at</code> 更新时，旧主控移入 <code>previous.noindex</code>，新主控显示升级页，按新清单更新引擎、模型和比清单旧的应用（不降级，不重装用户回滚掉的版本）；可回到上一版。</li>
+<li><b>检查更新</b>：菜单「检查更新…」按本机主控的渠道（内部版 <code>internal-*</code>、beta <code>beta*</code>）查 <code>luokelabs/luoke-releases</code>，<code>built_at</code> 更新才算；升级时下载主控 DMG，核大小、sha256、公证票据、签名和 Team ID，再打开它走原地升级。本机版、开发版不查。默认每天自动检查一次，只在菜单显示「有更新：&lt;版本&gt;…」，不自动安装。</li>
+<li><b>配件回滚</b>：菜单「配件回到上一版…」把配件与 <code>previous.noindex</code> 里的旧版对调（先核签名、Team ID、bundle id、公证，按路径结束进程，不动输入源；再点一次换回）。主控把每个被本版配方认可的配件版本及其通过的任务记入 <code>verified-history.json</code>（每配件 3 个版本）；换回的版本只能用记录中的任务，无记录的不能换回。</li>
+<li><b>卸载</b>：输入法先停用输入源；结束进程；删除 .app 时连同 <code>previous.noindex</code> 里的旧版；可选"一起从记忆里忘掉"和"删除数据"。只删除配件清单 <code>data</code> 中声明且符合配件自身标识的路径；不删除 <code>mem.db</code>。"卸载全部"删除环境目录、登录项和主控本身。</li>
+</ul>
+
+<h2>故障和降级</h2>
+<div class="tbl"><table>
+<tr><th>情况</th><th>表现</th></tr>
+<tr><td>引擎崩溃</td><td>以新端口和密钥重启；600 秒内崩溃 3 次熔断，生成任务保持 <code>paused</code> 直到主控重启</td></tr>
+<tr><td>请求中途引擎出错</td><td>尚无输出时自动重试一次，否则以 <code>engine_failed</code> 结束</td></tr>
+<tr><td>模型放不下</td><td>用户在等的请求返回 <code>needs_user</code> 并附占用内存的进程列表；后台请求返回 <code>paused</code></td></tr>
+<tr><td>引擎因内存拒绝提示（尚无输出）</td><td>卸载并重新加载底座以释放 MLX 缓冲池，重试一次；仍不行答内存不够</td></tr>
+<tr><td>冒烟检查放不下</td><td>推迟，每 300 秒在空闲时重试</td></tr>
+<tr><td>专用模型进程空闲或内存紧张</td><td>停掉；按需重起时答 <code>not_ready</code>（retry_after 2），内存不够时 retry_after 30</td></tr>
+<tr><td>专用模型进程失败 ≥ 3 次</td><td>该任务暂停，不再重启</td></tr>
+<tr><td>下载失败</td><td>分三类说明：服务器上找不到、连不上、核对不过</td></tr>
+<tr><td>配件版本未通过验证</td><td>调用返回 <code>unknown_accessory</code></td></tr>
+</table></div>
+
+<h2>文件</h2>
+<p>环境目录 <code>~/Library/Application Support/luoke-core/</code>，详见「参考 · 文件位置」。日志只记元数据（任务、优先级、token 数、耗时、结果），请求文字不落盘、不进日志。</p>
+
+<h2>已知限制</h2>
+<ul>
+<li>内存压力会暂停和打断后台、停掉专用模型工作进程，但不主动卸载底座。</li>
+<li>熔断不会自动恢复，需要重启主控。</li>
+<li><code>/settings</code>、<code>/downloads</code>、<code>/endpoint</code> 只核对请求头自报的身份；<code>/status</code>、<code>/jobs/run</code> 不核身份。</li>
+<li>配方不支持撤回已发布的配件版本，也不声明最低主控版本。</li>
+<li>端点只有 <code>/v1/models</code> 和 <code>/v1/chat/completions</code>；<code>luoke launch</code> 只支持 pi。</li>
+</ul>

@@ -1,0 +1,30 @@
+[submodule "luoke-core"]
+	path = luoke-core
+	url = https://github.com/luokelabs/luoke-core.git
+	branch = main
+	ignore = dirty
+[submodule "luoke-mail"]
+	path = luoke-mail
+	url = https://github.com/luokelabs/luoke-mail.git
+	branch = main
+	ignore = dirty
+[submodule "luoke-ime"]
+	path = luoke-ime
+	url = https://github.com/luokelabs/luoke-ime.git
+	branch = main
+	ignore = dirty
+[submodule "luoke-mem"]
+	path = luoke-mem
+	url = https://github.com/luokelabs/luoke-mem.git
+	branch = main
+	ignore = dirty
+[submodule "luoke-agent"]
+	path = luoke-agent
+	url = https://github.com/luokelabs/luoke-agent.git
+	branch = main
+	ignore = dirty
+[submodule "luoke-community"]
+	path = luoke-community
+	url = https://github.com/luokelabs/luoke-community.git
+	branch = main
+	ignore = dirty

@@ -1,0 +1,17 @@
+# 顶层仓库收顶层文档，各项目作为子模块登记（主人 2026-10-16 定）；别的东西不进这个仓库
+/*
+!/.gitignore
+!/README.md
+!/ARCHITECTURE.md
+!/CONTEXT.md
+!/CLAUDE.md
+!/docs/
+!/projects/
+!/atlas/
+!/.gitmodules
+!/luoke-core
+!/luoke-mail
+!/luoke-ime
+!/luoke-mem
+!/luoke-agent
+!/luoke-community

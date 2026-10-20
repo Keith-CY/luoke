@@ -1,0 +1,41 @@
+<!-- id: ops | nav: 运行与发布 | group: 运维 -->
+<h1>运行与发布</h1>
+
+<h2>版本</h2>
+<div class="tbl"><table>
+<tr><th>类型</th><th>标签</th><th>说明</th></tr>
+<tr><td>内部版</td><td><code>internal-MMDD</code></td><td>每天固定时间把各组件主线的提交钉在顶层仓库并打标签；出版流程在三个硬件档上评测，签名公证后发布为预发布版</td></tr>
+<tr><td>本机版</td><td><code>local-MMDD-HHMM</code></td><td>只在一台机器的档上评测，签名公证、不上传，用于开发机上的快速验证</td></tr>
+<tr><td>beta / 正式</td><td><code>beta*</code></td><td>封闭测试和公开发布</td></tr>
+</table></div>
+<p>安装包发布在 <code>luokelabs/luoke-releases</code>，模型在 ModelScope 和 Hugging Face 各有一份。</p>
+
+<h2>出版流程</h2>
+<ol>
+<li>读取钉住的各组件提交，打包配件 .app。</li>
+<li>按配方在各档评测每个任务；已有且未变化的证据复用。</li>
+<li>按支持台账决定各档开关，生成配方和差异报告；有回退则停止。</li>
+<li>签名、公证、生成 DMG 和发布清单，上传。</li>
+</ol>
+<p>每一步记录在 <code>steps.json</code> 中，失败后可以从中断处继续。</p>
+
+<h2>换装与回滚</h2>
+<ul>
+<li>用户：主控菜单「检查更新…」下载并核对新版后原地升级，或手动打开新版安装器；数据和模型保留；旧版保存在 <code>previous.noindex</code>，可回到上一版。单个配件可经「配件回到上一版…」换回旧版，主控按那一版当时的验证接受它。</li>
+<li>开发：本机版用同样的安装器升级；配件的新版本可经"本机放行"在内部版或本机版主控上先行使用。</li>
+</ul>
+
+<h2>测试机器</h2>
+<div class="tbl"><table>
+<tr><th>机器</th><th>配置</th><th>用途</th></tr>
+<tr><td>开发机</td><td>Apple M5 Max · 128 GB</td><td>128 档评测、日常试用</td></tr>
+<tr><td>16 GB 测试机</td><td>Mac mini M1 · 16 GB</td><td>16 档评测、干净机首次运行</td></tr>
+<tr><td>32 GB 测试机</td><td>32 GB</td><td>32 档评测、实验</td></tr>
+</table></div>
+
+<h2>诊断</h2>
+<ul>
+<li>主控设置中可导出诊断：机型、芯片、内存、首次运行各步时刻、运行状态和日志尾部，只含元数据。</li>
+<li>主控日志 <code>logs/hub.log</code>；空闲任务的标准错误在 <code>logs/jobs/</code>，最后 4 KB 也记在 <code>state.json</code>。</li>
+<li>输入法的沙盒拦截在输入法菜单中列出。</li>
+</ul>
