@@ -13,12 +13,16 @@
 
 <h2>质量</h2>
 <ul>
-<li>话题归纳（<code>luoke-mem.topics</code>）在 128 档的评测分数偏低，16、32 档仍在评测。</li>
+<li>话题归纳（<code>luoke-mem.topics</code>）在 16 GB 档未通过评测，暂不开启；128 档评测分数偏低。</li>
 <li>16 GB 档的打字归纳未通过评测，暂不开启。</li>
 </ul>
 
 <h2>缺陷</h2>
-<p>暂无已知未修复的缺陷。</p>
+<ul>
+<li><b>改成"移到垃圾箱"形不成处理习惯</b>（邮件助手 × 记忆）：<code>mail-override</code> 的 <code>data.to</code> 用分拣动作代码，移到垃圾箱是 <code>ignore</code>；记忆归纳习惯只认 <code>ACTION_NAMES</code>（垃圾箱是 <code>trash</code>），这类改建议被跳过。改成归档的不受影响。</li>
+<li><b>归纳任务被一次模型错误整次打断</b>（记忆）：打字线遇到"稍后再来"以外的主控错误（如 <code>engine_failed</code>）时整次退出，话题线和结尾的反刍这次不跑；话题线某批持续出错时，下次仍从这一批开始，进度不再前进。</li>
+<li><b>自由问题的"以后再说"</b>（agent × 记忆，目前不会触发）：agent 对不针对某条理解的问题提供"以后再说"，记忆的 <code>reply</code> 不接受，agent 显示"这条已经变了"并永久关闭卡片。记忆现在只产生针对理解的问题。</li>
+</ul>
 
 <h2>待讨论</h2>
 <ul>

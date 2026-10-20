@@ -14,7 +14,7 @@
 <tr><td><code>luoke-mail.learn-orgs</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
 <tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>关</td><td>关</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
 <tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code></td></tr>
-<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>评测中</td><td>评测中</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
+<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
 <tr><td><code>luoke-ime.rerank</code></td><td>score</td><td>开</td><td>开</td><td>开</td><td>无提示词（打分）</td></tr>
 <tr><td><code>luoke-ime.predict</code></td><td>predict</td><td>开</td><td>开</td><td>开</td><td>无提示词（续写）</td></tr>
 <tr><td><code>digup.embed</code></td><td>embed</td><td>关</td><td>关</td><td>关</td><td>—</td></tr>
@@ -32,6 +32,6 @@
 <ul>
 <li>每个任务有评测集和硬性条目，评测结果写入配方的 <code>evidence</code>，并决定各档开关。</li>
 <li>分拣的硬性条目：正常邮件零误报，可疑邮件最多漏 1 封。</li>
-<li>往来邮件：已了结的不能报为"等你"，"等你"的漏报不超过 1 个。</li>
+<li>往来邮件：已了结的不能报为"等你"，"等你"的漏报不超过 1 个。模型答"轮到谁"（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>），由代码映射为等你 / 在等对方 / 已了结。</li>
 <li>话题归纳：只写品牌名或来源名即为失败；另记是否有具体对象。</li>
 </ul>

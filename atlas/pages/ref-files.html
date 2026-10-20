@@ -33,7 +33,8 @@
 <div class="tbl"><table>
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>mem.db</code>（及 <code>-wal</code>、<code>-shm</code>）</td><td>记忆，0600；可用 <code>LUOKE_HOME</code> 换位置</td></tr>
-<tr><td><code>mem.db-ui.json</code>、<code>mem.db-learn.lock</code></td><td>界面进程状态；归纳任务锁</td></tr>
+<tr><td><code>mem.db-ui.json</code>、<code>mem.db-learn.lock</code></td><td>界面进程状态（0600）；归纳任务锁</td></tr>
+<tr><td><code>mem.db.before-0.18</code></td><td>第一次重新定档前的整份副本，14 天后或有内容被忘掉时删除</td></tr>
 <tr><td><code>agent/</code></td><td>agent 的 <code>state.db</code>、socket、日志</td></tr>
 <tr><td><code>ime/</code></td><td>输入法的设置、用户引擎、引擎数据、开发记录</td></tr>
 </table></div>
@@ -43,7 +44,9 @@
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>config.json</code></td><td>设置</td></tr>
 <tr><td><code>luoke.db</code></td><td>邮件、建议、规则、清理、操作记录、精选</td></tr>
-<tr><td><code>token</code></td><td>页面令牌</td></tr>
+<tr><td><code>token</code>、<code>server.json</code>、<code>server.lock</code></td><td>页面令牌；运行中实例的端口；单实例锁</td></tr>
+<tr><td><code>idle.lock</code>、<code>resident</code>、<code>account-salt</code></td><td>空闲工作锁；后台整理已开启的标记；邮箱不透明键的随机值</td></tr>
+<tr><td><code>run/agent.sock</code></td><td>agent 接口（默认关闭，<code>LUOKE_MAIL_AGENT=1</code> 时才有）</td></tr>
 <tr><td><code>service.log</code>、<code>app.log</code></td><td>日志</td></tr>
 </table></div>
 
@@ -56,5 +59,7 @@
 <tr><td><code>LUOKE_HUB_SOCKET</code></td><td>指定主控 socket（指定后不回退默认位置）</td></tr>
 <tr><td><code>LUOKE_HOME</code></td><td>记忆所在目录</td></tr>
 <tr><td><code>LUOKE_MAIL_HOME</code></td><td>邮件助手数据目录</td></tr>
+<tr><td><code>LUOKE_MAIL_PORT</code></td><td>邮件助手网页端口（未用 <code>--port</code> 时）</td></tr>
+<tr><td><code>LUOKE_MAIL_AGENT</code></td><td>设为 1 时开启邮件助手的 agent 接口</td></tr>
 <tr><td><code>PI_CODING_AGENT_DIR</code></td><td><code>luoke launch pi</code> 写入配置的位置</td></tr>
 </table></div>

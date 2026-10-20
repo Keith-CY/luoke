@@ -1,7 +1,7 @@
 <!-- id: agent | nav: agent「螺壳」 | group: 组件 -->
 <h1>agent「螺壳」</h1>
 <p class="lede">螺壳里唯一主动找用户的组件。它把记忆的提问和建议、各工具要报的事合并成卡片和简报，挑时机告诉用户，并代表用户调用工具声明的能力。当前版本不使用模型。</p>
-<p class="src">仓库 <code>luoke-agent</code> · 核心 0.0.1 · 不在 v1 首发中</p>
+<p class="src">仓库 <code>luoke-agent</code> · 核心 0.0.1 · 自带 <code>luoke_mem</code> 0.23.1 · 不在 v1 首发中</p>
 
 <h2>职责</h2>
 <ul>
@@ -20,8 +20,8 @@
 <li><b>启动</b>：主控按配件清单（<code>resident: true</code>）拉起壳；壳以 <code>python -m luoke_agent serve --home H --memory M --parent-pid P</code> 启动核心，标准错误追加到 <code>&lt;home&gt;/logs/core.log</code>。</li>
 <li><b>存活</b>：核心意外退出时壳会重启它，间隔从 2 秒翻倍到 60 秒；核心每 2 秒检查父进程，壳退出时随之退出。</li>
 <li><b>壳与核心之间</b>：<code>&lt;home&gt;/run/agent.sock</code> 上的 HTTP/1.1，见「界面协议」。</li>
-<li><b>轮询</b>：核心每 5 秒一个周期；工具 outbox 每 60 秒读一次，记忆和主控每 300 秒各读一次，简报到点前会额外读一次记忆。</li>
-<li><b>使用的主控接口</b>：<code>GET /accessories</code> 发现已安装的工具；<code>GET /tasks</code> 取主控内置的 <code>luoke_mem</code> 路径，取不到时用自带的副本。</li>
+<li><b>轮询</b>：核心每 5 秒一个周期；工具 outbox 每 60 秒读一次，记忆和主控每 300 秒各读一次，简报到点前会额外读一次记忆；窗口打开时立即把全部来源读一遍。一个来源出错不影响其他，暂时不在运行的来源卡片先收起，回来后照旧。</li>
+<li><b>使用的主控接口</b>：<code>GET /accessories</code> 发现已安装的工具（只认 <code>capabilities.protocol</code> 为 1 且有 socket 的，排除自己）；核心每次启动时经 <code>GET /tasks</code> 取主控内置的 <code>luoke_mem</code> 路径，取不到或导入失败时用自带的副本。</li>
 </ul>
 
 <h2>界面协议（核心 ↔ 壳）</h2>
@@ -36,7 +36,7 @@
 </table></div>
 
 <h2>工具协议</h2>
-<p>工具在配件清单的 <code>capabilities</code> 中声明协议版本（1）、socket 路径、可报事项（<code>reports[]</code>：kind、title、默认 urgency）和动作（<code>actions[]</code>），并在自己的 Unix socket 上提供 MCP 子集。完整规格见 <code>luoke-agent/docs/工具协议.md</code>。</p>
+<p>工具在配件清单的 <code>capabilities</code> 中声明协议版本（1）、socket 路径、可报事项（<code>reports[]</code>：kind、title、默认 urgency）和动作（<code>actions[]</code>），并在自己的 Unix socket 上提供 MCP 子集。完整规格见 <code>luoke-agent/docs/工具协议.md</code>。目前没有已发布的配件在清单中声明 <code>capabilities</code>：邮件助手的实现默认关闭，agent 实际只有记忆一个来源。</p>
 <h3>传输</h3>
 <ul>
 <li>每个请求一条连接：<code>POST /mcp</code>，请求体为一条 JSON-RPC 2.0 消息，上限 1 MB；MCP 协议版本 <code>2026-07-28</code>，在 <code>params._meta</code> 中携带。</li>
@@ -65,14 +65,14 @@
 <h2>与记忆的交互</h2>
 <ul>
 <li>以 <code>Memory(path, tool="luoke-agent")</code> 打开记忆；文件不存在时不创建，遇到版本过新的库时提示更新。</li>
-<li>读取 <code>asks(status=["open"])</code>；带 <code>about_note</code> 的问题附上该理解的前 3 条依据原文（每条 120 字以内）。</li>
+<li>读取 <code>asks(status=["open"])</code>，该不该问、每天几条由记忆决定；带 <code>about_note</code> 的问题附上该理解最新的 3 条依据原文（来源、日期、每条 120 字以内），没有时显示 ask 的 <code>evidence</code>。记忆的提问和建议 urgency 默认为 normal，走简报。</li>
 <li>回答经 <code>reply(ask_id, choice, text)</code> 交回：</li>
 </ul>
 <div class="tbl"><table>
 <tr><th>卡片</th><th>按钮 → choice</th></tr>
 <tr><td>处理习惯等是非类建议</td><td>好 → <code>useful</code> · 不用 → <code>useless</code> · 别再提 → <code>never</code></td></tr>
 <tr><td>信息性建议</td><td>知道了 → <code>useful</code> · 别再提 → <code>never</code></td></tr>
-<tr><td>关于某条理解的问题</td><td>对 → <code>yes</code> · 不对 → <code>no</code> · 以前是现在不是 → <code>past</code> · 按我改的 → <code>revise</code> · 以后再说 → <code>later</code>（3 天后再问）</td></tr>
+<tr><td>关于某条理解的问题</td><td>对 → <code>yes</code> · 不对 → <code>no</code> · 以前是，现在不是 → <code>past</code> · 按我改的 → <code>revise</code> · 以后再说 → <code>later</code>（记忆把问题记为 later，7 天后由反刍重新提出）</td></tr>
 <tr><td>自由问题</td><td>交回 → <code>answer</code> · 以后再说 → <code>later</code></td></tr>
 </table></div>
 
@@ -81,7 +81,8 @@
 <li><b>排序</b>：urgency（urgent、normal、low）→ deadline → 首次出现时间。</li>
 <li><b>每类的方式</b>（<code>modes</code>）：<code>now</code>、<code>brief</code>、<code>window</code>、<code>off</code>；未设置时 urgent 为 <code>now</code>，其余为 <code>brief</code>。</li>
 <li><b>急事</b>：用户在 Mac 前（120 秒内有上报、未锁屏、屏幕未睡、空闲 &lt; 180 秒）时立即通知，不受免打扰时段限制。</li>
-<li><b>简报</b>：第一件 normal 事项到达后 60 分钟发一份，需用户在场且不在免打扰时段；每份最多附 2 件 low；只有 low 时 24 小时最多一份；上一份未打开时新的一份静音。</li>
+<li><b>简报</b>：第一件待简报的事项（normal；只有 low 时距上一份 low 简报 ≥ 24 小时）出现后计时 60 分钟，到点后等用户在场且不在免打扰时段才发；每份含全部 normal，最多附 2 件 low；通知正文列前 3 个标题；上一份未打开窗口时新的一份静音。</li>
+<li><b>窗口</b>：窗口打开时，现有事项都算看过，不再为它们发通知。</li>
 <li><b>少说</b>：同一类连续 3 次没有回应，从 <code>brief</code> 降为 <code>window</code>，并给出一张"以后只放在窗口里"的卡片。</li>
 <li><b>清理</b>：过期事项撤下；完成的卡片 30 分钟后撤下；完成或撤回超过 30 天的记录删除。</li>
 </ul>
@@ -111,4 +112,6 @@
 <li>从不发送 <code>outbox_ack state:"shown"</code>，工具无法据此停止自己的通知。</li>
 <li>设置没有界面；卡片上用户改过的选项只存在壳里，壳重启后丢失；<code>core.log</code> 不轮转。</li>
 <li>简报通知的正文包含事项标题。</li>
+<li>自由问题（不针对某条理解）的"以后再说"记忆不接受，卡片会显示"这条已经变了"并关闭；记忆目前不产生自由问题。</li>
+<li>核心只在启动时取一次主控的 <code>luoke_mem</code> 路径；主控升级后需重启核心才换用新的。</li>
 </ul>

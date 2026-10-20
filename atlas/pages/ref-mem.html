@@ -4,8 +4,8 @@
 
 <h2>打开</h2>
 <ul>
-<li><code>Memory(path=None, tool="luoke")</code>：工具使用。默认路径 <code>$LUOKE_HOME/mem.db</code>，未设置时为 <code>~/.luoke/mem.db</code>。文件 0600，目录 0700；记忆文件或其 <code>-wal</code>、<code>-shm</code> 是符号链接时拒绝打开。</li>
-<li><code>WholeMemory(path=None)</code>：整份记忆，供记忆自己的界面、命令行和归纳任务使用；打开时执行重新定档和合并。</li>
+<li><code>Memory(path=None, tool="luoke")</code>：工具使用。默认路径 <code>$LUOKE_HOME/mem.db</code>，未设置时为 <code>~/.luoke/mem.db</code>。文件 0600，目录 0700；记忆文件或其 <code>-wal</code>、<code>-shm</code>、<code>-journal</code> 是符号链接时拒绝打开。文件不存在时创建（0600）；只看不改的入口（命令行 <code>sources</code>、<code>forget-tool</code>、<code>learn</code>）不创建。</li>
+<li><code>WholeMemory(path=None)</code>：整份记忆，供记忆自己的界面、命令行和归纳任务使用；打开时执行重新定档（只降不升）、以前的事、相近话题合并。第一次定档前把整份记忆复制为 <code>mem.db.before-0.18</code>，14 天后或有内容被忘掉时删除。</li>
 <li>文件 schema 比库新得多（千位不同）时抛 <code>TooNew</code>。</li>
 </ul>
 
@@ -36,7 +36,7 @@
 <div class="tbl"><table>
 <tr><th>方法</th><th>说明</th></tr>
 <tr><td><code>asks(status=["open"], *, tool)</code></td><td>未过期的问题和建议；<code>tool</code> 筛出与某工具相关的</td></tr>
-<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code> / <code>answer</code>；建议 <code>useful</code> / <code>useless</code> / <code>never</code></td></tr>
+<tr><td><code>reply(aid, choice, text=None)</code></td><td>交回用户的回答：关于某条理解的问题 <code>yes</code> / <code>no</code> / <code>past</code> / <code>revise</code> / <code>later</code>（<code>later</code> 把问题记为 later，7 天后由反刍重新提出）；自由问题只接受 <code>answer</code>；建议 <code>useful</code>（关于习惯的建议同时确认该习惯）/ <code>useless</code> / <code>never</code>；其他组合抛 <code>ValueError</code></td></tr>
 </table></div>
 <h3>工具函数</h3>
 <p><code>mask_secrets(text)</code>（遮去密码、验证码、密钥、通过 Luhn 校验的卡号、证件号）、<code>find_secrets</code>、<code>sensitive_kinds(text)</code>（健康、法律、宗教政治）、<code>confidence(note)</code>、<code>default_path()</code>。</p>
@@ -49,7 +49,7 @@
 <tr><td><code>cites</code></td><td>(note_id, record_id)</td></tr>
 <tr><td><code>asks</code></td><td>id、tool、kind（question / suggestion）、text、why、about_note、about_kind、urgency、answer（JSON）、status、created_at、expires_at、decided_at、answer_record、sensitive、evidence、rank、action（JSON）、key</td></tr>
 <tr><td><code>candidates</code></td><td>id、kind、text、record_ids、first_seen、last_seen（归纳中积累的候选）</td></tr>
-<tr><td><code>learning</code></td><td>name、value（归纳进度、反刍结果、一次性修复标记）</td></tr>
+<tr><td><code>learning</code></td><td>name、value：归纳进度（<code>typing.last_id</code> / <code>last_at</code> / <code>last_run</code>、<code>topics.last_id</code> / <code>last_at</code> / <code>last_run</code> / <code>pending</code> / <code>version</code>）、每次结果（<code>typing.last_outcome</code>、<code>topics.last_outcome</code>、<code>rumination.last</code>）、以前的事唤回次数（<code>past.revived.&lt;kind&gt;</code>）、一次性修复标记</td></tr>
 <tr><td><code>grants</code></td><td>遗留，不再使用</td></tr>
 </table></div>
 <p>升级只加不改：新表、可空的新列、新索引。版本存于 <code>PRAGMA user_version</code>。</p>
@@ -77,11 +77,11 @@
 <div class="tbl"><table>
 <tr><th>命令</th><th>说明</th></tr>
 <tr><td><code>python -m luoke_mem [--path P] sources</code></td><td>各工具写入的条数</td></tr>
-<tr><td><code>forget-tool &lt;tool&gt; [--dry-run]</code></td><td>忘掉某工具写入的内容</td></tr>
+<tr><td><code>forget-tool &lt;tool&gt; [--dry-run]</code></td><td>忘掉某工具写入的内容；<code>luoke-mem</code> 被拒绝（说明原因，退出码 1）</td></tr>
 <tr><td><code>ui [--open] [--note N] [--view recent]</code></td><td>打印界面地址</td></tr>
 <tr><td><code>app [--note N] [--view recent]</code></td><td>在浏览器中打开界面（<code>luoke://memory</code> 的入口）</td></tr>
-<tr><td><code>learn [--force] [--again] [--hub SOCK]</code></td><td>运行一次归纳；<code>--again</code> 从头重新归纳</td></tr>
+<tr><td><code>learn [--force] [--again] [--hub SOCK]</code></td><td>运行一次归纳；<code>--force</code> 有新记录就跑；<code>--again</code> 从头重新归纳（打字记下的不重复，话题线用户没表态的话题重来）；已有一个在跑时直接返回</td></tr>
 </table></div>
 
 <h2>界面</h2>
-<p>独立进程，监听 127.0.0.1 随机端口；页面令牌在 <code>?t=</code>，接口令牌在 <code>X-Luoke-Token</code>；校验 Host 和 Origin；600 秒无请求退出。路由：<code>/api/summary</code>、<code>/api/overview</code>、<code>/api/records</code>、<code>/api/notes</code>、<code>/api/note</code>、<code>/api/recent</code>；修改用 <code>POST /api/change</code>（confirm、reject、forget、revise）、<code>/api/forget-tool</code>、<code>/api/forget-all</code>。</p>
+<p>独立进程，监听 127.0.0.1 随机端口；页面令牌在 <code>?t=</code>，接口令牌在 <code>X-Luoke-Token</code>；校验 Host 和 Origin；600 秒无请求退出。路由：<code>/api/ping</code>、<code>/api/summary</code>、<code>/api/overview</code>、<code>/api/records</code>、<code>/api/notes</code>、<code>/api/note</code>、<code>/api/recent</code>；修改用 <code>POST /api/change</code>（confirm、reject、forget、revise；修改文字 ≤ 200 字，拒绝凭证）、<code>/api/forget-tool</code>（拒绝 <code>luoke-mem</code>）、<code>/api/forget-all</code>（需输入「清空」）。<code>/api/grants</code>、<code>/api/grant</code> 为遗留接口，不再影响读取。界面状态（pid、端口、令牌）存于 <code>mem.db-ui.json</code>（0600）。</p>
