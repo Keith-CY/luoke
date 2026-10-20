@@ -10,6 +10,6 @@ cp "$HERE/site/index.html" "$HERE/site/.nojekyll" "$WORK/"
 cd "$WORK"
 if git diff --quiet && [ -z "$(git status --porcelain)" ]; then echo "no change"; exit 0; fi
 git add -A
-git -c user.name="Luoke Labs" -c user.email="7994361+zhixianio@users.noreply.github.com" commit -qm "Update docs"
+git -c user.name="Luoke Labs" -c user.email="zhixian@luoke.ai" commit -qm "Update docs"
 git push -q origin main
 echo "published: https://luokelabs.github.io/luoke-atlas/"
