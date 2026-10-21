@@ -1,68 +1,180 @@
 <!-- id: search | nav: 深度搜索 luoke-search | group: 组件 -->
 <h1>深度搜索</h1>
-<p class="lede">给 Mac 上用户选的文件夹和照片图库建索引，按字词和按意思找回来。没有自己的界面，入口在 agent。本章描述登记的设计：主线目前只有说明文件，还没有代码。</p>
-<p class="src">仓库 <code>luoke-search</code> · 规划中，未发布 · 跟随 agent（v1.x），不在 v1 首发中</p>
+<p class="lede">给 Mac 上用户选的文件夹和照片图库建索引，按字词和按意思找回来。没有自己的界面，入口在 agent；向量由主控算，自己不带模型。</p>
+<p class="src">仓库 <code>luoke-search</code>（Swift 包 <code>LuokeSearchKit</code>）· 版本 0.1.0，按代码 2a26c1b 核对 · 不在 v1 首发中，跟随 agent（v1.x）发布 · 只支持 macOS 26.2 及以上</p>
 
 <h2>职责</h2>
 <ul>
-<li>第一版搜本机文件：文档（txt、md、rtf、doc、docx、odt、html、xlsx、pptx、csv、tsv，含 GBK 编码的文字文件）、PDF（逐页读，扫描件按页 OCR）、截图（读其中的字）、图片、视频（关键帧和音轨）、录音；经 PhotoKit 读照片图库（需用户允许）。不搜代码。</li>
-<li>第二步经记忆读记录和依据原文、打字记录，经邮件助手的读取接口读邮件；自己只存向量和关键词，不重复存原文。</li>
-<li>只读用户的文件，不改、不移动、不上传；不主动找用户，只经 agent 的 outbox 报两类事。</li>
+<li>第一版搜本机文件（文档、PDF 含扫描件、截图、图片、视频、录音）和照片图库。不搜代码。</li>
+<li>只读用户的文件，不改、不移动、不上传；照片图库只读。</li>
+<li>不主动找用户：只经 agent 的 outbox 报两类事；设置只在用户在卡片上点按后才改。</li>
+<li>第一版不读也不写记忆，搜索词不写进记忆。</li>
 </ul>
 
 <h2>运行形态</h2>
+<div class="tbl"><table>
+<tr><th>入口</th><th>行为</th></tr>
+<tr><td><code>螺壳深度搜索.app</code></td><td>bundle id <code>ai.luoke.search</code>，<code>LSUIElement</code>（不出现在程序坞）。主控在登录时带 <code>--resident</code> 拉起，打开即 <code>serve</code>；带 <code>--resident</code> 时向主控 <code>PUT /accessory/resident</code>，收到 SIGTERM 退出前 <code>POST /accessory/exiting</code></td></tr>
+<tr><td><code>luoke-search serve</code></td><td>常驻服务：在 <code>run/agent.sock</code> 上提供 MCP，并跟着文件夹和照片图库更新索引；每 5 分钟补一次还在等的向量，每 2 分钟看一次设置、照片权限和文件夹能不能读；10 分钟没人搜就放掉内存里的向量。<code>--socket</code> 换 socket 路径，<code>--no-watch</code> 只开 socket</td></tr>
+<tr><td><code>luoke-search index --job</code></td><td>第一遍建索引（供主控的空闲任务调用）：同步设置里的文件夹和照片图库、读等着的、补向量；SIGTERM / SIGINT 时读完手上那个文件就停，退出码 0，下次接着读；标准错误只有计数</td></tr>
+<tr><td>其他子命令</td><td>同一个可执行文件 <code>Contents/MacOS/luoke-search</code> 也是命令行，见「接口」</td></tr>
+</table></div>
 <ul>
-<li>常驻的后台 .app（不出现在程序坞），由主控安装、登录时拉起；bundle id 拟为 <code>ai.luoke.search</code>。同一个可执行文件也是命令行 <code>luoke-search</code>。只支持 macOS 26.2 及以上。</li>
-<li><b>没有界面</b>：没有菜单栏图标、窗口或快捷键面板。用户在 agent 的对话里提问，agent 调用 MCP 工具，把结果画成卡片（标题、命中片段、出处的页码或时刻），点按后在 Mac 上打开；要用户定的事（搜哪些文件夹、是否加入照片图库）也由 agent 的卡片询问。</li>
-<li>建索引分两步：<b>读取</b>（取文字、OCR、抽关键帧、切声音）由本工具完成，完成即可按字词搜；<b>算向量</b>找主控，主控不在或忙时记为"等向量"，以后补。</li>
-<li>按字词搜用 SQLite FTS5（unicode61 表，另加给中文、日文用的 trigram 表），按意思搜比余弦，两者混合排序；查询中的类型词（"截图""照片"等）给对应类型加分，停用词不当关键词。</li>
+<li><b>没有界面</b>：用户在 agent 的对话里提问，agent 调 MCP 工具并画结果卡片；搜哪些文件夹、是否加入照片图库也由 agent 的卡片询问。</li>
+<li><b>读取和算向量分开</b>：读取（取文字、OCR、抽帧、切声音）由本工具完成，读完即可按字词搜；向量找主控要，主控不在或忙时记为等向量，以后补。</li>
+<li><b>跟着文件夹</b>：常驻服务启动时把文件夹走一遍（只看名字和时间，不读内容），移出不再搜的；之后用 FSEvents 盯着，变化停 0.75 秒后一起处理，只看变了的路径（新的、改过的、移动或改名的只改路径、删掉的、整个搬进来的文件夹）。新变的文件马上读，每次最多 50 个，排在第一遍的积压前面，读完补向量。设置改了就换成盯新的文件夹。</li>
+<li><b>第一遍兜底</b>：常驻服务每 2 分钟检查一次，有等着读的且接着电源（或设置允许用电池）、不在低电量模式、不过热、主控说后台在跑时，读一段（最多 100 个）；文件一有变化就让路。</li>
+<li><b>长文件先读开头</b>：超过 50 页的 PDF 第一遍只读前 30 页，超过 40 段的文档只读前 40 段，条目记为 <code>partial</code>，读到的部分照样能搜；所有文件都过一遍以后，再每次 30 页或 40 段往后补，每步读完就存，能停能续；文件改了从头读。盘拔了或内容被 iCloud 挪走时留到下次，不当成读不了。</li>
+<li><b>单个文件的看门狗</b>（<code>index</code>、<code>index --job</code>、常驻服务都开着）：读一个文件时每秒看一次本进程内存和这个文件读了多久。内存超过上限（物理内存的一半，限在 4–8 GB）且至少一半是读这个文件时涨的，或读了 15 分钟（只算 Mac 醒着的时间），就把这个文件（连同修改时间和大小）和原因写进 <code>run/stopped-file.json</code>，以退出码 75 结束进程；下次起来先把它记为读不了，文件改过才重读。</li>
+<li><b>读到一半进程没了</b>：每个条目记读的次数，两次都没读完就不再读（长文件的后续部分同样计数，已读的留着）。</li>
+<li><b>照片图库</b>：常驻服务盯着图库的变更通知（变化攒 2 秒合一次），新拍的马上读。第一次要读时弹系统的询问框，问的时候文件夹照样在跟。</li>
+<li><b>线程</b>：所有活在常驻服务自己的一条串行队列上；读文件（尤其 OCR）不在 Swift 并发的线程池里做，一个进程同时只做一张 OCR。</li>
+<li><b>签名</b>：hardened runtime，权限只有 Apple Events（让 QuickTime Player 跳到某一刻）和照片图库。</li>
+</ul>
+<h3>不读什么</h3>
+<ul>
+<li>不跟符号链接；不进包（含照片图库的包，图库经 PhotoKit 读）、隐藏文件夹、<code>~/Library</code>、<code>*.noindex</code>、开发用文件夹（<code>node_modules</code>、<code>venv</code>、<code>site-packages</code>、<code>DerivedData</code>、<code>Pods</code> 等）和用户跳过的文件夹。</li>
+<li>代码项目（含 <code>.git</code>、<code>package.json</code>、<code>Package.swift</code>、<code>pyproject.toml</code>、<code>Cargo.toml</code>、<code>.xcodeproj</code> 等的文件夹）里只读截图。</li>
+<li>只在 iCloud、没下载到本机的文件不读（读会触发下载）。</li>
+<li><b>像数据集的文件夹</b>：同一个文件夹里同一类媒体（图片、视频、录音）≥ 300 个、其中 ≥ 70% 是机器起的名字（纯数字、十六进制串和 UUID、<code>frame_0042</code>、<code>clip-000123</code> 这类数据集词加数字），这一类不读，文档照读。相机和系统起的名字（IMG_、DSC、PXL_、截屏等）、名字里带日期的、其他词加数字的不算；图片再抽 10 张看 EXIF，一半以上写了相机厂家或型号的不跳。用户直接选的文件夹（含套在另一个选中文件夹里的）不算。<code>status</code> 和 <code>search_status</code> 列出这些文件夹。</li>
+<li><b>凭证文件不读</b>：按扩展名（<code>pem</code>、<code>p12</code>、<code>kdbx</code>、<code>key</code>、<code>ovpn</code> 等）、名字开头（<code>id_rsa</code>、<code>.env</code>、<code>.netrc</code> 等）、名字里的词（password、credentials、secret、api key、recovery codes、seed phrase 等）、中日韩片段（密码、口令、密钥、私钥、助记词、恢复码等）和密码管理器的导出（<code>logins.csv</code>、bitwarden / lastpass 导出、keepass）。单独的 key、token 不算。</li>
+<li>拔掉的盘、macOS 不让读的根文件夹记为读不了，其中已有的条目保留。</li>
+</ul>
+
+<h2>读什么</h2>
+<div class="tbl"><table>
+<tr><th>类型（<code>kind</code>）</th><th>怎么读</th><th>结果指到</th></tr>
+<tr><td><code>doc</code></td><td>txt、md、csv、tsv（自动认编码：UTF-8、UTF-16、GB 18030 含 GBK、Big5、Windows-1252，最多读前 32 MB）；rtf、doc（系统文字系统）；docx、odt；xlsx（每个工作表一段）；pptx（每页加演讲者备注，按演示顺序）；html（不用 WebKit）。约 1800 字一段、重叠 200 字、在句末断开，每个文件最多 2000 段</td><td>第几部分、第几个工作表、第几页幻灯片</td></tr>
+<tr><td><code>pdf</code></td><td>PDFKit 一页一段（最多 2000 页），每页取前 4000 字算向量。一页字数不到 200（中日文一字按 2.75 计）当扫描页：按 1400 px 画出后 OCR，字进关键词，页面的样子等图片向量。PDF 自带标题像残留文件名时用文件名。加密的记读不了</td><td>第几页</td></tr>
+<tr><td><code>screenshot</code></td><td>按文件名（Screenshot、截屏、屏幕快照、CleanShot 等）或 macOS 的截屏标记认出。OCR 的字只进关键词、不算文字向量；样子等图片向量</td><td>—</td></tr>
+<tr><td><code>image</code></td><td>读尺寸和 EXIF 拍摄时间；长边不到 256 px 的跳过；不做 OCR；样子等图片向量</td><td>—</td></tr>
+<tr><td><code>audio</code></td><td>AVFoundation 解成 16 kHz 单声道，30 秒一窗、每 25 秒起一窗，静音窗丢掉；不转文字，等声音向量</td><td>那一窗的起止秒</td></tr>
+<tr><td><code>video</code></td><td>每 3 秒一帧（最多 1200 帧），和上一张留下的帧几乎一样的不留；音轨照录音切。AVFoundation 打不开的格式（mkv、webm 等）记读不了</td><td>那一帧或那一窗的秒数</td></tr>
+<tr><td><code>photo</code></td><td>照片图库（PhotoKit），用户在设置里打开并允许后才读。照片记拍摄时间和尺寸、不做 OCR，样子等图片向量；视频照视频文件取帧和声音。只在 iCloud 的原件不下载：视频记读不了，照片只按名字和时间搜。新的读、改过的重读、删掉的移出，关掉就全部移出</td><td>—（打开「照片」并说明拍摄时间）</td></tr>
+</table></div>
+<ul>
+<li><b>OCR</b> 用系统的 Vision，指定语言、中文排第一（简体、繁体、英文、日文、韩文，再加本机偏好的语言）。</li>
+<li>每个条目的时间：有拍摄时间用拍摄时间，否则用修改时间。照片图库的条目路径记为 <code>photos:&lt;本机标识&gt;</code>，标题是导入时的文件名，没有就叫"照片""视频"。</li>
+<li>每个条目另有一段"名字"（文件名和所在文件夹），只按字词搜。</li>
+<li>读法升版时，旧版读过的条目自动重读。</li>
+</ul>
+
+<h2>怎么搜</h2>
+<ul>
+<li><b>按字词</b>：SQLite FTS5 两张表，<code>fts</code>（unicode61 + Porter 词干）和 <code>fts_tri</code>（trigram，给中文、日文等不用空格的文字）。查询中的中日文用系统分词（NLTokenizer）切词，去掉停用词和相对时间词（"上个月""去年"等，交给 agent 换成 <code>since</code> / <code>until</code>）；分词器拆成单字的相邻字连起来再试（可选词：找到每个加 0.1、最多 0.3，找不到不扣，不能单独让条目入围）；三个字以上走 trigram，两个字用 LIKE；英文找不到原词时按前缀匹配。</li>
+<li><b>类型词</b>：查询中的"截图""照片""录音""视频""PDF""文档"等不当关键词，给对应类型加分（不是筛选），这类条目按意思 z ≥ 1 即入围；"照片"同时指文件夹里的图片和图库的照片。只有类型词、按意思也没找到时，列出该类型最新的条目。</li>
+<li><b>按意思</b>：查询向量以 <code>user-waiting</code> 向主控要（模型在加载时最多等两次）。全部向量以 fp16 存在索引里，搜索时整块读进内存，每 1024 行转 fp32 用 vDSP 求余弦。每个条目取最好的一段。</li>
+<li><b>混合打分</b>（默认做法 A）：余弦先换成 z 分：满 20 行的模态（文字、图片、声音）按自己的均值居中，不满的按全体均值；离散度全体合着算，每行跟其余各行比（留一法），并向典型值 0.03 收缩。条目入围条件：z ≥ 2（类型词对上时 ≥ 1），或含必需的查询词至少一半。分数 = z + 2 ×（命中词比例）<sup>1.5</sup> + 0.5 × 名字中的命中比例 + 0.3 × 名次项 + 类型词加 1。查询的词都含数字（编号、单号）时按精确查找：字词权重加倍、z 减半。</li>
+<li><b>其他打分做法</b>只在 <code>eval --scoring</code> 里用于对比：<code>b</code>（每个模态只和自己比）、<code>c&lt;k&gt;</code>（模态的均值和方差按 k 行的分量往全体拉）、<code>d</code>（各自均值、离散度合着算）。</li>
+<li><b>结果</b>：分数不到第一名一半的标 <code>strong: false</code>（卡片上标"可能相关"）；原文件已不在的不列出。结果指向含查询词最多的一段（名字和内容都对得上时指向内容）；按意思入围的指向意思最好的那段。表格命中时片段是含查询词的一两行，每格前写列名。片段和标题送出前遮掉凭证（密码、验证码、密钥、卡号、证件号换成〔密码〕这样，规则同记忆的凭证遮蔽）；索引里保留原文。</li>
+<li><b>拒答门槛未开</b>：没有结果时 <code>confident</code> 为 <code>false</code>，有结果时为 <code>null</code>（"有结果但说不准"）。候选门槛（字词全中，或第一条的余弦过它那个模态的门槛：文字 0.70 / 图片 0.66 / 声音 0.70）只在 <code>eval --refusal</code> 里量，是否开启待定；开启后没过门槛的结果照给、标 <code>confident: false</code>。</li>
 </ul>
 
 <h2>接口</h2>
 <h3>给 agent 的 MCP 工具</h3>
-<p>按 agent 工具协议（版本 1），在 <code>~/.luoke-search/run/agent.sock</code> 上提供；<code>luoke-search mcp</code> 在标准输入输出上提供同一组工具。</p>
+<p>按 agent 工具协议（版本 1，MCP 无状态子集：<code>server/discover</code>、<code>resources/list</code>、<code>resources/read</code>、<code>tools/list</code>、<code>tools/call</code>，另答 <code>initialize</code>、<code>ping</code>），在 <code>~/.luoke-search/run/agent.sock</code> 上 <code>POST /mcp</code>；<code>luoke-search mcp</code> 在标准输入输出上提供同一组工具（一行一条）。一次只处理一个请求。</p>
 <div class="tbl"><table>
-<tr><th>工具</th><th>只读</th><th>做什么</th></tr>
-<tr><td><code>search_query</code></td><td>是</td><td>参数 <code>query</code>，可选 <code>kinds</code>、<code>since</code> / <code>until</code>、<code>limit</code>；答复结果列表（编号、类型、标题、出处、页码或时刻、命中片段、为什么对得上、分数）、<code>partial</code>（还在建索引或缺向量时为真）和一张 A2UI 结果卡片</td></tr>
-<tr><td><code>search_open</code></td><td>是</td><td>按结果编号打开并跳到那一页或那一刻，或在访达中显示</td></tr>
-<tr><td><code>search_status</code></td><td>是</td><td>已索引多少、还在等什么、主控能否算向量</td></tr>
-<tr><td><code>search_settings</code></td><td>是</td><td>查看设置；给出要改的内容时返回一张确认卡片（方案）</td></tr>
-<tr><td><code>search_settings_apply</code></td><td>否</td><td>执行用户在卡片上点按的方案：搜哪些文件夹、跳过哪些、是否加入照片图库、用电池时是否建索引</td></tr>
-<tr><td><code>search_open_system_settings</code></td><td>是</td><td>打开系统设置中对应的隐私页</td></tr>
+<tr><th>工具</th><th>只读</th><th>参数 → 答复</th></tr>
+<tr><td><code>search_query</code></td><td>是</td><td><code>query</code>；可选 <code>kinds</code>（<code>doc</code> <code>pdf</code> <code>screenshot</code> <code>image</code> <code>video</code> <code>audio</code> <code>photo</code>，筛选）、<code>since</code> / <code>until</code>（ISO 8601 日期或时间）、<code>limit</code>（1–50，默认 10）→ <code>hits</code>、<code>partial</code>、<code>partial_reason</code>、<code>confident</code>、<code>took_ms</code>，加一张结果卡片（前 5 条，每条 [打开] [在访达中显示]，每次 surfaceId 不同）</td></tr>
+<tr><td><code>search_open</code></td><td>是</td><td><code>id</code>、可选 <code>reveal</code> → 一句说明。视频、录音用 QuickTime Player 跳到那一刻；PDF 说明在第几页；照片打开「照片」并说明拍摄时间；文件不在了答 <code>stale</code>。标 <code>ai.luoke/where: mac</code></td></tr>
+<tr><td><code>search_status</code></td><td>是</td><td>— → <code>items</code>（按类型）、<code>waiting</code>（<code>read</code> / <code>rest_of_long_files</code> / <code>vectors</code> / <code>media</code>）、<code>dataset_folders</code>（路径和文件数）、<code>first_pass_done</code>、<code>hub</code>（<code>state</code>：available / downloading / busy / unsupported / not_running / not_connected，<code>note</code>）、<code>folders</code>、<code>photos</code>（on / needs_access / off）</td></tr>
+<tr><td><code>search_settings</code></td><td>是</td><td>不带 <code>change</code>：当前设置。带 <code>change</code>（<code>add_folders</code>、<code>remove_folders</code>、<code>skip_folders</code>、<code>photos</code>、<code>on_battery</code>；文件夹可写路径或 desktop、documents、downloads、pictures、movies）→ <code>plan_id</code>、<code>changes</code> 和一张确认卡片：文件夹写访达里的名字，完整路径在小字里；加文件夹时数一下大约多少文件（桌面、文稿、下载、iCloud 云盘、外接盘这类 macOS 保护的位置不数，只说明 macOS 会先询问）</td></tr>
+<tr><td><code>search_settings_apply</code></td><td>否</td><td><code>plan_id</code> → 执行自己出过的方案。没有 <code>ai.luoke/user-action</code>、或点按的不是这个方案自己的卡片，答 <code>needs_user_action</code>；设置文件读不了答 <code>needs_setup</code>；方案已不在或设置在出方案后变过答 <code>stale</code>；macOS 不让读的文件夹答 <code>needs_setup</code> 并换上带 [打开系统设置] 的卡片</td></tr>
+<tr><td><code>search_open_system_settings</code></td><td>是</td><td><code>pane</code>：<code>files</code>（文件和文件夹）/ <code>full_disk</code>（完全磁盘访问）/ <code>photos</code> → 打开系统设置对应隐私页。标 Mac</td></tr>
+<tr><td><code>outbox_ack</code></td><td>是</td><td><code>id</code>、<code>state</code>（shown / answered / dismissed）；answered、dismissed 的不再出</td></tr>
+</table></div>
+<p>结果条目：<code>id</code>（条目号加位置，如 <code>12#p3</code> 第 3 页、<code>#s</code> 幻灯片、<code>#w</code> 工作表、<code>#c</code> 第几部分、<code>#t25.0</code> 秒）、<code>kind</code>、<code>title</code>、<code>path</code>（照片图库的条目为空）、<code>where</code>（<code>page</code> / <code>part</code> / <code>sheet</code> / <code>time</code> / <code>end</code>）、<code>date</code>、<code>snippet</code>（约 160 字）、<code>why</code>（"第 3 页的文字对得上"等）、<code>score</code>、<code>strong</code>。</p>
+<h3>outbox</h3>
+<p><code>luoke://luoke-search/outbox</code>，只报两类事，不推搜索结果：</p>
+<ul>
+<li><code>needs-access</code>（normal）：设置里的文件夹 macOS 不让读，或打开了照片图库但被拒绝；卡片带 [打开系统设置]。</li>
+<li><code>index-ready</code>（low）：第一遍建完，3 天后过期。</li>
+</ul>
+<h3>命令行</h3>
+<div class="tbl"><table>
+<tr><th>子命令</th><th>做什么</th></tr>
+<tr><td><code>index [文件夹...] [--exclude] [--prune] [--wait] [--no-vectors] [--allow-battery] [--json]</code></td><td>同步、读、补向量；不给文件夹时搜设置里的文件夹并移出不再搜的。<code>--wait</code> 主控忙时按它说的时间等（最多 1 小时）</td></tr>
+<tr><td><code>index --job</code></td><td>第一遍建索引，见「运行形态」</td></tr>
+<tr><td><code>search &lt;问题&gt; [--kind] [-n] [--since] [--until] [--json]</code></td><td>同 <code>search_query</code></td></tr>
+<tr><td><code>open &lt;编号&gt; [--reveal]</code></td><td>同 <code>search_open</code></td></tr>
+<tr><td><code>status [--json]</code></td><td>索引位置和大小、各类数量、等什么、主控状态、是否排除出 Time Machine</td></tr>
+<tr><td><code>settings [--add-folder] [--remove-folder] [--skip-folder] [--photos on|off] [--on-battery on|off] [--json]</code></td><td>用户自己敲的改动直接执行（经同一套方案检查）</td></tr>
+<tr><td><code>eval &lt;题库.json&gt;... [--testbed] [-n] [--refusal] [--scoring a|b|d|c&lt;k&gt;] [--json]</code></td><td>跑评测，出第一名、前五、前十、MRR，按题型分开；<code>--refusal</code> 量拒答门槛（<code>expect</code> 为空的是没有答案的题）；<code>--scoring</code> 换打分做法对比</td></tr>
+<tr><td><code>photos-probe [--access] [--sample] [--originals]</code></td><td>只出汇总数字：本机照片图库能给深度搜索多少（只在 app 里能用，不问权限，不从 iCloud 下载）</td></tr>
+<tr><td><code>mcp</code>、<code>serve</code></td><td>见上</td></tr>
 </table></div>
 <ul>
-<li><b>outbox</b> <code>luoke://luoke-search/outbox</code>：<code>needs-access</code>（normal，需要用户允许读某个文件夹或照片图库）、<code>index-ready</code>（low，第一遍索引完成）。不推送搜索结果。</li>
-<li><b>命令行</b> <code>luoke-search</code>：<code>index</code>、<code>search</code>、<code>open</code>、<code>status</code>、<code>settings</code>、<code>eval</code>、<code>mcp</code>，与 MCP 工具一一对应，<code>--json</code> 输出与 MCP 答复同格式；<code>--index</code> 指定索引目录，<code>LUOKE_HUB_SOCKET</code> 指定主控。</li>
+<li><code>--json</code> 的键为 snake_case，<code>search --json</code> 与 <code>search_query</code> 的答复同格式。</li>
+<li>每条命令可加 <code>--index &lt;数据目录&gt;</code>；环境变量 <code>LUOKE_SEARCH_HOME</code> 同样换数据目录。不在 app 里运行的命令行必须给出其中之一，不用正式的 <code>~/.luoke-search</code>；不认识的选项报错。<code>LUOKE_HUB_SOCKET</code> 指定主控。<code>LUOKE_SEARCH_OPENER=dry</code> 什么都不真的打开（照片也不），只在标准错误说要打开什么，答复句尾加"（演习）"；<code>LUOKE_SEARCH_PHOTOS=system</code> 让非 app 进程读图库（开发用），<code>off</code> 关掉。</li>
 </ul>
-<h3>使用的主控接口</h3>
+
+<h2>依赖主控</h2>
 <ul>
-<li>嵌入任务 <code>POST /tasks/&lt;任务&gt;/v1/embed</code>：满 768 维、L2 归一化的向量，带 <code>vector_space</code>（变了只重算向量、不重读文件）；查询以用户在等发送，建索引以后台发送；被挡回时按 <code>retry_after_ms</code> 等待。参数只从 <code>GET /tasks</code> 读。</li>
-<li>任务名：登记为 <code>luoke-search.embed</code>；当前主线配方中仍为 <code>digup.embed</code>（所属配件 <code>digup</code>），未分配到任何档，各档答 <code>unsupported</code>。</li>
-<li>主控的空闲任务支持清单中的 <code>exec</code>（<code>Contents/MacOS</code> 下的可执行文件名），供不带 Python 的配件使用。</li>
+<li><b>任务</b>：客户端请求的任务名为 <code>luoke-search.embed</code>（配件清单同名；开发时 <code>LUOKE_SEARCH_EMBED_TASK</code> 可换）。主控主线配方中该任务仍叫 <code>digup.embed</code> 且未分配到任何档，所以对当前主控，<code>GET /tasks</code> 里没有 <code>luoke-search.embed</code>，深度搜索判为"这版主控还不认识深度搜索"，只按字词搜。</li>
+<li><b>接口</b>：<code>GET /tasks</code> 读状态和参数（<code>batch</code>、<code>max_chars</code>、<code>max_total_chars</code>、<code>vector_space</code>，以及 <code>image_batch</code>、<code>image_budgets</code>、<code>audio_batch</code>、<code>max_image_bytes</code>、<code>max_audio_bytes</code>、<code>max_audio_secs</code>），<code>X-Luoke-Tasks-Version</code> 变了就重读；<code>POST /tasks/&lt;任务&gt;/v1/embed</code> 送 <code>texts</code> 或 <code>inputs</code>（图片、声音的字节，不送路径）。请求头 <code>X-Luoke-Accessory: luoke-search/0.1.0</code>、<code>X-Luoke-Priority</code>，需要时 <code>X-Luoke-Allow-Battery</code>。要求 768 维，收到后再做 L2 归一化。</li>
+<li><b>提示词</b>：查询 <code>task: search result | query: …</code>；文档 <code>title: … | text: …</code>（标题用文件名，PDF 用它自己的标题）。</li>
+<li><b>图片和声音</b>：索引里不存像素和声音；主控的参数表明收某一种时，从文件重新做出同样的帧和窗口再送。预算：照片和图片 JPEG ≤ 1024 px、140；截图 PNG ≤ 1536 px、280；扫描页 PNG 1400 px、280；视频帧 JPEG ≤ 1024 px、70；声音 30 秒 WAV。一个一个做、攒够一批就发；这一档不收的预算照旧等；暂时失败的试 3 次，主控说读不了的那条不再要向量。补向量时重做图片和声音这一步不在看门狗下。</li>
+<li><b>主控不在或忙</b>：照常读取、按字词搜，答复带 <code>partial_reason</code>（主控没在运行、不认识深度搜索、这台 Mac 不提供、还有多少段等向量等），不退回任何自带模型。补向量时 <code>power_cooldown</code>、<code>lane_busy</code> 这类短歇原地等完；其他拒绝停下、下次再补（<code>index --wait</code> 时按 <code>retry_after_ms</code> 等，连续没进展才翻倍，最多 300 秒）。<code>vector_space</code> 变了只重算向量，不重读文件；空间不一致时这次只按字词搜。</li>
+<li><b>开发不碰正在用的主控</b>：只有默认数据目录 <code>~/.luoke-search</code> 才回退到已安装主控的 socket；带 <code>--index</code> 或 <code>LUOKE_SEARCH_HOME</code> 的运行只认 <code>LUOKE_HUB_SOCKET</code>，没设就只按字词搜。</li>
 </ul>
 
 <h2>数据</h2>
 <div class="tbl"><table>
 <tr><th>位置</th><th>内容</th></tr>
-<tr><td><code>~/.luoke-search/</code></td><td>数据目录（700），排除出 Time Machine</td></tr>
-<tr><td>索引（SQLite）</td><td>读出的文字、关键词表、向量和条目信息</td></tr>
-<tr><td><code>run/agent.sock</code></td><td>MCP socket</td></tr>
+<tr><td><code>~/.luoke-search/</code></td><td>数据目录（700），整个排除出 Time Machine</td></tr>
+<tr><td><code>index.noindex/index.sqlite</code></td><td>索引（600，schema 4）：<code>items</code>（路径、来源 file / photos、类型、大小、时间、inode、拍摄时间、标题、状态 pending / partial / done / failed / skipped、读法版本、进队时间、没读完的次数）、<code>segments</code>（类型、位置、向量模态、768 维 fp16 向量、等什么、暂时失败的次数）、像数据集的文件夹、<code>fts</code>（读出的文字，另存 NFKC 前的原文给片段和向量用）、<code>fts_tri</code>、<code>meta</code></td></tr>
+<tr><td><code>settings.json</code></td><td>要搜的文件夹、跳过的文件夹、照片图库（默认关）、用电池时建索引（默认开）。读不了时不按设置建索引、不改设置</td></tr>
+<tr><td><code>state.json</code></td><td>未执行的方案（出新方案时清掉 7 天前的）、outbox 已答或放下的事、第一遍完成时间</td></tr>
+<tr><td><code>run/stopped-file.json</code></td><td>看门狗停下时正在读的文件、它的修改时间和大小、原因；下次记入索引后删除</td></tr>
+<tr><td><code>run/agent.sock</code></td><td>MCP socket（目录 700、socket 600；残留且没人在听的删掉重开，有人在听就拒绝）</td></tr>
 </table></div>
 <ul>
-<li>名字像密码、密钥、证书、令牌的文件一律跳过，不读内容；结果、卡片、outbox 中不放凭证。</li>
-<li>向主控只送文字、图片和声音的字节，不送路径。日志只记元数据，不记搜索词、片段和文件内容。</li>
-<li>第一版不读也不写记忆，搜索词不写进记忆。</li>
+<li>日志只写计数（"1 new, 0 changed…"），不写路径、搜索词、片段和文件内容。</li>
+<li>结果、卡片、outbox 中不放凭证；凭证文件从不读入。</li>
+</ul>
+
+<h2>评测</h2>
+<p>题库在 <code>evals/</code>，语料全是合成的（<code>testbed/zh</code>，英文和多语言语料用上游脚本生成）；真实文件的题库不进仓库。以下为默认打分 A 在实验室主控（开了图片和声音的嵌入任务）、测试机上的结果。</p>
+<div class="tbl"><table>
+<tr><th>题库</th><th>题数</th><th>第一名 / 前五 / MRR</th></tr>
+<tr><td><code>zh.json</code> 中文</td><td>51</td><td>0.90 / 0.96 / 0.93</td></tr>
+<tr><td><code>zh-office.json</code> 文档格式</td><td>11</td><td>1.00</td></tr>
+<tr><td><code>zh-receipts.json</code> 中英混排扫描小票</td><td>7</td><td>1.00</td></tr>
+<tr><td><code>synthetic.json</code> 英文</td><td>37</td><td>0.97 / 1.00 / 0.98</td></tr>
+<tr><td><code>multilingual.json</code> 孟加拉文、阿拉伯文</td><td>48</td><td>0.92 / 0.98 / 0.94</td></tr>
+<tr><td><code>en-answerable.json</code> 英文（与无答案题配对）</td><td>36</td><td>0.94 / 1.00 / 0.97</td></tr>
+<tr><td>以上合计</td><td>190</td><td>178 题第一（0.937）/ 0.984 / 0.959</td></tr>
+<tr><td><code>few-*.json</code> 文档多、图少（200 篇文档加 5 / 10 / 19 张图或 3 段录音）</td><td>117</td><td>115 题第一；问图的 34 题全对，问录音的 3 题对 1 题</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>拒答（候选门槛 0.70 / 0.66 / 0.70，未开启）</th><th>结果</th></tr>
+<tr><td>没有答案的题拦下（<code>zh-noanswer.json</code> 37 + <code>en-noanswer.json</code> 39）</td><td>65 / 76（86%），其中近似题 27 / 34</td></tr>
+<tr><td>有答案的 190 题中第一条对却被拦（错拒）</td><td>21（11%）；英文、阿拉伯文对的答案余弦偏低，文字 0.70 对它们偏高</td></tr>
+<tr><td>文档多、图少的无答案题（73）</td><td>拦下 69；这批有答案的题错拒 0</td></tr>
+</table></div>
+<ul>
+<li>打分做法按事先写好的挑法选定：A 在 190 题上第一名最高；<code>b</code> 误拒最少但第一名低得多（164 题）；<code>c40</code> 与 A 打平但误拒更多；<code>d</code> 在文档多、图少的题上与 A 打平，在 190 题上少 4 题。</li>
+<li>参考向量集 9 条（文字 5、截图、照片、视频帧、声音各 1）经本工具客户端对主控算的向量余弦均 ≥ 0.999。</li>
+<li>搜索端到端（要查询向量 + 混合排序）p50 15 ms、p90 17 ms。嵌入进程（开图片和声音）峰值约 4 GB。</li>
 </ul>
 
 <h2>故障</h2>
 <ul>
-<li>主控不在、忙或任务不可用：照常读取文件、按字词搜，向量以后补；不退回任何自带模型。</li>
-<li>还在建索引或缺向量时，答复带 <code>partial</code> 和一句说明。</li>
+<li>主控不在、忙或任务不可用：照常读文件、按字词搜，向量以后补；答复带 <code>partial</code> 和一句说明。</li>
+<li>还在建索引或长文件没读完时答复带 <code>partial</code>（"还有 N 个文件没读""还有 N 个长文件没读完"）；图片、视频、录音在等主控时说明暂时只能按名字和里面的字找到。</li>
+<li>文件读不了（加密 PDF、打不开的视频格式、只在 iCloud 的图库视频）记为 failed，不影响其他文件；文件消失后结果不再列出，<code>search_open</code> 答 <code>stale</code>。</li>
+<li>SIGTERM：手上那个文件读完就停，删掉自己的 socket；剩下的下次接着读。</li>
+<li>单个文件读得过久或内存失控：看门狗记下该文件、以退出码 75 退出，由主控重新拉起；该文件记为读不了，改过才重读。</li>
 </ul>
 
 <h2>已知限制</h2>
 <ul>
-<li>图片和声音的向量要等主控换上带新 mlx-vlm 的引擎包；在那之前图片、视频、录音只能按文件名和 OCR 的字找。有了图片和声音才发布。</li>
-<li>没有拒答门槛：语料里没有答案时多半仍给出不相干的结果；门槛在这类题有评测数字后再定，在那之前答复不表示"有把握"。</li>
-<li>邮件读取接口、与 agent 的分工（谁判断要搜、手机端要什么、A2UI 目录没有图片组件时缩略图怎么办）待商定。</li>
+<li>主控配方中的任务名仍是 <code>digup.embed</code>、未分档：在主控改名并分档之前，正式环境只能按字词搜。</li>
+<li>图片和声音的向量要等主控换上带新 mlx-vlm 的引擎包；在那之前图片、视频、录音、照片只能按文件名、拍摄时间和 OCR 的字找。有了图片和声音才发布。</li>
+<li>拒答门槛未开启，<code>confident</code> 有结果时恒为 <code>null</code>，答复不表示"有把握"。</li>
+<li>默认打分 A 在文档多、图少于 20 张的文件夹里，对的图 z 余量小（测得最低约 2.3）；文档和图讲同一类东西的语料还没测。录音题成绩不稳定（3 题对 1 题）。</li>
+<li>配件清单不登记 <code>jobs</code>：第一遍目前由常驻服务兜底读，<code>index --job</code> 要等主控能起不带 Python 的空闲任务的版本后再登记。</li>
+<li>录音和视频音轨不转文字；mkv、webm 等 AVFoundation 打不开的视频读不了。</li>
+<li>照片图库测过假图库和一次真图库只读测试；iCloud"优化 Mac 储存空间"的图库和几万张的图库没测；PDF 无法从外部定位到页，只在答复中说明页码；「照片」无法定位到某一张。</li>
+<li>邮件、记忆、打字记录的搜索（第二步）未做；与 agent 的分工（谁判断要搜、手机端要什么、缩略图）待商定。</li>
 </ul>
