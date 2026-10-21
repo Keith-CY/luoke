@@ -73,7 +73,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 <body>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-21 17:05</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-21 17:06</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -471,7 +471,7 @@ sequenceDiagram
 <section class="page" id="mail" data-title="邮件助手 luoke-mail">
 <h1>邮件助手</h1>
 <p class="lede">用本机模型整理整个邮箱：逐封分拣近期邮件，清理旧邮件，体检订阅并挑选精选，起草回复放入草稿箱。可撤回的处理会自动执行，并在"今日处理"页集中复查。</p>
-<p class="src">仓库 <code>luoke-mail</code>（包 <code>luoke_mail</code>）· 版本 0.16.3 · 支持 Gmail、QQ、网易 163/126、自定义 IMAP，可连接多个邮箱</p>
+<p class="src">仓库 <code>luoke-mail</code>（包 <code>luoke_mail</code>）· 版本 0.16.4 · 支持 Gmail、QQ、网易 163/126、自定义 IMAP，可连接多个邮箱</p>
 
 <h2>职责</h2>
 <ul>
@@ -509,7 +509,7 @@ sequenceDiagram
 </ol>
 <h3>以前的未读邮件</h3>
 <ul>
-<li>第 3 步记下的队列作为空闲任务分拣（空闲任务中排最前，属于主控的 <code>clean</code> 任务）：每次取 10 封（取时不标已读），入库标 <code>items.older</code>，以后台优先级交给 <code>luoke-mail.triage</code>，每段最多 4 分钟；主控说暂停或模型出错时停下，下次再分。分完照常标已读。</li>
+<li>第 3 步记下的队列作为空闲任务分拣（空闲任务中排最前，属于主控的 <code>clean</code> 任务）：每次取 10 封（取时不标已读），入库标 <code>items.older</code>，以后台优先级交给 <code>luoke-mail.triage</code>，每段最多 4 分钟；主控说暂停或模型出错时停下，下次再分。分好的当场标已读；照确认过的习惯归档、加标签（以及螺壳自己的邮箱的自动处理）在下一次同步时做，和其他待处理邮件一样。</li>
 <li>同步不等它们，收件箱的"未分析"数也不计它们；"清理 → 收件箱中的旧邮件"不再列出它们。</li>
 <li>以后用户自己标回未读的旧邮件不再排进来；分拣范围放大后，新范围里的邮件由正常同步分拣。</li>
 </ul>
@@ -599,7 +599,7 @@ sequenceDiagram
 <tr><td><code>~/.luoke-mail/config.json</code></td><td>邮箱、模型、处理模式、后台整理、功耗、学习、往来、自动标已读等设置</td></tr>
 <tr><td><code>~/.luoke-mail/luoke.db</code></td><td>邮件和建议（<code>items</code>，<code>older</code> 标记补分的以前未读邮件）、规则、发件人决定、缓存、清理（<code>old_mail</code>）、操作记录和撤销步骤（<code>log</code>）、精选、学习候选</td></tr>
 <tr><td>钥匙串 <code>luoke-mail:imap</code>、<code>luoke-mail:engine</code></td><td>邮箱授权码、模型服务密钥；Mac 锁定时读不到会跳过本轮，不视为未保存</td></tr>
-<tr><td><code>service.log</code>、<code>app.log</code></td><td>常驻实例的标准错误（启动时超过 2 MB 先另存为 <code>service.log.1</code>，超过 1 MB 清空）；从应用后台启动的实例的标准错误（追加，不轮转）</td></tr>
+<tr><td><code>service.log</code>、<code>app.log</code></td><td>常驻实例的标准错误（启动时超过 2 MB 先另存为 <code>service.log.1</code>）；从应用后台启动的实例的标准错误（追加，不轮转）</td></tr>
 <tr><td><code>run/notifications.json</code></td><td>最近 100 条通知：时间、标题、发送方式、启动器的结果（posted / not allowed / failed / no answer）</td></tr>
 <tr><td><code>token</code>、<code>server.json</code>、<code>server.lock</code></td><td>页面令牌（0600）；运行中实例的 pid、端口、是否常驻；单实例锁</td></tr>
 <tr><td><code>idle.lock</code>、<code>resident</code></td><td>空闲工作锁（应用和主控的空闲任务不同时做）；后台整理已开启的标记</td></tr>
@@ -1516,6 +1516,7 @@ sequenceDiagram
 <ul>
 <li>新增深度搜索章节（按登记的设计，尚无代码），总览、核心概念、术语表、任务表补上深度搜索；出版流程改为每格当天评一遍、10 分钟无进展的看门狗、复测挪到发布后并在下一版生效；主控首次运行补五步步骤条和完成页的通知权限，空闲任务补 <code>exec</code>；决策页补 0016–0018 的 2026-10-20 修订（luoke-core cd6a6c7）。</li>
 <li>深度搜索章节按代码重写（luoke-search 0.1.0，2a26c1b）：运行形态（常驻 .app、FSEvents 更新、能停能续的第一遍和常驻兜底、单个文件的看门狗、长文件先读开头、跳过像数据集的文件夹）、各类文件的读法、字词与意思的混合打分（默认做法 A，其他做法只在 <code>eval --scoring</code> 里）、拒答门槛未开启（<code>confident</code> 无结果为 false、有结果为 null）、MCP 工具和命令行、数据文件、对主控的依赖（客户端用 <code>luoke-search.embed</code>，主控配方仍为 <code>digup.embed</code>；清单未登记 <code>jobs</code>）、各题库与拒答的评测结果。邮件助手更新到 0.16.3：范围以前的未读邮件作为空闲任务补分、标已读并在今日处理单列，清理不再列出；设置里的通知权限提示、"打开通知设置"和"发送测试通知"；<code>service.log</code> 和 <code>run/notifications.json</code>；清理页丢弃迟到的答复；刷新后停在上次查看的邮箱。</li>
+<li>邮件助手 0.16.4：旧未读邮件照习惯处理在下一次同步时做；日志只按 2 MB 另存，不再清空。</li>
 </ul>
 
 <h2>2026-10-20</h2>
