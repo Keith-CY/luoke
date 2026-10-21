@@ -1,6 +1,6 @@
 # CLAUDE.md — 螺壳顶层
 
-给在螺壳任何一个项目里工作的 Claude Code 会话看的。本仓库放顶层文档；`luoke-core/`、`luoke-ime/`、`luoke-mem/`、`luoke-mail/`、`luoke-agent/`、`luoke-community/`、`luoke-search/` 作为子模块挂在下面，每个仍是独立仓库，各有自己的 CLAUDE.md。
+给在螺壳任何一个项目里工作的 Claude Code 会话看的。本仓库放顶层文档；`luoke-core/`、`luoke-ime/`、`luoke-mem/`、`luoke-mail/`、`luoke-agent/`、`luoke-community/`、`luoke-search/`、`luoke-audit/` 作为子模块挂在下面，每个仍是独立仓库，各有自己的 CLAUDE.md。
 
 @ops/CLAUDE.md
 
