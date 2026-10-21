@@ -10,6 +10,7 @@
 <tr><td><a href="#mail">邮件助手</a></td><td><code>luoke-mail</code></td><td>分拣、清理、精选、起草；可撤回的处理自动执行并每日复查</td></tr>
 <tr><td><a href="#ime">输入法</a></td><td><code>luoke-ime</code></td><td>macOS 输入法；沙盒引擎出候选，本地模型重排和联想</td></tr>
 <tr><td><a href="#agent">agent「螺壳」</a></td><td><code>luoke-agent</code></td><td>唯一主动联系用户的组件；合并提问、建议和工具的事项</td></tr>
+<tr><td><a href="#search">深度搜索</a></td><td><code>luoke-search</code></td><td>给本机文件和照片图库建索引，按字词和意思找回；没有界面，经 agent 调用（规划中）</td></tr>
 </table></div>
 
 <h2>架构</h2>
@@ -20,6 +21,7 @@ flowchart LR
     mail["邮件助手"]
     ime["输入法"]
     agent["agent「螺壳」"]
+    search["深度搜索（规划中）"]
     subgraph core["主控"]
       engine["推理引擎（底座）"]
       workers["打分 / 联想 / 嵌入进程"]
@@ -36,6 +38,8 @@ flowchart LR
   mem -- "理解" --> ime
   mem -- "提问、建议" --> agent
   agent -- "调用能力" --> mail
+  agent -.->|MCP 工具| search
+  search -.->|嵌入| workers
   ext["外部工具（如 pi）"] -.-> ep --> engine
 </pre>
 

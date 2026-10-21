@@ -12,7 +12,7 @@
 <tr><td><code>resident</code></td><td>是否常驻（配件也可经 <code>PUT /accessory/resident</code> 声明）</td></tr>
 <tr><td><code>memory</code></td><td>是否读写记忆；决定卸载时能否"一起忘掉"、首次运行是否需要记忆</td></tr>
 <tr><td><code>tasks</code></td><td>需要主控提供的任务（名、kind）</td></tr>
-<tr><td><code>jobs</code></td><td>空闲任务：<code>name</code>、<code>command</code>（可用占位符 <code>{memory}</code>、<code>{tool}</code>）、<code>min_interval_minutes</code>（默认 120）、<code>allow_battery</code>（默认否）、<code>timeout_minutes</code>（默认 30）</td></tr>
+<tr><td><code>jobs</code></td><td>空闲任务：<code>name</code>、<code>command</code>（可用占位符 <code>{memory}</code>、<code>{tool}</code>）、<code>min_interval_minutes</code>（默认 120）、<code>allow_battery</code>（默认否）、<code>timeout_minutes</code>（默认 30）、<code>exec</code>（可选：不带 Python 的配件用 <code>Contents/MacOS</code> 下的可执行文件名，不能含路径）</td></tr>
 <tr><td><code>capabilities</code></td><td>给 agent 的能力声明，主控原样转交（规格见 agent 的工具协议）</td></tr>
 <tr><td><code>data</code></td><td>卸载时可删除的数据路径，只接受与配件自身标识绑定的形式</td></tr>
 <tr><td><code>commands</code></td><td><code>uninstall</code>（删除数据前运行）、<code>forget-tool</code>（从记忆中忘掉本工具写入的内容）</td></tr>

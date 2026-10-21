@@ -11,7 +11,7 @@
 <tr><td>推理引擎</td><td>主控</td><td>oMLX（引擎包内的 <code>omlx-cli serve</code>），只监听 127.0.0.1 随机端口并带随机密钥；运行底座模型</td></tr>
 <tr><td>打分 / 联想工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td>引擎包 Python 运行 <code>score_worker.py</code>，经管道通信，不监听端口</td></tr>
 <tr><td>嵌入工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td><code>embed_worker.py</code>，同上</td></tr>
-<tr><td>空闲任务</td><td>主控</td><td>配件 .app 自带的 Python 运行清单中 <code>jobs</code> 的命令，环境带 <code>LUOKE_HUB_SOCKET</code></td></tr>
+<tr><td>空闲任务</td><td>主控</td><td>配件 .app 自带的 Python（或清单 <code>exec</code> 指定的 <code>Contents/MacOS</code> 下的可执行文件）运行清单中 <code>jobs</code> 的命令，环境带 <code>LUOKE_HUB_SOCKET</code></td></tr>
 <tr><td>常驻配件</td><td>本体</td><td>以 <code>--resident</code> 启动；10 分钟内最多自动重启 3 次</td></tr>
 <tr><td>记忆界面</td><td>本体</td><td>用主控自带的 Python 运行记忆的入口</td></tr>
 <tr><td>高级用户端点</td><td>主控内的线程</td><td>OpenAI 兼容，127.0.0.1:17860 起</td></tr>
@@ -77,7 +77,7 @@
 <ul>
 <li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。</li>
 <li><b>配件安装校验</b>：<code>codesign --verify --deep --strict</code>、Team ID、bundle id 与清单一致、公证票据有效。</li>
-<li><b>首次运行</b>：预检（档位、磁盘、系统版本、照实说明体验）→ 选择应用 → 确认下载计划 → 下载 → 本机检查 → 完成（注册登录项；输入法未启用时调一次它的 <code>--register</code>，每秒检查是否已添加，添加后改提示）。</li>
+<li><b>首次运行</b>：步骤条五步：这台 Mac（预检：档位、磁盘、系统版本、照实说明体验）→ 选应用 → 确认下载 → 下载安装（含本机试跑）→ 完成；升级时三步：要更新的 → 更新 → 完成。完成页：注册登录项；输入法的 <code>--status</code> 答 <code>not_registered</code> 时调一次它的 <code>--register</code>，每秒检查是否已添加，添加后改提示；列出每个应用的通知权限（经启动器的 <code>--notify-status</code>）：已允许 / 还没问过（按钮发一条测试通知，让系统询问）/ 已关闭（按钮打开该应用的通知设置），未全部允许时每 2 秒刷新。</li>
 <li><b>升级</b>：新安装器的 <code>built_at</code> 更新时，旧主控移入 <code>previous.noindex</code>，新主控显示升级页，按新清单更新引擎、模型和比清单旧的应用（不降级，不重装用户回滚掉的版本）；可回到上一版。</li>
 <li><b>检查更新</b>：菜单「检查更新…」按本机主控的渠道（内部版 <code>internal-*</code>、beta <code>beta*</code>）查 <code>luokelabs/luoke-releases</code>，<code>built_at</code> 更新才算；升级时下载主控 DMG，核大小、sha256、公证票据、签名和 Team ID，再打开它走原地升级。本机版、开发版不查。默认每天自动检查一次，只在菜单显示「有更新：&lt;版本&gt;…」，不自动安装。</li>
 <li><b>配件回滚</b>：菜单「配件回到上一版…」把配件与 <code>previous.noindex</code> 里的旧版对调（先核签名、Team ID、bundle id、公证，按路径结束进程，不动输入源；再点一次换回）。主控把每个被本版配方认可的配件版本及其通过的任务记入 <code>verified-history.json</code>（每配件 3 个版本）；换回的版本只能用记录中的任务，无记录的不能换回。</li>
