@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-22 12:03</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-22 17:02</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -1609,7 +1609,13 @@ sequenceDiagram
 </ul>
 
 <h2>缺陷</h2>
-<p>暂无已知未修复的缺陷。</p>
+<ul>
+<li><b>记忆：重复的事实不合并</b>：同一机构的不同说法各成一条，用户确认过一条后新说法仍另起；别人来信推出的事实读起来像账户清单。</li>
+<li><b>邮件助手 × 记忆：机构名截断、话题键分散</b>：机构名截到 20 字，话题键带上模型选的类别，同一机构落在不同话题下。</li>
+<li><b>记忆：带"领域："前缀的品牌名话题绕过品牌过滤</b>；精选口味没走兴趣那道发件人过滤。</li>
+<li><b>记忆：整理只管猜测、老化只管生效的</b>：后加的过滤管不到已生效的理解，很久以前的事实留在猜测里。</li>
+<li><b>邮件助手 × 记忆：改建议并当场处理被算成两次</b>，可能造出不存在的处理习惯。</li>
+</ul>
 
 <h2>待讨论</h2>
 <ul>
@@ -1655,6 +1661,7 @@ sequenceDiagram
 <h2>2026-10-22</h2>
 <ul>
 <li>新增"提示词"页：逐个生成任务写明输入、输出约定、校验与退路、预算和评测；任务表按最近一次内部版的台账更正档位（往来邮件三档开、话题归纳 16 档开、打字归纳 16 档仍关），注明起草回复、订阅阅读、精选挑选没有评测，往来邮件的硬性条目改为都一次不能错，补主控定输出上限的算法；决策页补 0013、0014 的 2026-10-21 修订（写进用户自己的账户不算外传、深度搜索索引可存完整号码并在输出时遮，日历和浏览器桥由主控提供）和 0017 的 2026-10-22 修订（主控窗口和邮件网页 beta1 前统一改版，封闭测试 11-02 起一批）。</li>
+<li>在主人的真实数据上核查了一遍记忆的产出（只看计数和理解那一句，记录在团队内部）；已知问题新增五条缺陷。</li>
 </ul>
 
 <h2>2026-10-21</h2>
