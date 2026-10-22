@@ -73,12 +73,12 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 <body>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-21 17:06</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-22 12:03</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
-  <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
+  <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
 <div class="navgroup"><div class="navlabel">组件</div><a href="#core" data-page="core">主控 luoke-core</a><a href="#mem" data-page="mem">记忆 luoke-mem</a><a href="#mail" data-page="mail">邮件助手 luoke-mail</a><a href="#ime" data-page="ime">输入法 luoke-ime</a><a href="#agent" data-page="agent">agent「螺壳」</a><a href="#search" data-page="search">深度搜索 luoke-search</a></div>
-<div class="navgroup"><div class="navlabel">参考</div><a href="#ref-api" data-page="ref-api">主控任务接口</a><a href="#ref-manifest" data-page="ref-manifest">配件清单与配方</a><a href="#ref-mem" data-page="ref-mem">记忆接口与表结构</a><a href="#ref-tasks" data-page="ref-tasks">任务与提示词</a><a href="#ref-files" data-page="ref-files">文件位置</a></div>
+<div class="navgroup"><div class="navlabel">参考</div><a href="#ref-api" data-page="ref-api">主控任务接口</a><a href="#ref-manifest" data-page="ref-manifest">配件清单与配方</a><a href="#ref-mem" data-page="ref-mem">记忆接口与表结构</a><a href="#ref-tasks" data-page="ref-tasks">任务与提示词</a><a href="#ref-prompts" data-page="ref-prompts">提示词</a><a href="#ref-files" data-page="ref-files">文件位置</a></div>
 <div class="navgroup"><div class="navlabel">运维</div><a href="#ops" data-page="ops">运行与发布</a></div>
 <div class="navgroup"><div class="navlabel">其他</div><a href="#decisions" data-page="decisions">决策</a><a href="#open" data-page="open">已知问题</a><a href="#glossary" data-page="glossary">术语表</a><a href="#changelog" data-page="changelog">文档修订</a></div>
 </nav>
@@ -1281,21 +1281,21 @@ sequenceDiagram
 </section>
 <section class="page" id="ref-tasks" data-title="任务与提示词">
 <h1>任务与提示词</h1>
-<p class="lede">所有经主控调用模型的任务：所属配件、种类、各硬件档是否开启、提示词位置。档位以发布时的支持台账为准，下表为当前主线配方的状态。</p>
+<p class="lede">所有经主控调用模型的任务：所属配件、种类、各硬件档是否开启、提示词位置。档位以发布时的支持台账为准，下表为最近一次内部版的台账。每个提示词的输入、输出、校验和评测见「提示词」页。</p>
 
 <div class="tbl"><table>
 <tr><th>任务</th><th>kind</th><th>16</th><th>32</th><th>128</th><th>提示词 / 实现</th></tr>
 <tr><td><code>luoke-mail.triage</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
-<tr><td><code>luoke-mail.draft</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.draft</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code>；无评测，沿用</td></tr>
 <tr><td><code>luoke-mail.cleanup</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
 <tr><td><code>luoke-mail.senders</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
-<tr><td><code>luoke-mail.digest-read</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/digest.py</code></td></tr>
-<tr><td><code>luoke-mail.digest-pick</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/editor.py</code></td></tr>
+<tr><td><code>luoke-mail.digest-read</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/digest.py</code>；无评测，沿用</td></tr>
+<tr><td><code>luoke-mail.digest-pick</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/editor.py</code>；无评测，沿用</td></tr>
 <tr><td><code>luoke-mail.learn-sent</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
 <tr><td><code>luoke-mail.learn-orgs</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
-<tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>关</td><td>关</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
-<tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code></td></tr>
-<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
+<tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
+<tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code>；16 档过 1 遍，连过 3 遍才开</td></tr>
+<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
 <tr><td><code>luoke-ime.rerank</code></td><td>score</td><td>开</td><td>开</td><td>开</td><td>无提示词（打分）</td></tr>
 <tr><td><code>luoke-ime.predict</code></td><td>predict</td><td>开</td><td>开</td><td>开</td><td>无提示词（续写）</td></tr>
 <tr><td><code>digup.embed</code></td><td>embed</td><td>关</td><td>关</td><td>关</td><td>无提示词（嵌入）；深度搜索使用，登记名 <code>luoke-search.embed</code>，配方尚未改名</td></tr>
@@ -1305,16 +1305,163 @@ sequenceDiagram
 <ul>
 <li>提示词写在调用方配件里，随请求发给主控；主控不保存、不记录请求文字。</li>
 <li>输出一律用 JSON schema 约束；配件负责解析和校验，失败时有明确的退路（重问一次、判为保留、跳过）。</li>
+<li>输出上限由主控按 <code>item_tokens</code> × 条目数 + <code>fixed_tokens</code> 定，调用方给的 <code>max_tokens</code> 不用。</li>
 <li>邮件、网页、打的字等输入一律声明为数据，其中给 AI 的指令不执行。</li>
-<li>结果的数量、依据和把握程度由代码判定，模型只负责提名。</li>
+<li>结果的数量、依据和把握程度由代码判定，模型只负责提名；例外是订阅阅读的分数由模型给，≥ 2 才进精选候选。</li>
 </ul>
 
 <h2>评测</h2>
 <ul>
-<li>每个任务有评测集和硬性条目，评测结果写入配方的 <code>evidence</code>，并决定各档开关。</li>
+<li>评测集和硬性条目写在主控的 <code>tools/release_evals.json</code>，评测结果写入配方的 <code>evidence</code>，并决定各档开关。起草回复、订阅阅读、精选挑选没有评测，各档一直沿用上一版的"开"。</li>
 <li>分拣的硬性条目：正常邮件零误报，可疑邮件最多漏 1 封。</li>
-<li>往来邮件：已了结的不能报为"等你"，"等你"的漏报不超过 1 个。模型答"轮到谁"（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>），由代码映射为等你 / 在等对方 / 已了结。</li>
+<li>往来邮件：已了结的不能报为"等你"，"等你"的不能漏，都一次不能错。模型答"轮到谁"（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>），由代码映射为等你 / 在等对方 / 已了结。</li>
 <li>话题归纳：只写品牌名或来源名即为失败；另记是否有具体对象。</li>
+</ul>
+</section>
+<section class="page" id="ref-prompts" data-title="提示词">
+<h1>提示词</h1>
+<p class="lede">每个生成任务的提示词要点：送进去什么、要求输出什么、代码怎么校验、失败时怎么退。只做摘要，原文在各配件仓库。任务名、种类和各档开关见「任务与提示词」。</p>
+
+<h2>共同做法</h2>
+<ul>
+<li>提示词、输出 schema 和校验都在调用方配件里；主控只做通用的生成：不思考（<code>enable_thinking</code> 关），把 <code>response_format</code> 的 JSON schema 交给引擎约束，消息里的特殊 token 先中和。</li>
+<li>输出上限由主控定：<code>item_tokens</code> × 条目数 + <code>fixed_tokens</code>；调用方给的 <code>max_tokens</code> 不用。输入超过任务的 <code>max_chars</code> 答 <code>input_too_long</code>，条目数超过 <code>batch</code> 拒绝；调用方事先按上限二分截短或减少条目。</li>
+<li>输入里的邮件、订阅、打的字一律声明为数据，其中给 AI 的话不执行。</li>
+<li>结果多少、能不能生效、把握几档由代码和记忆的表决定；模型只负责提名和分类。</li>
+<li>两个客户端都不看 <code>finish_reason</code>：输出被截断时按"无法解析"处理。</li>
+</ul>
+
+<h2>邮件助手</h2>
+
+<h3><code>luoke-mail.triage</code> 分拣</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>SYSTEM_PROMPT</code>、<code>build_messages</code>、<code>parse_output</code></td></tr>
+<tr><td>输入</td><td>今天的日期和星期；用户邮箱；记忆的"关于用户 / 处理习惯"块（≤ 600 字）；用户给这个发件人定的规则（有就给）；是否精选来源；发件域名验证结论（16 档不给）；邮件头（发件人、收件人、抄送、时间、主题、附件名 ≤ 10 个）和正文，正文按档的字符上限截短</td></tr>
+<tr><td>输出</td><td>13 个字段都必填：<code>category</code>（8 选 1）、<code>priority</code>（high / medium / low）、<code>action</code>（reply / schedule / follow_up / archive / ignore）、<code>summary</code>（≤ 40 字）、<code>reason</code>、<code>due_date</code>（只填邮件明写的期限）、5 个 <code>event_*</code>（只在 schedule 时填）、<code>reply_points</code>（≤ 3 条）、<code>suspicious</code>；文字字段用设置的语言</td></tr>
+<tr><td>校验与退路</td><td><code>action</code> 不在枚举：带一句纠正重问一次，再不行报错；<code>category</code> / <code>priority</code> 不在枚举改成 other / medium；日期须 YYYY-MM-DD、时间须 HH:MM，否则置空；只有 schedule 且日期有效才生成日程；<code>suspicious</code> 为真时强制 ignore + phishing</td></tr>
+<tr><td>预算</td><td>输出 320 + 80 token；温度 0</td></tr>
+<tr><td>评测</td><td>47 封（19 封难题，含钓鱼、注入、发件域名验证）；硬性：正常邮件 0 误报，可疑邮件最多漏 1 封。不覆盖规则、记忆块、精选来源、非中文输出，也不评摘要和回复要点</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.draft</code> 起草回复</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>DRAFT_PROMPT</code>、<code>draft_reply</code></td></tr>
+<tr><td>输入</td><td>记忆块（≤ 600 字）；分拣给的回复要点（没有时让模型自己写得体的回复）；原邮件（同分拣，截短）。不含往来历史和今天的日期</td></tr>
+<tr><td>输出</td><td><code>{"body"}</code>：用原邮件的语言，不编造事实、日期、数字和承诺，要用户补的地方用【】标出，可署名</td></tr>
+<tr><td>校验与退路</td><td>只查正文非空；不重问，失败报错。草稿只存进草稿箱，由用户自己发</td></tr>
+<tr><td>预算</td><td>输出 800 + 100 token；温度 0.3、<code>top_p</code> 0.9</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.cleanup</code> 清理判断</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>old_prompt</code>、<code>build_old_messages</code>、<code>parse_old_output</code></td></tr>
+<tr><td>输入</td><td>今天的日期；每封旧邮件一行：发件人、日期、主题（≤ 100 字）、Gmail 分类、用户贴的标签（≤ 4 个）；一批 ≤ 25 封，按字符上限再减。星标和"保留"类标签的邮件不送</td></tr>
+<tr><td>输出</td><td><code>items[{n, kind}]</code>：kind 11 类（归档范围没有 <code>todo</code>）；拿不准选保留类，不选 promotion / newsletter / notification</td></tr>
+<tr><td>校验与退路</td><td>编号越界或 kind 不在枚举的丢掉；一条可用的都没有就重问一次；两次都不行，整批记为 other（不建议删）</td></tr>
+<tr><td>预算</td><td>每封 30 + 60 token</td></tr>
+<tr><td>评测</td><td>40 封（归档 30、收件箱 10）；硬性：该留的不能判成会建议删的三类</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.senders</code> 订阅体检</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>SENDER_PROMPT</code>、<code>classify_senders</code></td></tr>
+<tr><td>输入</td><td>很少打开的发件人：名称、地址、最近 ≤ 8 个主题（各 ≤ 60 字）；一批 ≤ 10 个</td></tr>
+<tr><td>输出</td><td><code>items[{n, kind}]</code>：kind 7 类；拿不准选 transactional / security / other</td></tr>
+<tr><td>校验与退路</td><td>越界、不在枚举的丢掉；解析失败返回空（什么都不建议），不重问</td></tr>
+<tr><td>预算</td><td>每个 25 + 60 token</td></tr>
+<tr><td>评测</td><td>25 个发件人；硬性：账单、登录提醒、个人往来不能判成会建议退订的类别</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.digest-read</code> 订阅阅读</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/digest.py</code>：<code>PROMPT</code>、<code>build_messages</code>、<code>parse</code></td></tr>
+<tr><td>输入</td><td>今天的日期；记忆的"精选口味 / 关注的话题 / 不感兴趣"块（≤ 500 字）；收藏和点过"没兴趣"的标题各 ≤ 8 条；订阅正文（HTML 转文字，≤ 12000 字，链接编成〔n〕，≤ 40 个，去掉退订和分享链接），再按档的字符上限截短</td></tr>
+<tr><td>输出</td><td><code>items</code> ≤ 8 条：<code>title</code>（≤ 30 字）、<code>score</code>（0–3）、<code>lasting</code>、<code>link</code>（编号或 null）、<code>topics</code>（1–3 个）、<code>summary</code> 和 <code>why</code>（score ≥ 2 时填）</td></tr>
+<tr><td>校验与退路</td><td>分数夹到 0–3；链接编号不在列表里就不带链接；文字截长；解析失败重问一次，再失败跳过这封。score ≥ 2 才进精选候选</td></tr>
+<tr><td>预算</td><td>输出 1300 + 100 token</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.digest-pick</code> 精选挑选</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/editor.py</code>：<code>PROMPT</code>、<code>choose</code>、<code>edit</code></td></tr>
+<tr><td>输入</td><td>同阅读的口味块和标题例子；候选 ≤ 30 条：标题、摘要、来源、日期、另有几家报道</td></tr>
+<tr><td>输出</td><td><code>picks[{n, why}]</code>，正好 k 条，<code>why</code> ≤ 30 字</td></tr>
+<tr><td>校验与退路</td><td>编号去重、去越界；可用的不到 k 的一半，改按阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
+<tr><td>预算</td><td>每条 60 + 60 token</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.learn-sent</code> 了解你：发出的邮件</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/learn.py</code>：<code>SENT_PROMPT</code>、<code>parse_facts</code>；生效规则在 <code>learner.py</code></td></tr>
+<tr><td>输入</td><td>用户邮箱；每封：日期、收件人和抄送（各 ≤ 4 个）、主题、用户自己写的部分（去掉引用和转发，≤ 800 字，取头尾）；一批 ≤ 8 封</td></tr>
+<tr><td>输出</td><td><code>facts[{topic, who, text, n}]</code>：topic 15 类之一，关系类填 <code>who</code>，<code>text</code> ≤ 30 字，<code>n</code> 为依据的邮件编号</td></tr>
+<tr><td>校验与退路</td><td>topic 不在列表、没有有效编号的丢掉；文字遮凭证；两封邮件一致才交给记忆，单值类（职位、单位等）以最新依据为准；解析失败重问一次，再失败这批没有事实</td></tr>
+<tr><td>预算</td><td>每封 100 + 100 token</td></tr>
+<tr><td>评测</td><td>4 组；硬性：第三方的说法、秘密、一次性安排的词不能出现</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.learn-orgs</code> 了解你：机构来信</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/learn.py</code>：<code>RECEIVED_PROMPT</code>、<code>parse_facts</code></td></tr>
+<tr><td>输入</td><td>多次来信、用户打开过的机构：名称、地址、封数、首末月份、最近 ≤ 6 个主题；一批 ≤ 10 个</td></tr>
+<tr><td>输出</td><td>同上，topic 8 类之一，<code>who</code> 为机构名，<code>text</code> 写明机构和用户的关系</td></tr>
+<tr><td>校验与退路</td><td>同上；只写机构名的丢掉，缺机构名的补上；结果只作猜测，等用户确认</td></tr>
+<tr><td>预算</td><td>每个 60 + 100 token</td></tr>
+<tr><td>评测</td><td>2 组；硬性：只发广告的不能当客户，不能记某一笔金额</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.thread</code> 往来邮件</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/threads.py</code>：<code>PROMPT</code>、<code>parse</code></td></tr>
+<tr><td>输入</td><td>一串往来的最后 ≤ 6 封（按字符上限再减）：日期、用户或对方（名字）、主题、本人写的正文（≤ 600 字）；末尾注明最后一封是谁写的</td></tr>
+<tr><td>输出</td><td><code>state</code>（user_turn / other_turn / done）、<code>since</code>（YYYY-MM-DD）、<code>what</code>（≤ 25 字）；拿不准选 done</td></tr>
+<tr><td>校验与退路</td><td><code>state</code> 映射为等你 / 在等对方 / 已了结，不在枚举就重问一次，再失败按已了结；<code>since</code> 格式不对置空；done 时清空另两项</td></tr>
+<tr><td>预算</td><td>60 + 100 token</td></tr>
+<tr><td>评测</td><td>16 串（10 串硬性）；硬性：已了结的不能报成等你，等你的不能漏，都一次不能错</td></tr>
+</table></div>
+
+<h2>记忆</h2>
+
+<h3><code>luoke-mem.typing</code> 常用说法和话题</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mem/learn.py</code>：<code>PROMPT</code>、<code>messages</code>、<code>parse</code>、<code>_term</code>、<code>_interest</code></td></tr>
+<tr><td>输入</td><td>已记下的话题、还在观察的话题、用户否定过的、用户在输入法里删掉的候选；打的字每段 ≤ 300 字，一批 ≤ 40 段、≤ 6000 字</td></tr>
+<tr><td>输出</td><td><code>terms[{text, evidence}]</code>（2–12 字，照用户的写法）；<code>interests[{text, evidence}]</code>（≤ 20 字，至少两段依据，最多 3 个）</td></tr>
+<tr><td>校验与退路</td><td>编号越界丢掉，兴趣不足两段丢掉；常用说法由代码在打字记录里数（3 天、5 次）才生效，词长、常用词表、凭证、否定过的拦掉；兴趣依据跨 3 天才生效，之前是猜测。解析失败这批没有结果</td></tr>
+<tr><td>预算</td><td>每段 8 + 300 token</td></tr>
+<tr><td>评测</td><td>24 例；硬性：一次性安排、别人的事、删掉的候选、秘密不能出现；底线：说法召回 70、话题召回 60、每例普通词误收 ≤ 0.5</td></tr>
+</table></div>
+
+<h3><code>luoke-mem.topics</code> 邮件里的话题</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mem/topics.py</code>：<code>PROMPT</code>、<code>sources</code>、<code>parse</code>、<code>take</code></td></tr>
+<tr><td>输入</td><td>已记下的话题（≤ 30）和否定过的（≤ 20）；按来源汇总的邮件助手记录（一年内、用户自己的、非事务邮件），每个来源 ≤ 1200 字：名称、往来次数（来信、打开、精选里读过 / 有用 / 没兴趣）、邮件助手说过的"讲的是"、最近 ≤ 3 封原文开头（各 ≤ 280 字）；一批 ≤ 40 个来源，16 档 ≤ 20 个、≤ 3000 字</td></tr>
+<tr><td>输出</td><td><code>interests</code> ≤ 5 个，写成"领域：具体对象"（≤ 30 字）；<code>dislikes</code> ≤ 3 个，只认精选里说的"没兴趣"</td></tr>
+<tr><td>校验与退路</td><td>超过 40 字、没有有效来源编号、含凭证的丢掉；只是品牌或来源名、纯拉丁字母的丢掉；跨轮累计 ≥ 2 条记录才算；每个话题立即作为精选口味，作为"关注的话题"要过记忆的表且最多 8 个；不感兴趣必须有精选反馈记录。提示词换版本时全部重读</td></tr>
+<tr><td>预算</td><td>每个来源 8 + 300 token</td></tr>
+<tr><td>评测</td><td>3 个虚构的人共 12 例；硬性：一次性的事、别人的事、凭证不能进话题名，只写来源名算失败；另记话题是否具体</td></tr>
+</table></div>
+
+<h2>没有提示词的任务</h2>
+<ul>
+<li><code>luoke-ime.rerank</code>：只送前文和候选，主控返回每个候选的对数概率。</li>
+<li><code>luoke-ime.predict</code>：只送前文，主控续写若干分支，停在标点。</li>
+<li><code>luoke-search.embed</code>：只送加好检索前缀的文字，返回向量。</li>
+<li>agent 和系统检查目前不调用生成任务。</li>
 </ul>
 </section>
 <section class="page" id="ref-files" data-title="文件位置">
@@ -1433,11 +1580,11 @@ sequenceDiagram
 
 <div class="tbl"><table>
 <tr><th>编号</th><th>决策</th><th>要点</th></tr>
-<tr><td>0013</td><td>本机就是边界</td><td>数据不离开用户自己的设备（设备之间端到端加密）；本机组件之间不为隐私设限；凭证不进记忆，走钥匙串；高级用户端点的密钥可自定义或留空</td></tr>
-<tr><td>0014</td><td>分工</td><td>模型在主控，理解在记忆，事情在工具，沟通在 agent；工具之间不互相调用，只有 agent 调用工具的能力；高级用户端点经主控调度</td></tr>
+<tr><td>0013</td><td>本机就是边界</td><td>数据不离开用户自己的设备（设备之间端到端加密）；本机组件之间不为隐私设限；凭证不进记忆，走钥匙串；高级用户端点的密钥可自定义或留空。修订（2026-10-21）：写进用户自己选定并在用的账户（他的邮箱、日历等）不算外传，内容仍不能发到螺壳自己的服务器和用户没选过的第三方；深度搜索的本机索引可以原样存文件里认出的完整证件号、卡号，也原样送主控的嵌入模型，交给 agent 或画成卡片时再遮（只遮那一串、保留后四位），名字像密码、密钥的文件照旧不读，记忆仍不存凭证的值</td></tr>
+<tr><td>0014</td><td>分工</td><td>模型在主控，理解在记忆，事情在工具，沟通在 agent；工具之间不互相调用，只有 agent 调用工具的能力；高级用户端点经主控调度。修订（2026-10-21）：日历由主控提供（EventKit 薄接口：按时间段读、写一个事件并返回编号，日历权限挂在主控名下，配方登记哪些配件能用，第三方配件要先得到用户同意，beta1 之后做）；浏览器桥（native messaging host）也放在主控里，插件经它把页面信息交给主控的任务、调用日历接口、写记忆记录，网页内容只接受固定格式</td></tr>
 <tr><td>0015</td><td>记忆如何形成理解</td><td>工具只记录、记忆读原文下结论；三档把握程度；合理默认、按反馈调整；看依据的时间；空闲时反刍产出提问和建议；不按上下文隔离</td></tr>
 <tr><td>0016</td><td>替用户做事</td><td>能撤回的在确认习惯后自动执行并提示，事后每日复查；不可逆或对外的始终由用户点按；agent 自己的邮箱可按类型放开外发。修订（2026-10-20）：系统检查查出的"会重建的缓存"（npm、uv、pip、Xcode DerivedData、Homebrew 旧版本等）用户确认一次后可对该类自动清理，每次提示，对应应用在用时跳过；其余类别每次由用户点按，删除优先移到废纸篓；只往本机下载的签名规则包、特征库不算数据外传</td></tr>
-<tr><td>0017</td><td>v1 首发</td><td>首发邮件助手和输入法，主控和记忆随装；Apple 芯片、16 GB 起、macOS 26.2+；先封闭测试再公开。修订（2026-10-20）：所有面向用户的界面按同一套设计规范，由品牌负责人在 <code>luoke-brand</code> 牵头制定，各项目照着改；beta1 只修明显的不一致，整体改版在 beta1 之后；顶层仓库公开，各组件仓库仍私有</td></tr>
+<tr><td>0017</td><td>v1 首发</td><td>首发邮件助手和输入法，主控和记忆随装；Apple 芯片、16 GB 起、macOS 26.2+；先封闭测试再公开。修订（2026-10-20）：所有面向用户的界面按同一套设计规范，由品牌负责人在 <code>luoke-brand</code> 牵头制定，各项目照着改；beta1 只修明显的不一致，整体改版在 beta1 之后；顶层仓库公开，各组件仓库仍私有。修订（2026-10-22）：主控的所有窗口和邮件助手的网页在 beta1 前按设计规范整体改，记忆界面、输入法设置、agent 卡片仍在 beta1 之后；封闭测试顺延到 11-02，只做一批，招满 30 位为止，开测时对应的项目在 GitHub 上公开</td></tr>
 <tr><td>0018</td><td>推理和权重归主控</td><td>体系内没有脱离主控的模型运行实例；垂类模型也做成主控的任务，对延迟敏感的走优先通道。修订（2026-10-20）：嵌入任务由深度搜索（<code>luoke-search</code>）接手，任务名由 <code>digup.embed</code> 改为 <code>luoke-search.embed</code>，接口、评测和多模态安排不变</td></tr>
 </table></div>
 
@@ -1511,6 +1658,11 @@ sequenceDiagram
 </section>
 <section class="page" id="changelog" data-title="文档修订">
 <h1>文档修订</h1>
+
+<h2>2026-10-22</h2>
+<ul>
+<li>新增"提示词"页：逐个生成任务写明输入、输出约定、校验与退路、预算和评测；任务表按最近一次内部版的台账更正档位（往来邮件三档开、话题归纳 16 档开、打字归纳 16 档仍关），注明起草回复、订阅阅读、精选挑选没有评测，往来邮件的硬性条目改为都一次不能错，补主控定输出上限的算法；决策页补 0013、0014 的 2026-10-21 修订（写进用户自己的账户不算外传、深度搜索索引可存完整号码并在输出时遮，日历和浏览器桥由主控提供）和 0017 的 2026-10-22 修订（主控窗口和邮件网页 beta1 前统一改版，封闭测试 11-02 起一批）。</li>
+</ul>
 
 <h2>2026-10-21</h2>
 <ul>

@@ -1,20 +1,20 @@
 <!-- id: ref-tasks | nav: 任务与提示词 | group: 参考 -->
 <h1>任务与提示词</h1>
-<p class="lede">所有经主控调用模型的任务：所属配件、种类、各硬件档是否开启、提示词位置。档位以发布时的支持台账为准，下表为当前主线配方的状态。</p>
+<p class="lede">所有经主控调用模型的任务：所属配件、种类、各硬件档是否开启、提示词位置。档位以发布时的支持台账为准，下表为最近一次内部版的台账。每个提示词的输入、输出、校验和评测见「提示词」页。</p>
 
 <div class="tbl"><table>
 <tr><th>任务</th><th>kind</th><th>16</th><th>32</th><th>128</th><th>提示词 / 实现</th></tr>
 <tr><td><code>luoke-mail.triage</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
-<tr><td><code>luoke-mail.draft</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
+<tr><td><code>luoke-mail.draft</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code>；无评测，沿用</td></tr>
 <tr><td><code>luoke-mail.cleanup</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
 <tr><td><code>luoke-mail.senders</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/triage.py</code></td></tr>
-<tr><td><code>luoke-mail.digest-read</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/digest.py</code></td></tr>
-<tr><td><code>luoke-mail.digest-pick</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/editor.py</code></td></tr>
+<tr><td><code>luoke-mail.digest-read</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/digest.py</code>；无评测，沿用</td></tr>
+<tr><td><code>luoke-mail.digest-pick</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/editor.py</code>；无评测，沿用</td></tr>
 <tr><td><code>luoke-mail.learn-sent</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
 <tr><td><code>luoke-mail.learn-orgs</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/learn.py</code></td></tr>
-<tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>关</td><td>关</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
-<tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code></td></tr>
-<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
+<tr><td><code>luoke-mail.thread</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mail/threads.py</code></td></tr>
+<tr><td><code>luoke-mem.typing</code></td><td>generate</td><td>关</td><td>开</td><td>开</td><td><code>luoke_mem/learn.py</code>；16 档过 1 遍，连过 3 遍才开</td></tr>
+<tr><td><code>luoke-mem.topics</code></td><td>generate</td><td>开</td><td>开</td><td>开</td><td><code>luoke_mem/topics.py</code></td></tr>
 <tr><td><code>luoke-ime.rerank</code></td><td>score</td><td>开</td><td>开</td><td>开</td><td>无提示词（打分）</td></tr>
 <tr><td><code>luoke-ime.predict</code></td><td>predict</td><td>开</td><td>开</td><td>开</td><td>无提示词（续写）</td></tr>
 <tr><td><code>digup.embed</code></td><td>embed</td><td>关</td><td>关</td><td>关</td><td>无提示词（嵌入）；深度搜索使用，登记名 <code>luoke-search.embed</code>，配方尚未改名</td></tr>
@@ -24,14 +24,15 @@
 <ul>
 <li>提示词写在调用方配件里，随请求发给主控；主控不保存、不记录请求文字。</li>
 <li>输出一律用 JSON schema 约束；配件负责解析和校验，失败时有明确的退路（重问一次、判为保留、跳过）。</li>
+<li>输出上限由主控按 <code>item_tokens</code> × 条目数 + <code>fixed_tokens</code> 定，调用方给的 <code>max_tokens</code> 不用。</li>
 <li>邮件、网页、打的字等输入一律声明为数据，其中给 AI 的指令不执行。</li>
-<li>结果的数量、依据和把握程度由代码判定，模型只负责提名。</li>
+<li>结果的数量、依据和把握程度由代码判定，模型只负责提名；例外是订阅阅读的分数由模型给，≥ 2 才进精选候选。</li>
 </ul>
 
 <h2>评测</h2>
 <ul>
-<li>每个任务有评测集和硬性条目，评测结果写入配方的 <code>evidence</code>，并决定各档开关。</li>
+<li>评测集和硬性条目写在主控的 <code>tools/release_evals.json</code>，评测结果写入配方的 <code>evidence</code>，并决定各档开关。起草回复、订阅阅读、精选挑选没有评测，各档一直沿用上一版的"开"。</li>
 <li>分拣的硬性条目：正常邮件零误报，可疑邮件最多漏 1 封。</li>
-<li>往来邮件：已了结的不能报为"等你"，"等你"的漏报不超过 1 个。模型答"轮到谁"（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>），由代码映射为等你 / 在等对方 / 已了结。</li>
+<li>往来邮件：已了结的不能报为"等你"，"等你"的不能漏，都一次不能错。模型答"轮到谁"（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>），由代码映射为等你 / 在等对方 / 已了结。</li>
 <li>话题归纳：只写品牌名或来源名即为失败；另记是否有具体对象。</li>
 </ul>

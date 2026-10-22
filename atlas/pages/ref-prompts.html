@@ -1,0 +1,145 @@
+<!-- id: ref-prompts | nav: 提示词 | group: 参考 -->
+<h1>提示词</h1>
+<p class="lede">每个生成任务的提示词要点：送进去什么、要求输出什么、代码怎么校验、失败时怎么退。只做摘要，原文在各配件仓库。任务名、种类和各档开关见「任务与提示词」。</p>
+
+<h2>共同做法</h2>
+<ul>
+<li>提示词、输出 schema 和校验都在调用方配件里；主控只做通用的生成：不思考（<code>enable_thinking</code> 关），把 <code>response_format</code> 的 JSON schema 交给引擎约束，消息里的特殊 token 先中和。</li>
+<li>输出上限由主控定：<code>item_tokens</code> × 条目数 + <code>fixed_tokens</code>；调用方给的 <code>max_tokens</code> 不用。输入超过任务的 <code>max_chars</code> 答 <code>input_too_long</code>，条目数超过 <code>batch</code> 拒绝；调用方事先按上限二分截短或减少条目。</li>
+<li>输入里的邮件、订阅、打的字一律声明为数据，其中给 AI 的话不执行。</li>
+<li>结果多少、能不能生效、把握几档由代码和记忆的表决定；模型只负责提名和分类。</li>
+<li>两个客户端都不看 <code>finish_reason</code>：输出被截断时按"无法解析"处理。</li>
+</ul>
+
+<h2>邮件助手</h2>
+
+<h3><code>luoke-mail.triage</code> 分拣</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>SYSTEM_PROMPT</code>、<code>build_messages</code>、<code>parse_output</code></td></tr>
+<tr><td>输入</td><td>今天的日期和星期；用户邮箱；记忆的"关于用户 / 处理习惯"块（≤ 600 字）；用户给这个发件人定的规则（有就给）；是否精选来源；发件域名验证结论（16 档不给）；邮件头（发件人、收件人、抄送、时间、主题、附件名 ≤ 10 个）和正文，正文按档的字符上限截短</td></tr>
+<tr><td>输出</td><td>13 个字段都必填：<code>category</code>（8 选 1）、<code>priority</code>（high / medium / low）、<code>action</code>（reply / schedule / follow_up / archive / ignore）、<code>summary</code>（≤ 40 字）、<code>reason</code>、<code>due_date</code>（只填邮件明写的期限）、5 个 <code>event_*</code>（只在 schedule 时填）、<code>reply_points</code>（≤ 3 条）、<code>suspicious</code>；文字字段用设置的语言</td></tr>
+<tr><td>校验与退路</td><td><code>action</code> 不在枚举：带一句纠正重问一次，再不行报错；<code>category</code> / <code>priority</code> 不在枚举改成 other / medium；日期须 YYYY-MM-DD、时间须 HH:MM，否则置空；只有 schedule 且日期有效才生成日程；<code>suspicious</code> 为真时强制 ignore + phishing</td></tr>
+<tr><td>预算</td><td>输出 320 + 80 token；温度 0</td></tr>
+<tr><td>评测</td><td>47 封（19 封难题，含钓鱼、注入、发件域名验证）；硬性：正常邮件 0 误报，可疑邮件最多漏 1 封。不覆盖规则、记忆块、精选来源、非中文输出，也不评摘要和回复要点</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.draft</code> 起草回复</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>DRAFT_PROMPT</code>、<code>draft_reply</code></td></tr>
+<tr><td>输入</td><td>记忆块（≤ 600 字）；分拣给的回复要点（没有时让模型自己写得体的回复）；原邮件（同分拣，截短）。不含往来历史和今天的日期</td></tr>
+<tr><td>输出</td><td><code>{"body"}</code>：用原邮件的语言，不编造事实、日期、数字和承诺，要用户补的地方用【】标出，可署名</td></tr>
+<tr><td>校验与退路</td><td>只查正文非空；不重问，失败报错。草稿只存进草稿箱，由用户自己发</td></tr>
+<tr><td>预算</td><td>输出 800 + 100 token；温度 0.3、<code>top_p</code> 0.9</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.cleanup</code> 清理判断</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>old_prompt</code>、<code>build_old_messages</code>、<code>parse_old_output</code></td></tr>
+<tr><td>输入</td><td>今天的日期；每封旧邮件一行：发件人、日期、主题（≤ 100 字）、Gmail 分类、用户贴的标签（≤ 4 个）；一批 ≤ 25 封，按字符上限再减。星标和"保留"类标签的邮件不送</td></tr>
+<tr><td>输出</td><td><code>items[{n, kind}]</code>：kind 11 类（归档范围没有 <code>todo</code>）；拿不准选保留类，不选 promotion / newsletter / notification</td></tr>
+<tr><td>校验与退路</td><td>编号越界或 kind 不在枚举的丢掉；一条可用的都没有就重问一次；两次都不行，整批记为 other（不建议删）</td></tr>
+<tr><td>预算</td><td>每封 30 + 60 token</td></tr>
+<tr><td>评测</td><td>40 封（归档 30、收件箱 10）；硬性：该留的不能判成会建议删的三类</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.senders</code> 订阅体检</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>SENDER_PROMPT</code>、<code>classify_senders</code></td></tr>
+<tr><td>输入</td><td>很少打开的发件人：名称、地址、最近 ≤ 8 个主题（各 ≤ 60 字）；一批 ≤ 10 个</td></tr>
+<tr><td>输出</td><td><code>items[{n, kind}]</code>：kind 7 类；拿不准选 transactional / security / other</td></tr>
+<tr><td>校验与退路</td><td>越界、不在枚举的丢掉；解析失败返回空（什么都不建议），不重问</td></tr>
+<tr><td>预算</td><td>每个 25 + 60 token</td></tr>
+<tr><td>评测</td><td>25 个发件人；硬性：账单、登录提醒、个人往来不能判成会建议退订的类别</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.digest-read</code> 订阅阅读</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/digest.py</code>：<code>PROMPT</code>、<code>build_messages</code>、<code>parse</code></td></tr>
+<tr><td>输入</td><td>今天的日期；记忆的"精选口味 / 关注的话题 / 不感兴趣"块（≤ 500 字）；收藏和点过"没兴趣"的标题各 ≤ 8 条；订阅正文（HTML 转文字，≤ 12000 字，链接编成〔n〕，≤ 40 个，去掉退订和分享链接），再按档的字符上限截短</td></tr>
+<tr><td>输出</td><td><code>items</code> ≤ 8 条：<code>title</code>（≤ 30 字）、<code>score</code>（0–3）、<code>lasting</code>、<code>link</code>（编号或 null）、<code>topics</code>（1–3 个）、<code>summary</code> 和 <code>why</code>（score ≥ 2 时填）</td></tr>
+<tr><td>校验与退路</td><td>分数夹到 0–3；链接编号不在列表里就不带链接；文字截长；解析失败重问一次，再失败跳过这封。score ≥ 2 才进精选候选</td></tr>
+<tr><td>预算</td><td>输出 1300 + 100 token</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.digest-pick</code> 精选挑选</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/editor.py</code>：<code>PROMPT</code>、<code>choose</code>、<code>edit</code></td></tr>
+<tr><td>输入</td><td>同阅读的口味块和标题例子；候选 ≤ 30 条：标题、摘要、来源、日期、另有几家报道</td></tr>
+<tr><td>输出</td><td><code>picks[{n, why}]</code>，正好 k 条，<code>why</code> ≤ 30 字</td></tr>
+<tr><td>校验与退路</td><td>编号去重、去越界；可用的不到 k 的一半，改按阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
+<tr><td>预算</td><td>每条 60 + 60 token</td></tr>
+<tr><td>评测</td><td>无</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.learn-sent</code> 了解你：发出的邮件</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/learn.py</code>：<code>SENT_PROMPT</code>、<code>parse_facts</code>；生效规则在 <code>learner.py</code></td></tr>
+<tr><td>输入</td><td>用户邮箱；每封：日期、收件人和抄送（各 ≤ 4 个）、主题、用户自己写的部分（去掉引用和转发，≤ 800 字，取头尾）；一批 ≤ 8 封</td></tr>
+<tr><td>输出</td><td><code>facts[{topic, who, text, n}]</code>：topic 15 类之一，关系类填 <code>who</code>，<code>text</code> ≤ 30 字，<code>n</code> 为依据的邮件编号</td></tr>
+<tr><td>校验与退路</td><td>topic 不在列表、没有有效编号的丢掉；文字遮凭证；两封邮件一致才交给记忆，单值类（职位、单位等）以最新依据为准；解析失败重问一次，再失败这批没有事实</td></tr>
+<tr><td>预算</td><td>每封 100 + 100 token</td></tr>
+<tr><td>评测</td><td>4 组；硬性：第三方的说法、秘密、一次性安排的词不能出现</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.learn-orgs</code> 了解你：机构来信</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/learn.py</code>：<code>RECEIVED_PROMPT</code>、<code>parse_facts</code></td></tr>
+<tr><td>输入</td><td>多次来信、用户打开过的机构：名称、地址、封数、首末月份、最近 ≤ 6 个主题；一批 ≤ 10 个</td></tr>
+<tr><td>输出</td><td>同上，topic 8 类之一，<code>who</code> 为机构名，<code>text</code> 写明机构和用户的关系</td></tr>
+<tr><td>校验与退路</td><td>同上；只写机构名的丢掉，缺机构名的补上；结果只作猜测，等用户确认</td></tr>
+<tr><td>预算</td><td>每个 60 + 100 token</td></tr>
+<tr><td>评测</td><td>2 组；硬性：只发广告的不能当客户，不能记某一笔金额</td></tr>
+</table></div>
+
+<h3><code>luoke-mail.thread</code> 往来邮件</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mail/threads.py</code>：<code>PROMPT</code>、<code>parse</code></td></tr>
+<tr><td>输入</td><td>一串往来的最后 ≤ 6 封（按字符上限再减）：日期、用户或对方（名字）、主题、本人写的正文（≤ 600 字）；末尾注明最后一封是谁写的</td></tr>
+<tr><td>输出</td><td><code>state</code>（user_turn / other_turn / done）、<code>since</code>（YYYY-MM-DD）、<code>what</code>（≤ 25 字）；拿不准选 done</td></tr>
+<tr><td>校验与退路</td><td><code>state</code> 映射为等你 / 在等对方 / 已了结，不在枚举就重问一次，再失败按已了结；<code>since</code> 格式不对置空；done 时清空另两项</td></tr>
+<tr><td>预算</td><td>60 + 100 token</td></tr>
+<tr><td>评测</td><td>16 串（10 串硬性）；硬性：已了结的不能报成等你，等你的不能漏，都一次不能错</td></tr>
+</table></div>
+
+<h2>记忆</h2>
+
+<h3><code>luoke-mem.typing</code> 常用说法和话题</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mem/learn.py</code>：<code>PROMPT</code>、<code>messages</code>、<code>parse</code>、<code>_term</code>、<code>_interest</code></td></tr>
+<tr><td>输入</td><td>已记下的话题、还在观察的话题、用户否定过的、用户在输入法里删掉的候选；打的字每段 ≤ 300 字，一批 ≤ 40 段、≤ 6000 字</td></tr>
+<tr><td>输出</td><td><code>terms[{text, evidence}]</code>（2–12 字，照用户的写法）；<code>interests[{text, evidence}]</code>（≤ 20 字，至少两段依据，最多 3 个）</td></tr>
+<tr><td>校验与退路</td><td>编号越界丢掉，兴趣不足两段丢掉；常用说法由代码在打字记录里数（3 天、5 次）才生效，词长、常用词表、凭证、否定过的拦掉；兴趣依据跨 3 天才生效，之前是猜测。解析失败这批没有结果</td></tr>
+<tr><td>预算</td><td>每段 8 + 300 token</td></tr>
+<tr><td>评测</td><td>24 例；硬性：一次性安排、别人的事、删掉的候选、秘密不能出现；底线：说法召回 70、话题召回 60、每例普通词误收 ≤ 0.5</td></tr>
+</table></div>
+
+<h3><code>luoke-mem.topics</code> 邮件里的话题</h3>
+<div class="tbl"><table>
+<tr><th>项</th><th>要点</th></tr>
+<tr><td>位置</td><td><code>luoke_mem/topics.py</code>：<code>PROMPT</code>、<code>sources</code>、<code>parse</code>、<code>take</code></td></tr>
+<tr><td>输入</td><td>已记下的话题（≤ 30）和否定过的（≤ 20）；按来源汇总的邮件助手记录（一年内、用户自己的、非事务邮件），每个来源 ≤ 1200 字：名称、往来次数（来信、打开、精选里读过 / 有用 / 没兴趣）、邮件助手说过的"讲的是"、最近 ≤ 3 封原文开头（各 ≤ 280 字）；一批 ≤ 40 个来源，16 档 ≤ 20 个、≤ 3000 字</td></tr>
+<tr><td>输出</td><td><code>interests</code> ≤ 5 个，写成"领域：具体对象"（≤ 30 字）；<code>dislikes</code> ≤ 3 个，只认精选里说的"没兴趣"</td></tr>
+<tr><td>校验与退路</td><td>超过 40 字、没有有效来源编号、含凭证的丢掉；只是品牌或来源名、纯拉丁字母的丢掉；跨轮累计 ≥ 2 条记录才算；每个话题立即作为精选口味，作为"关注的话题"要过记忆的表且最多 8 个；不感兴趣必须有精选反馈记录。提示词换版本时全部重读</td></tr>
+<tr><td>预算</td><td>每个来源 8 + 300 token</td></tr>
+<tr><td>评测</td><td>3 个虚构的人共 12 例；硬性：一次性的事、别人的事、凭证不能进话题名，只写来源名算失败；另记话题是否具体</td></tr>
+</table></div>
+
+<h2>没有提示词的任务</h2>
+<ul>
+<li><code>luoke-ime.rerank</code>：只送前文和候选，主控返回每个候选的对数概率。</li>
+<li><code>luoke-ime.predict</code>：只送前文，主控续写若干分支，停在标点。</li>
+<li><code>luoke-search.embed</code>：只送加好检索前缀的文字，返回向量。</li>
+<li>agent 和系统检查目前不调用生成任务。</li>
+</ul>
