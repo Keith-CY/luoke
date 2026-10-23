@@ -29,7 +29,7 @@
 
 <h2>任务</h2>
 <h3><code>GET /tasks</code></h3>
-<p>返回 <code>{contract, hub_version, tier, tasks_version, background: {state, reasons}, tasks: {&lt;名&gt;: {kind, status, reason, progress, slow, combo, params, vector_space?}}, luoke_mem?: {path, version}}</code>。只列出请求方自己的任务；<code>luoke_mem</code> 给出主控内置的记忆库路径。</p>
+<p>返回 <code>{contract, hub_version, tier, tasks_version, background: {state, reasons}, tasks: {&lt;名&gt;: {kind, status, reason, progress, slow, combo, model_name, params, vector_space?}}, luoke_mem?: {path, version}}</code>。只列出请求方自己的任务；<code>model_name</code> 是只用来显示的模型名（配方的 label，没有则取目录名，本档没有模型时为 null）；<code>luoke_mem</code> 给出主控内置的记忆库路径。</p>
 <h3>生成 <code>POST /tasks/&lt;task&gt;/v1/chat/completions</code></h3>
 <ul>
 <li>任务 kind 为 <code>generate</code>。请求为 OpenAI 格式的 <code>messages</code>，必须 <code>stream: true</code>，带 <code>luoke_items</code>（本批条目数，≤ <code>batch</code>）；<code>response_format</code> 可用 <code>json_schema</code> 或 <code>json_object</code>。</li>

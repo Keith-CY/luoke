@@ -73,8 +73,8 @@
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/editor.py</code>：<code>PROMPT</code>、<code>choose</code>、<code>edit</code></td></tr>
 <tr><td>输入</td><td>同阅读的口味块和标题例子；候选 ≤ 30 条：标题、摘要、来源、日期、另有几家报道</td></tr>
-<tr><td>输出</td><td><code>picks[{n, why}]</code>，正好 k 条，<code>why</code> ≤ 30 字</td></tr>
-<tr><td>校验与退路</td><td>编号去重、去越界；可用的不到 k 的一半，改按阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
+<tr><td>输出</td><td><code>picks[{n, why}]</code>，最多 k 条（不感兴趣的宁可少选，不凑数），<code>why</code> ≤ 30 字</td></tr>
+<tr><td>校验与退路</td><td>编号去重、去越界、<code>why</code> 截到 60 字；一条可用的都没有时，改按用户点过有用、阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
 <tr><td>预算</td><td>每条 60 + 60 token</td></tr>
 <tr><td>评测</td><td>无</td></tr>
 </table></div>
