@@ -13,6 +13,7 @@
 </table></div>
 
 <h2>主控 <code>~/Library/Application Support/luoke-core/</code></h2>
+<p>开发版（bundle id <code>ai.luoke.core.dev</code>）用 <code>luoke-core-dev/</code>，结构相同。</p>
 <div class="tbl"><table>
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
@@ -26,7 +27,8 @@
 <tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
 <tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
 <tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包和挂载记录，新主控启动后清除</td></tr>
-<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「配件回到上一版…」换回，卸载配件时一并删除</td></tr>
+<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「恢复旧版本应用」换回，卸载配件时一并删除</td></tr>
+<tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再一步换上</td></tr>
 </table></div>
 
 <h2>记忆 <code>~/.luoke/</code></h2>

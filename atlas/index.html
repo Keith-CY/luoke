@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-23 12:09</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-23 16:58</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -242,7 +242,7 @@ sequenceDiagram
 <section class="page" id="core" data-title="主控 luoke-core">
 <h1>主控</h1>
 <p class="lede">本机所有模型推理的唯一入口，也是螺壳的安装器。它按配方为每个硬件档选择模型，调度各配件的请求和空闲任务，监管推理引擎和专用模型进程，并负责下载、升级和卸载。</p>
-<p class="src">仓库 <code>luoke-core</code> · bundle id <code>ai.luoke.core</code> · 接口细节见「参考 · 主控任务接口」「参考 · 配件清单与配方」</p>
+<p class="src">仓库 <code>luoke-core</code> · bundle id <code>ai.luoke.core</code>（开发版 <code>ai.luoke.core.dev</code>，名为「螺壳主控（开发）」，数据在 <code>luoke-core-dev</code>，不认领 <code>luoke://</code>）· 接口细节见「参考 · 主控任务接口」「参考 · 配件清单与配方」</p>
 
 <h2>组成</h2>
 <div class="tbl"><table>
@@ -319,7 +319,7 @@ sequenceDiagram
 <li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。</li>
 <li><b>配件安装校验</b>：<code>codesign --verify --deep --strict</code>、Team ID、bundle id 与清单一致、公证票据有效。</li>
 <li><b>首次运行</b>：步骤条五步：这台 Mac（预检：档位、磁盘、系统版本、照实说明体验；内存不到 16 GB 或系统版本低于引擎要求时停在这一步）→ 选应用 → 确认下载 → 下载安装（逐项进度，主控排第一行；应用装好即打开，不等模型；含本机试跑）→ 完成；升级时三步：要更新的 → 更新 → 完成；后来加装应用用小窗口、没有步骤条，预检不拦。离开下载页时注册登录项（加装不注册）；下载页结束时分几种结局给出下一步：有项没下下来（先继续 / 重试）、试跑没过（重新检查 / 继续）、缺底座、主控没起来（重试会重启主控）。确认页上废纸篓里有旧输入法时提示。完成页：输入法的 <code>--status</code> 答 <code>not_registered</code> 时调一次它的 <code>--register</code>，每秒检查是否已添加；添加后可试打并一键切换（<code>--select</code>），切不过去时给「重新登记输入法」，重新登记后仍不行则提示注销重新登录；列出每个应用的通知权限（经启动器的 <code>--notify-status</code>）：已允许 / 还没问过（按钮发一条测试通知，让系统询问）/ 已关闭（按钮打开该应用的通知设置），未全部允许时每 2 秒刷新。</li>
-<li><b>升级</b>：分两步。新安装器的 <code>built_at</code> 更新时，安装器显示小进度窗、结束旧主控（等 45 秒后强制）和记忆进程，旧版移入 <code>previous.noindex</code>，拷入新版并写 <code>run/upgrade.json</code>，再打开新主控。新主控读到标记（读后删除）显示升级页，列出这次的更新说明、主控（已换好）、比清单旧的应用（不降级，不重装用户回滚掉的版本）、未装的引擎包和本档缺的模型；用户点「开始更新」后下载更新（要换的应用先退出、装好再拉起），点「以后再说」或关掉窗口则这次不更新应用（常驻应用照常拉起，下次主控启动再提示），引擎和模型之后自动补；没有要下的直接完成。有项没更新上时完成页可回到上一版主控。</li>
+<li><b>升级</b>：分两步。新安装器的 <code>built_at</code> 更新时，安装器显示小进度窗，先把新版拷到环境目录的 <code>staging.noindex</code> 并核对签名，再结束旧主控（等 45 秒后强制）和记忆进程，旧版移入 <code>previous.noindex</code>，一步改名换上新版，写 <code>run/upgrade.json</code> 后打开新主控；系统的「App 管理」挡住替换时照实说明并给出打开该设置页的按钮，不留半份拷贝。新主控读到标记（读后删除）显示升级页，列出这次的更新说明、主控（已换好）、比清单旧的应用（不降级，不重装用户回滚掉的版本）、未装的引擎包和本档缺的模型；用户点「开始更新」后下载更新（要换的应用先退出、装好再拉起），点「以后再说」或关掉窗口则这次不更新应用（常驻应用照常拉起，下次主控启动再提示），引擎和模型之后自动补；没有要下的直接完成。有项没更新上时完成页可回到上一版主控。</li>
 <li><b>检查更新</b>：菜单「检查更新」打开窗口（检查更新 → 下载核对 → 安装），按本机主控的渠道（内部版 <code>internal-*</code>、beta <code>beta*</code>）查 <code>luokelabs/luoke-releases</code>，<code>built_at</code> 更新才算；有新版本时列出发布说明的「更新说明」一节和大小。升级时下载主控 DMG（显示进度），核大小、sha256、公证票据、签名和 Team ID，再交给新版主控走两步升级；连不上、核对不过、某一步失败都可重试，原来的主控不动。本机版、开发版不查，窗口里说明。默认每天自动检查一次（启动 60 秒后，之后每小时看是否满 24 小时，查成了才算；开关在窗口底栏），发现新版只在菜单「检查更新」一行显示「有新版本」，不自动安装。</li>
 <li><b>恢复旧版本应用</b>：菜单「恢复旧版本应用」打开窗口，列出 <code>previous.noindex</code> 里有旧版的应用（无验证记录的标「不能换回」）；换回时先核签名、Team ID、bundle id、公证，结束进程（不动输入源），两处对调并注销备份目录里的登记；换下的版本以后升级时不再自动装回，再来一次可换回。主控把每个被本版配方认可的配件版本及其通过的任务记入 <code>verified-history.json</code>（每配件 3 个版本）；换回的版本只能用记录中的任务，无记录的不能换回。</li>
 <li><b>卸载</b>：输入法的输入源还启用时先停用（macOS 26 起不能代停，拦下并请用户在系统设置里移除），删完再核一次，并删除它的临时目录和锁；结束进程；删除 .app 时连同 <code>previous.noindex</code> 里的旧版，并注销同 bundle id 的其他副本（含废纸篓里的）；可选"一起从记忆里忘掉"和"删除数据"（删数据时先跑配件自己的 uninstall 命令）。只删除配件清单 <code>data</code> 中声明且符合配件自身标识的路径；不删除 <code>mem.db</code>。完成页列出还留着的数据和位置。"卸载全部"删除环境目录、登录项、设置和命令行链接，把主控移到废纸篓后退出。</li>
@@ -420,14 +420,14 @@ sequenceDiagram
 </table></div>
 <ul>
 <li>表中没有的组合（如 <code>own-label</code>、<code>mail-cleared</code>、<code>mail-acted</code>）最多是猜测。规则自动执行的记录（<code>data.by</code> 不是 user）和事务邮件的打开不算依据。</li>
-<li>名字只有品牌或来源名（如"Zillow""X 相关动态"）的话题不会成为兴趣。</li>
+<li>名字只有品牌或来源名（如"Zillow""X 相关动态""领域：来源名"）的话题不会成为兴趣，也不会成为精选口味。</li>
 <li><b>第三方来信推出的事实</b>：同一来源 ≥ 6 封、跨 ≥ 3 个月、打开 ≥ 2 封、最近 6 个月内仍有来信时直接生效。</li>
 <li><b>健康、法律、宗教政治</b>相关的推断必须由用户确认。</li>
 <li><b>门槛按用户调整</b>：同一类被否定 ≥ 2 次且多于确认，门槛上调；确认 ≥ 3 次且从未否定，门槛下调。</li>
-<li><b>以前的事</b>：会变的理解（包括用户确认过的）最新依据超过 730 天，标为 <code>past</code>，不再使用也不再提问，相关的未答问题撤回；姓名、学校、家人等不会变的不受影响。用户说"现在还是"即恢复为确定；同一类被这样唤回 ≥ 2 次后，这一类的期限加倍为 1460 天。</li>
+<li><b>以前的事</b>：会变的理解（包括猜测和用户确认过的）最新依据超过 730 天，标为 <code>past</code>，不再使用也不再提问，相关的未答问题撤回；姓名、学校、家人等不会变的不受影响。用户说"现在还是"即恢复为确定；同一类被这样唤回 ≥ 2 次后，这一类的期限加倍为 1460 天。</li>
 <li><b>以前的事再次出现</b>（工具又提出同一条）：只因太久而变成以前的事的，按原样回来——用户确认过的回到确定，否则为猜测、按新依据定档；用户自己说过"以前是，现在不是"的回到猜测，保留表态时间，新依据不能让它自行生效，只能再问用户。</li>
 <li><b>邮件推出的兴趣</b>：关于用户的、由邮件记录撑起的兴趣最多 8 条生效；重新定档时按依据条数保留前 8 条，其余回到猜测。</li>
-<li><b>取代与合并</b>：同类同话题的新理解生效时，取代用户未表态的旧推断（"其他"话题除外）；说法相近的话题合并为一条。</li>
+<li><b>取代与合并</b>：同类同话题的新理解生效时，取代用户未表态的旧推断（"其他"话题除外）；说法相近的话题合并为一条。同一机构的事实只留一条：话题「机构:X」（旧的「账户:X」「服务:X」「其他:X」按 X 算）相同即合并，新说法并进已有那条；未表态的只在说法相同而更完整时换字，用户确认过的保留原话，新说法另记、反刍时问"现在还是这样吗"。已有的重复在反刍时并进先有的（确认过的优先）；界面上可把并进来的说法拆出来，拆出的不再合并。</li>
 </ul>
 
 <h2>归纳</h2>
@@ -448,8 +448,9 @@ sequenceDiagram
 <p>不使用模型，每次归纳任务开头和结尾各执行一次；结果计数写入 <code>learning</code> 表 <code>rumination.last</code>。</p>
 <ul>
 <li><b>降档</b>：打字归纳出的兴趣和常用说法，最新依据超过 90 天且用户未表态，回到猜测。</li>
-<li><b>处理习惯</b>：同一（邮箱, 发件人, 邮件类别, 动作）出现 ≥ 2 次形成一条习惯；来源是 <code>mail-override</code> 的新建议和 <code>mail-acted</code> 的动作，只认 <code>ACTION_NAMES</code> 里的动作（archive、read、trash、spam、flag、keep、label、filter）。来自改建议的按定档规则判定，仅来自亲手处理的为猜测。用户撤销一次自动执行即回到猜测。</li>
-<li><b>想问的</b>：只问兴趣和处理习惯里依据无法自行撑到比较确定、180 天内有依据、不敏感的猜测，按最新依据和依据条数排序；每天最多 2 个，14 天过期；不再值得问的撤回。</li>
+<li><b>整理</b>：用户未表态的推断（猜测和已生效的）每次反刍按现行规则重查：日常词的常用说法、只有一段打字依据的话题、只有品牌或来源名或以"动态""通知"等结尾的兴趣和口味、只靠自建标签或整批清理撑起的兴趣和不感兴趣，收起不删；重复的事实并进先有的。</li>
+<li><b>处理习惯</b>：同一（邮箱, 发件人, 邮件类别, 动作）出现 ≥ 2 次形成一条习惯；来源是 <code>mail-override</code> 的新建议和 <code>mail-acted</code> 的动作，只认 <code>ACTION_NAMES</code> 里的动作（archive、read、trash、spam、flag、keep、label、filter）。来自改建议的按定档规则判定，仅来自亲手处理的为猜测。用户撤销一次自动执行即回到猜测。改建议后当场处理只算一次（<code>mail-acted</code> 的 <code>after_override</code> 覆盖整批，或 10 分钟内同一发件人、同一动作）。</li>
+<li><b>想问的</b>（都不问敏感的）：兴趣和处理习惯里依据无法自行撑到比较确定、180 天内有依据的猜测；打字线再多一天就会生效的常用说法和话题；同一来源 ≥ 6 封但最近 90 天没有来信、用户未表态的机构事实，和用户确认过、邮件里说法变了的机构事实（问"现在还是这样吗"）。前两类在前，机构事实在后，各按最新依据和依据条数排序；每天最多 2 个，14 天过期；不再值得问的撤回。</li>
 <li><b>建议</b>：每天最多 3 条。"以后都这样？"（有发件人和类别、动作可自动执行的处理习惯，用户点"好"即成为确定并可自动执行）；"退订？"（30 天内用户亲手整批清掉同一发件人 ≥ 2 次）。</li>
 <li><b>去重</b>：同一件事已有未答的问题时不再生成；"以后再说"或过期未答 7 天后、已答或"不用"60 天后才可能再问；"别再提"永不再问。</li>
 </ul>
@@ -528,7 +529,7 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>动作</th><th>条件</th><th>撤销</th></tr>
 <tr><td>标已读</td><td>收件箱中已分析、没出错的邮件（设置 <code>flow.mark_read</code>，默认开）；每次同步一条操作记录（动作 <code>seen</code>）；邮件助手标的已读另行记录（<code>read_by_us</code>），不当作用户读过</td><td>今日处理中逐封"标为未读"，或在操作记录中整批撤销（"分析后标为已读 N 封"）；撤销过的不再自动标。不写入记忆（不是用户的动作）</td></tr>
-<tr><td>按习惯归档、标已读、加标签</td><td>记忆中确定的处理习惯（发件人 × 邮件类别）；跳过可疑、需用户处理、撤销过的邮件</td><td>今日处理中逐封撤销，记一次反证（<code>mail-undo-auto</code>）</td></tr>
+<tr><td>按习惯归档、标已读、加标签</td><td>记忆中确定的处理习惯（发件人 × 邮件类别）；跳过可疑、需用户处理、高优先级、登录和安全类通知、撤销过的邮件</td><td>今日处理中逐封撤销，记一次反证（<code>mail-undo-auto</code>）</td></tr>
 <tr><td>螺壳自己的邮箱</td><td>设置中标为 <code>own</code> 的邮箱：照建议归档或移到垃圾箱</td><td>今日处理中逐封撤销</td></tr>
 </table></div>
 <p>用户自己的邮箱里，移到垃圾箱、垃圾邮件、退订不会自动执行。<b>处理模式</b>（默认关，开启需确认）只控制不可逆的批量操作：批量移到垃圾箱或垃圾邮件、含删除的清理、清理某发件人的历史邮件。</p>
@@ -568,7 +569,7 @@ sequenceDiagram
 <tr><td><code>digest-read</code></td><td><code>digest.py</code></td><td>一封订阅正文（≤ 12000 字）+ 口味 → 条目（≤ 8）、评分、摘要</td><td>一次一封，每次取 3 封排队；模型内存不足时缩到 4000 字重试；格式不对重问一次</td></tr>
 <tr><td><code>digest-pick</code></td><td><code>editor.py</code></td><td>候选条目 → 入选及理由</td><td>每批 ≤ 30；失败按阅读分数排</td></tr>
 <tr><td><code>learn-sent</code></td><td><code>learn.py</code></td><td>用户发出的邮件（只留本人写的部分）→ 事实</td><td>每批 ≤ 8</td></tr>
-<tr><td><code>learn-orgs</code></td><td><code>learn.py</code></td><td>往来机构的封数和主题 → 事实</td><td>每批 ≤ 10，最多 30 个机构</td></tr>
+<tr><td><code>learn-orgs</code></td><td><code>learn.py</code></td><td>往来机构的封数和主题 → 事实（机构名 ≤ 40 字，事实 ≤ 60 字；写入记忆的话题为「机构:名称」，类别只留在邮件助手）</td><td>每批 ≤ 10，最多 30 个机构</td></tr>
 <tr><td><code>thread</code></td><td><code>threads.py</code></td><td>往来串最后 ≤ 6 封（每封 ≤ 600 字，末尾注明最后一封是谁写的）→ 轮到谁（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>，代码映射为等你 / 在等对方 / 已了结）、从何时、要做什么</td><td>每次同步最多 10 串；两次答案不可用判为已了结；主控忙或出错时停下，下次再问</td></tr>
 </table></div>
 
@@ -577,7 +578,7 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>topic</th><th>说话人 / 性质</th><th>何时写</th><th>主要字段</th></tr>
 <tr><td><code>mail-read</code></td><td>user / activity</td><td>每个订阅每个整月一条（群发或有 List-Id）</td><td>封数、打开数、类别、主题、最多 3 封原文（事务类不带）</td></tr>
-<tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签</td></tr>
+<tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签、<code>after_override</code>（同一步里先改了建议的封数，有才写）</td></tr>
 <tr><td><code>mail-override</code></td><td>user / activity</td><td>用户改建议</td><td>原建议、新建议（用记忆的动作名：trash、keep、archive 等；分拣原始代码在 <code>suggestion</code>）、类别</td></tr>
 <tr><td><code>mail-auto</code></td><td>user / activity，<code>by=rule</code></td><td>习惯自动执行后</td><td>习惯编号、动作、封数</td></tr>
 <tr><td><code>mail-undo-auto</code></td><td>user / activity</td><td>撤销习惯的自动处理</td><td>习惯编号</td></tr>
@@ -1484,6 +1485,7 @@ sequenceDiagram
 </table></div>
 
 <h2>主控 <code>~/Library/Application Support/luoke-core/</code></h2>
+<p>开发版（bundle id <code>ai.luoke.core.dev</code>）用 <code>luoke-core-dev/</code>，结构相同。</p>
 <div class="tbl"><table>
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
@@ -1497,7 +1499,8 @@ sequenceDiagram
 <tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
 <tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
 <tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包和挂载记录，新主控启动后清除</td></tr>
-<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「配件回到上一版…」换回，卸载配件时一并删除</td></tr>
+<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；配件可经「恢复旧版本应用」换回，卸载配件时一并删除</td></tr>
+<tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再一步换上</td></tr>
 </table></div>
 
 <h2>记忆 <code>~/.luoke/</code></h2>
@@ -1622,11 +1625,11 @@ sequenceDiagram
 
 <h2>缺陷</h2>
 <ul>
-<li><b>记忆：重复的事实不合并</b>：同一机构的不同说法各成一条，用户确认过一条后新说法仍另起；别人来信推出的事实读起来像账户清单。</li>
-<li><b>邮件助手 × 记忆：机构名截断、话题键分散</b>：机构名截到 20 字，话题键带上模型选的类别，同一机构落在不同话题下。</li>
-<li><b>记忆：带"领域："前缀的品牌名话题绕过品牌过滤</b>；精选口味没走兴趣那道发件人过滤。</li>
-<li><b>记忆：整理只管猜测、老化只管生效的</b>：后加的过滤管不到已生效的理解，很久以前的事实留在猜测里。</li>
-<li><b>邮件助手 × 记忆：改建议并当场处理被算成两次</b>，可能造出不存在的处理习惯。</li>
+<li><b>记忆：同一机构换了名字仍各成一条</b>：按「机构:」后的名字原样合并，模型给的名称不同（如英文名、带域名、中文名）就不合并；别人来信推出的事实仍是一机构一句。</li>
+<li><b>记忆：带冒号的人际话题也被当成机构</b>：如「同事:某人」「客户:某人」按冒号后的名字合并，「工作:X」和「机构:X」也会并到一起。</li>
+<li><b>记忆：否定过某机构的一条事实后，关于它的新说法不再提出</b>（合并时也比对了被否定的那条）。</li>
+<li><b>记忆：精选口味生成时不查"动态""通知"等结尾</b>：这样的口味先生效，下一次反刍被收起，模型再提时又生成。</li>
+<li><b>记忆：改建议并当场处理被算成两次时形成的处理习惯不重算</b>，仍按原依据保留。</li>
 </ul>
 
 
@@ -1676,6 +1679,8 @@ sequenceDiagram
 <li>主控按代码复核（luoke-core e49cf49）：能耗模式改为全局并管本机端点，名称为全速 / 均衡 / 静音；新增"菜单和窗口"一节（左对齐的「名称：值」菜单、窗口期间出现在程序坞、主控小窗口、设置、只给本体用的接口核对对端进程）；升级写成两步（安装器换主控、新主控升级页确认其余）；检查更新窗口的步骤、状态和自动检查时机；首次运行的 16 GB 预检拦截、下载结局、输入法一键切换和重新登记；恢复旧版本应用、卸载、LaunchServices 登记清理、通知；引擎在流里报错的处理；任务开关的复测和"没评到沿用上一版"。已知限制去掉"只核对自报身份"一条。</li>
 <li>主控任务接口：<code>/tasks</code> 补 <code>model_name</code>。任务与提示词：精选挑选改为"最多 k 条"，退路改为一条可用的都没有时才按阅读分数排序（luoke-mail 0.17.11）。</li>
 <li>主控 d185b1e 修好当天发现的缺陷：下载和试跑有结果就发通知；自动检查更新查成了才记时间，核对不过的安装包删除；均衡、静音下端点一次只放一条；升级页没走完就关，常驻应用照常拉起、下次再提示。已知问题中对应四条去掉。</li>
+<li>主控开发版身份（<code>ai.luoke.core.dev</code>「螺壳主控（开发）」、数据在 <code>luoke-core-dev</code>）；升级时新版先放进 <code>staging.noindex</code> 核签名再一步换上，「App 管理」挡住时照实说明（luoke-core 3c44c63）。</li>
+<li>记忆、邮件助手按代码复核已知缺陷（luoke-mem 0.25.3、luoke-mail 0.17.16）：同一机构的事实合并、确认过的保留原话并问"现在还是这样吗"、反刍时整理已生效的推断、猜测也会变成以前的事、想问的加上打字和机构事实、改建议后当场处理只算一次；邮件助手机构名 40 字、话题「机构:名称」、<code>after_override</code>、按习惯归档跳过高优先级和安全通知。已知问题去掉机构名截断和整理范围两条，另三条改写为余下的缺口，新增两条（带冒号的人际话题被当成机构、否定一条后新说法不再提出）。</li>
 </ul>
 
 <h2>2026-10-22</h2>

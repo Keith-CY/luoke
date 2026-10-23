@@ -53,7 +53,7 @@
 <div class="tbl"><table>
 <tr><th>动作</th><th>条件</th><th>撤销</th></tr>
 <tr><td>标已读</td><td>收件箱中已分析、没出错的邮件（设置 <code>flow.mark_read</code>，默认开）；每次同步一条操作记录（动作 <code>seen</code>）；邮件助手标的已读另行记录（<code>read_by_us</code>），不当作用户读过</td><td>今日处理中逐封"标为未读"，或在操作记录中整批撤销（"分析后标为已读 N 封"）；撤销过的不再自动标。不写入记忆（不是用户的动作）</td></tr>
-<tr><td>按习惯归档、标已读、加标签</td><td>记忆中确定的处理习惯（发件人 × 邮件类别）；跳过可疑、需用户处理、撤销过的邮件</td><td>今日处理中逐封撤销，记一次反证（<code>mail-undo-auto</code>）</td></tr>
+<tr><td>按习惯归档、标已读、加标签</td><td>记忆中确定的处理习惯（发件人 × 邮件类别）；跳过可疑、需用户处理、高优先级、登录和安全类通知、撤销过的邮件</td><td>今日处理中逐封撤销，记一次反证（<code>mail-undo-auto</code>）</td></tr>
 <tr><td>螺壳自己的邮箱</td><td>设置中标为 <code>own</code> 的邮箱：照建议归档或移到垃圾箱</td><td>今日处理中逐封撤销</td></tr>
 </table></div>
 <p>用户自己的邮箱里，移到垃圾箱、垃圾邮件、退订不会自动执行。<b>处理模式</b>（默认关，开启需确认）只控制不可逆的批量操作：批量移到垃圾箱或垃圾邮件、含删除的清理、清理某发件人的历史邮件。</p>
@@ -93,7 +93,7 @@
 <tr><td><code>digest-read</code></td><td><code>digest.py</code></td><td>一封订阅正文（≤ 12000 字）+ 口味 → 条目（≤ 8）、评分、摘要</td><td>一次一封，每次取 3 封排队；模型内存不足时缩到 4000 字重试；格式不对重问一次</td></tr>
 <tr><td><code>digest-pick</code></td><td><code>editor.py</code></td><td>候选条目 → 入选及理由</td><td>每批 ≤ 30；失败按阅读分数排</td></tr>
 <tr><td><code>learn-sent</code></td><td><code>learn.py</code></td><td>用户发出的邮件（只留本人写的部分）→ 事实</td><td>每批 ≤ 8</td></tr>
-<tr><td><code>learn-orgs</code></td><td><code>learn.py</code></td><td>往来机构的封数和主题 → 事实</td><td>每批 ≤ 10，最多 30 个机构</td></tr>
+<tr><td><code>learn-orgs</code></td><td><code>learn.py</code></td><td>往来机构的封数和主题 → 事实（机构名 ≤ 40 字，事实 ≤ 60 字；写入记忆的话题为「机构:名称」，类别只留在邮件助手）</td><td>每批 ≤ 10，最多 30 个机构</td></tr>
 <tr><td><code>thread</code></td><td><code>threads.py</code></td><td>往来串最后 ≤ 6 封（每封 ≤ 600 字，末尾注明最后一封是谁写的）→ 轮到谁（<code>user_turn</code> / <code>other_turn</code> / <code>done</code>，代码映射为等你 / 在等对方 / 已了结）、从何时、要做什么</td><td>每次同步最多 10 串；两次答案不可用判为已了结；主控忙或出错时停下，下次再问</td></tr>
 </table></div>
 
@@ -102,7 +102,7 @@
 <div class="tbl"><table>
 <tr><th>topic</th><th>说话人 / 性质</th><th>何时写</th><th>主要字段</th></tr>
 <tr><td><code>mail-read</code></td><td>user / activity</td><td>每个订阅每个整月一条（群发或有 List-Id）</td><td>封数、打开数、类别、主题、最多 3 封原文（事务类不带）</td></tr>
-<tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签</td></tr>
+<tr><td><code>mail-acted</code></td><td>user / activity</td><td>用户在页面或在别处归档、删除、标垃圾、读过、加标签</td><td>动作、封数、类别、<code>where</code>（here / elsewhere）、标签、<code>after_override</code>（同一步里先改了建议的封数，有才写）</td></tr>
 <tr><td><code>mail-override</code></td><td>user / activity</td><td>用户改建议</td><td>原建议、新建议（用记忆的动作名：trash、keep、archive 等；分拣原始代码在 <code>suggestion</code>）、类别</td></tr>
 <tr><td><code>mail-auto</code></td><td>user / activity，<code>by=rule</code></td><td>习惯自动执行后</td><td>习惯编号、动作、封数</td></tr>
 <tr><td><code>mail-undo-auto</code></td><td>user / activity</td><td>撤销习惯的自动处理</td><td>习惯编号</td></tr>
