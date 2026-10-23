@@ -59,6 +59,7 @@
 ### 5. 进版本
 
 - 配件按 [配件清单](https://luokelabs.github.io/luoke-atlas/) 的格式写清单（bundle id、版本、任务、空闲任务、数据目录等），用团队的 Developer ID 签名公证。
+- 用到模型的任务，提示词照 [ADR 0019](adr/0019-prompts-in-files.md) 放在仓库根目录的 `prompts/` 里（每个任务的 system、user、retry 和 schema 各一个文件），不写在代码里。
 - 每个任务的评测集交给 luoke-core，由它放进配方、在三个内存档上评测。
 - 开发期间可以用开发清单在实验室主控上调试；本机试用经主控的"本机放行"先用上，不用等内部版。
 - 每天 20:00 的内部版会钉住各项目 main 的最新提交，新组件合并登记后也照此进版本。
