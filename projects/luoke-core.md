@@ -1,4 +1,4 @@
-# 螺壳主控 luoke-core
+# 螺壳 luoke-core
 
 - 仓库：[`luoke-core/`](../luoke-core)；设计：`luoke-core/docs/DESIGN.md`，v1 范围和接口细节：`luoke-core/docs/V1.md`
 - 本页由 luoke-core 的会话维护。
@@ -18,7 +18,7 @@
   - 预热、常驻声明、退出通知；被挡回时有统一的原因码和 `retry_after` / `retry_after_ms`（V1 §2）。
 - **配件接入契约**（DESIGN §11、V1 §8）：打包与身份、用模型的方式、评测集、数据与升级、界面与安全。
 - **空闲任务**：配件在清单 `jobs` 里登记"空闲时跑"的命令，主控在安静时刻拉起、用户回来时让它收尾（V1 §8）。
-- **主控自带的 Python 可以借**：`螺壳主控.app/Contents/Resources/python/bin/python3`（python-build-standalone 3.12，同一个 Team 签名）；契约 1 内路径和 bundle id `ai.luoke.core` 不变，换大版本前先写进这里并通知用它的配件（V1 §8）。
+- **主控自带的 Python 可以借**：`螺壳.app/Contents/Resources/python/bin/python3`（改名前装的是 `螺壳主控.app`；装在 `/Applications` 或 `~/Applications`，ADR 0012）（python-build-standalone 3.12，同一个 Team 签名）；契约 1 内路径和 bundle id `ai.luoke.core` 不变，换大版本前先写进这里并通知用它的配件（V1 §8）。
 - **配件用主控里那份 luoke_mem**：`GET /tasks` 顶层 `"luoke_mem": {"path", "version"}` 给出 site-packages 的位置；工具每次新起进程时问一次、插到 `sys.path` 最前面再 import，主控不在就用自带的兜底那份（兜底那份不比钉住的新）。
 - **`GET /accessories`**：装了哪些配件及其清单里的公开字段（含 `capabilities`）。
 - **打包脚本** `tools/package_python_app.py`：配件清单 + 包目录 → 自带 Python 的 .app（V1 §8）。
@@ -58,4 +58,4 @@
 - 工具不注册自己的登录项（由系统拉起的配件，例如输入法，是例外），不点名模型，不提供选模型的界面；安装路径由配件类型决定，发布后不变（DESIGN §11）。
 - 后台请求按硬件档限制输入长度、配件分段提交；被 `busy` / `paused` 挡回时按 `retry_after`（有 `retry_after_ms` 就按它）重试，主控不排队（DESIGN §6）。
 - 配件的代码改了、要换装的，同时升清单里的版本号：主控按版本号判断要不要升级。
-- **主控改名「螺壳」（主人 10-23 定，PR luoke-core#26 的提案）**：internal-1024 起更新程序和安装器认「螺壳.app」和「螺壳主控.app」两个名字，internal-1026 起主控装在 `~/Applications/螺壳.app`。bundle id `ai.luoke.core`、数据目录 `~/Library/Application Support/luoke-core`、socket、命令 `luoke` 都不变。配件里写死了主控位置的，要在 internal-1026 之前改成两个名字都认：最好按 bundle id 找（Swift：`NSWorkspace.shared.urlForApplication(withBundleIdentifier: "ai.luoke.core")`），Python 先试 `螺壳.app` 再试 `螺壳主控.app`。已接：luoke-mail 0.17.17（c5a4379）、luoke-ime 0.1.14（9dcbc8b），都是两个名字都认。给用户看的文字里的「螺壳主控」随各自的版本改成「螺壳」。
+- **主控改名「螺壳」（主人 10-23 定，PR luoke-core#26 的提案）**：internal-1024 起更新程序和安装器认「螺壳.app」和「螺壳主控.app」两个名字，internal-1024-2 起主控叫 `螺壳.app`，internal-1025-3 起装在 `/Applications`（`~/Applications` 里的也认，luoke-core ADR 0012）。bundle id `ai.luoke.core`、数据目录 `~/Library/Application Support/luoke-core`、socket、命令 `luoke` 都不变。配件里写死了主控位置的，要在 internal-1026 之前改成两个名字都认：最好按 bundle id 找（Swift：`NSWorkspace.shared.urlForApplication(withBundleIdentifier: "ai.luoke.core")`），Python 先试 `螺壳.app` 再试 `螺壳主控.app`。已接：luoke-mail 0.17.17（c5a4379）、luoke-ime 0.1.14（9dcbc8b），都是两个名字都认。给用户看的文字里的「螺壳主控」随各自的版本改成「螺壳」。
