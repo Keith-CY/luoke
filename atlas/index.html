@@ -66,11 +66,11 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-25 12:14</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-25 16:54</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
-  <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
+  <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 螺壳（主控） luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent luoke-agent</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
-<div class="navgroup"><div class="navlabel">组件</div><a href="#core" data-page="core">主控 luoke-core</a><a href="#mem" data-page="mem">记忆 luoke-mem</a><a href="#mail" data-page="mail">邮件助手 luoke-mail</a><a href="#ime" data-page="ime">输入法 luoke-ime</a><a href="#agent" data-page="agent">agent「螺壳」</a><a href="#search" data-page="search">深度搜索 luoke-search</a></div>
+<div class="navgroup"><div class="navlabel">组件</div><a href="#core" data-page="core">螺壳（主控） luoke-core</a><a href="#mem" data-page="mem">记忆 luoke-mem</a><a href="#mail" data-page="mail">邮件助手 luoke-mail</a><a href="#ime" data-page="ime">输入法 luoke-ime</a><a href="#agent" data-page="agent">agent luoke-agent</a><a href="#search" data-page="search">深度搜索 luoke-search</a></div>
 <div class="navgroup"><div class="navlabel">参考</div><a href="#ref-api" data-page="ref-api">主控任务接口</a><a href="#ref-manifest" data-page="ref-manifest">配件清单与配方</a><a href="#ref-mem" data-page="ref-mem">记忆接口与表结构</a><a href="#ref-tasks" data-page="ref-tasks">任务与提示词</a><a href="#ref-prompts" data-page="ref-prompts">提示词</a><a href="#ref-files" data-page="ref-files">文件位置</a></div>
 <div class="navgroup"><div class="navlabel">运维</div><a href="#ops" data-page="ops">运行与发布</a></div>
 <div class="navgroup"><div class="navlabel">其他</div><a href="#decisions" data-page="decisions">决策</a><a href="#open" data-page="open">已知问题</a><a href="#glossary" data-page="glossary">术语表</a><a href="#changelog" data-page="changelog">文档修订</a></div>
@@ -83,12 +83,12 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 <h2>组件</h2>
 <div class="tbl"><table>
 <tr><th>组件</th><th>仓库</th><th>职责</th></tr>
-<tr><td><a href="#core">主控</a></td><td><code>luoke-core</code></td><td>本机模型推理的唯一入口；安装、升级、卸载；调度空闲任务</td></tr>
+<tr><td><a href="#core">螺壳（主控）</a></td><td><code>luoke-core</code></td><td>用户装的应用「螺壳」；本机模型推理的唯一入口；安装、升级、卸载；调度空闲任务</td></tr>
 <tr><td><a href="#mem">记忆</a></td><td><code>luoke-mem</code></td><td>共用的本机记忆；唯一形成关于用户结论的地方</td></tr>
 <tr><td><a href="#mail">邮件助手</a></td><td><code>luoke-mail</code></td><td>分拣、清理、精选、起草；可撤回的处理自动执行并每日复查</td></tr>
 <tr><td><a href="#ime">输入法</a></td><td><code>luoke-ime</code></td><td>macOS 输入法；沙盒引擎出候选，本地模型重排和联想</td></tr>
-<tr><td><a href="#agent">agent「螺壳」</a></td><td><code>luoke-agent</code></td><td>唯一主动联系用户的组件；合并提问、建议和工具的事项</td></tr>
-<tr><td><a href="#search">深度搜索</a></td><td><code>luoke-search</code></td><td>给本机文件和照片图库建索引，按字词和意思找回；没有界面，经 agent 调用（规划中）</td></tr>
+<tr><td><a href="#agent">agent</a></td><td><code>luoke-agent</code></td><td>唯一主动联系用户的组件；合并提问、建议和工具的事项</td></tr>
+<tr><td><a href="#search">深度搜索</a></td><td><code>luoke-search</code></td><td>给本机文件和照片图库建索引，按字词和意思找回；没有界面，入口在螺壳（经 agent）（规划中）</td></tr>
 </table></div>
 
 <h2>架构</h2>
@@ -98,7 +98,7 @@ flowchart LR
     direction LR
     mail["邮件助手"]
     ime["输入法"]
-    agent["agent「螺壳」"]
+    agent["agent（螺壳的后台组件）"]
     search["深度搜索（规划中）"]
     subgraph core["主控"]
       engine["推理引擎（底座）"]
@@ -239,9 +239,9 @@ sequenceDiagram
 <h2>外部工具</h2>
 <p>高级用户可开启主控的本机端点，让 pi 等工具通过 OpenAI 兼容接口使用本机模型，包括用户自己登记的模型。这些请求与配件请求一起由主控调度，按"用户在等"处理。</p>
 </section>
-<section class="page" id="core" data-title="主控 luoke-core">
-<h1>主控</h1>
-<p class="lede">本机所有模型推理的唯一入口，也是螺壳的安装器。它按配方为每个硬件档选择模型，调度各配件的请求和空闲任务，监管推理引擎和专用模型进程，并负责下载、升级和卸载。</p>
+<section class="page" id="core" data-title="螺壳（主控） luoke-core">
+<h1>螺壳（主控）</h1>
+<p class="lede">用户装的应用「螺壳」（<code>螺壳.app</code>）；"主控"是它在内部分工里的叫法。本机所有模型推理的唯一入口，也是各应用的安装器。它按配方为每个硬件档选择模型，调度各配件的请求和空闲任务，监管推理引擎和专用模型进程，并负责下载、升级和卸载。</p>
 <p class="src">仓库 <code>luoke-core</code> · bundle id <code>ai.luoke.core</code>（开发版 <code>ai.luoke.core.dev</code>，名为「螺壳（开发）」，数据在 <code>luoke-core-dev</code>，不认领 <code>luoke://</code>）· 接口细节见「参考 · 主控任务接口」「参考 · 配件清单与配方」</p>
 
 <h2>组成</h2>
@@ -557,7 +557,7 @@ sequenceDiagram
 <tr><td>订阅体检</td><td>按发件人统计，建议退订、无法退订、可疑勿退订或常读；可退订、批量归档、清理历史、生成规则</td></tr>
 <tr><td>规则</td><td>按发件人、域名、邮件列表的规则；导出 Gmail 过滤器前用过去一年邮件预演命中数和误伤；操作记录可撤销</td></tr>
 <tr><td>记忆</td><td>想问你的、全部类别的理解及依据、用户网站、学习的暂停与继续、打开整份记忆</td></tr>
-<tr><td>设置</td><td>邮箱（含"螺壳自己的邮箱"）、本机模型（打包版显示"螺壳主控 · 模型名"和就绪标记，模型名取 <code>GET /tasks</code> 中分拣任务的 <code>model_name</code>，不解析 <code>combo</code>；换档在主控设置里）、处理模式、后台整理（含通知权限提示和"发送测试通知"）、自动标已读、往来邮件、功耗、分析范围</td></tr>
+<tr><td>设置</td><td>邮箱（含"螺壳自己的邮箱"）、本机模型（打包版显示"螺壳 · 模型名"和就绪标记，模型名取 <code>GET /tasks</code> 中分拣任务的 <code>model_name</code>，不解析 <code>combo</code>；换档在主控设置里）、处理模式、后台整理（含通知权限提示和"发送测试通知"）、自动标已读、往来邮件、功耗、分析范围</td></tr>
 </table></div>
 <p>页面在浏览器的 localStorage 中记住上次查看的邮箱，刷新或重新打开后仍停在该邮箱（仍连接时，或示例邮箱）；存不了时显示第一个邮箱。</p>
 
@@ -751,9 +751,9 @@ sequenceDiagram
 <li>个人化组件卡死不检测；转问没有限流。</li>
 </ul>
 </section>
-<section class="page" id="agent" data-title="agent「螺壳」">
-<h1>agent「螺壳」</h1>
-<p class="lede">螺壳里唯一主动找用户的组件。它把记忆的提问和建议、各工具要报的事合并成卡片和简报，挑时机告诉用户，并代表用户调用工具声明的能力。当前版本不使用模型。</p>
+<section class="page" id="agent" data-title="agent luoke-agent">
+<h1>agent</h1>
+<p class="lede">螺壳的后台组件，螺壳里唯一主动找用户的部分。以后并进螺壳：不在「应用」列表里单独勾选，随螺壳装好，设置里有「主动提醒」开关；现在的独立开发版「螺壳 agent（开发）」是过渡形态。它把记忆的提问和建议、各工具要报的事合并成卡片和简报，挑时机告诉用户，并代表用户调用工具声明的能力。当前版本不使用模型。</p>
 <p class="src">仓库 <code>luoke-agent</code> · 核心 0.0.1 · 自带 <code>luoke_mem</code> 0.23.1 · 不在 v1 首发中</p>
 
 <h2>职责</h2>
@@ -1682,6 +1682,7 @@ sequenceDiagram
 <ul>
 <li>主控按代码复核（luoke-core 0590c6e）：新装放 <code>/Applications</code>，安装盘改成拖进「应用程序」的窗口，在安装盘里双击给「帮我装进去」；已装的以实际位置为准、两处两名都认；升级改为先暂存核签名、再由独立的换包脚本换上并用 <code>open</code> 打开，管理员升级时从 <code>~/Applications</code> 搬进 <code>/Applications</code>，标准账户写不进去时弹管理员授权框；内部版每 3 小时自动检查；主控和安装器拉起别的应用一律经 <code>/usr/bin/open</code>。文件位置页补换包脚本、结果和日志，agent 一行改为「螺壳 agent」；运维页跟着改。</li>
 <li>已知问题：去掉升级后程序坞留死图标（luoke-core 6bd94be 修好，10-25 升级实测无死图标）。主控 c30aad3：两处各有一份时，打开旧那份会交给装好的那份，装好的那份启动时收走另几份；目标位置被别的应用占着时改放另一处。</li>
+<li>照顶层 CONTEXT.md「对外怎么叫」统一名称：主控页标题改为「螺壳（主控）」，agent 页去掉「螺壳」这个名字、写明是螺壳的后台组件和以后的安装方式；概览、邮件助手页跟着改。</li>
 <li>主控 5fef093：空闲任务的请求也照能耗模式歇息，主控挂着等，不再豁免（静音模式下风扇不再猛转）。</li>
 </ul>
 
