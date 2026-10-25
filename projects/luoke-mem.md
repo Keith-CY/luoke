@@ -9,7 +9,7 @@
 
 记忆归用户，不归任何一个工具。本机就是边界（[ADR 0013](../docs/adr/0013-the-machine-is-the-boundary.md)）：任何工具、agent 都读得到全部记录、理解和依据原文；删别的工具写的、清空，只在记忆自己的界面里做。记忆打在主控里，打开方式是 `luoke://memory`。
 
-现状 0.25.5。
+现状 0.25.6。
 
 ## 对外提供
 
@@ -35,7 +35,7 @@
 ## 依赖
 
 - 只用标准库。
-- **螺壳主控**：在后台生成任务里用模型（`luoke-mem.typing`、`luoke-mem.topics`），在空闲时拉起 `learn`；主控在 `GET /tasks` 里报自己那份 luoke_mem 的路径。没有主控时只是不归纳，记忆照常读写。
+- **螺壳（luoke-core）**：在后台生成任务里用模型（`luoke-mem.typing`、`luoke-mem.topics`），在空闲时拉起 `learn`；主控在 `GET /tasks` 里报自己那份 luoke_mem 的路径。没有主控时只是不归纳，记忆照常读写。
 
 ## 使用方
 
