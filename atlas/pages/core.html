@@ -50,7 +50,7 @@
 <tr><td>16 GB 档且不在安静时刻</td><td><code>busy</code></td><td><code>not_quiet</code></td></tr>
 <tr><td>别的配件的空闲任务在运行</td><td><code>busy</code></td><td><code>idle_job</code></td></tr>
 <tr><td>引擎里已有一项后台工作</td><td><code>busy</code></td><td><code>engine_busy</code></td></tr>
-<tr><td>能耗模式的歇息中（空闲任务所属配件豁免）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
+<tr><td>能耗模式的歇息中（空闲任务所属配件的请求不挡回，由主控挂着等歇息过去，最多 4 分钟）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
 </table></div>
 <p><b>能耗模式</b>（全局）：全速、均衡、静音。每项后台工作、每条本机端点请求结束后，按占用时长的 0、1、3 倍歇息，端点一次最多歇 600 秒；均衡、静音下端点一次只放一条请求；打字和配件里用户在等的请求不受影响。静音模式下温度 fair 即按过热暂停后台。<b>专用模型通道</b>（嵌入）每个任务有独立通道和间歇，不占用引擎的后台名额；用户在等的嵌入查询插在后台批（每 8 条）之间。</p>
 <h3>内存</h3>

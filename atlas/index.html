@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-25 12:03</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-25 12:14</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 主控 luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent「螺壳」</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -291,7 +291,7 @@ sequenceDiagram
 <tr><td>16 GB 档且不在安静时刻</td><td><code>busy</code></td><td><code>not_quiet</code></td></tr>
 <tr><td>别的配件的空闲任务在运行</td><td><code>busy</code></td><td><code>idle_job</code></td></tr>
 <tr><td>引擎里已有一项后台工作</td><td><code>busy</code></td><td><code>engine_busy</code></td></tr>
-<tr><td>能耗模式的歇息中（空闲任务所属配件豁免）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
+<tr><td>能耗模式的歇息中（空闲任务所属配件的请求不挡回，由主控挂着等歇息过去，最多 4 分钟）</td><td><code>busy</code></td><td><code>power_cooldown</code></td></tr>
 </table></div>
 <p><b>能耗模式</b>（全局）：全速、均衡、静音。每项后台工作、每条本机端点请求结束后，按占用时长的 0、1、3 倍歇息，端点一次最多歇 600 秒；均衡、静音下端点一次只放一条请求；打字和配件里用户在等的请求不受影响。静音模式下温度 fair 即按过热暂停后台。<b>专用模型通道</b>（嵌入）每个任务有独立通道和间歇，不占用引擎的后台名额；用户在等的嵌入查询插在后台批（每 8 条）之间。</p>
 <h3>内存</h3>
@@ -1682,6 +1682,7 @@ sequenceDiagram
 <ul>
 <li>主控按代码复核（luoke-core 0590c6e）：新装放 <code>/Applications</code>，安装盘改成拖进「应用程序」的窗口，在安装盘里双击给「帮我装进去」；已装的以实际位置为准、两处两名都认；升级改为先暂存核签名、再由独立的换包脚本换上并用 <code>open</code> 打开，管理员升级时从 <code>~/Applications</code> 搬进 <code>/Applications</code>，标准账户写不进去时弹管理员授权框；内部版每 3 小时自动检查；主控和安装器拉起别的应用一律经 <code>/usr/bin/open</code>。文件位置页补换包脚本、结果和日志，agent 一行改为「螺壳 agent」；运维页跟着改。</li>
 <li>已知问题：去掉升级后程序坞留死图标（luoke-core 6bd94be 修好，10-25 升级实测无死图标）。主控 c30aad3：两处各有一份时，打开旧那份会交给装好的那份，装好的那份启动时收走另几份；目标位置被别的应用占着时改放另一处。</li>
+<li>主控 5fef093：空闲任务的请求也照能耗模式歇息，主控挂着等，不再豁免（静音模式下风扇不再猛转）。</li>
 </ul>
 
 <h2>2026-10-24</h2>
