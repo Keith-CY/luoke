@@ -25,7 +25,9 @@
 </ul>
 
 
-<li><b>主控：经「检查更新」升级后程序坞留一个"后台运行"的死图标</b>：安装器那份进程已退出、安装包已卸下，LaunchServices 仍留着它的登记；注销或重启后消失，直接打开新安装包升级时不出现。</li>
+
+<li><b>主控：/Applications 和 ~/Applications 各有一份时不清理</b>：把新安装盘里的螺壳直接拖进「应用程序」时，旧位置的那份（同 bundle id）留着，开机启动和按 bundle id 找主控的工具可能落到旧那份上。</li>
+<li><b>主控：/Applications 里已有别人的「螺壳.app」时直接拦下</b>，不退到 ~/Applications。</li>
 
 <h2>待讨论</h2>
 <ul>

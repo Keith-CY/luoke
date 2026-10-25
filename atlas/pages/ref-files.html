@@ -4,9 +4,9 @@
 <h2>应用</h2>
 <div class="tbl"><table>
 <tr><th>位置</th><th>内容</th></tr>
-<tr><td><code>~/Applications/螺壳.app</code></td><td>主控（改名前为 <code>螺壳主控.app</code>，升级时换成新名字）（内含自带 Python、记忆代码、<code>luoke</code> 命令行）</td></tr>
+<tr><td><code>/Applications/螺壳.app</code></td><td>主控（也可能在 <code>~/Applications</code>，以实际位置为准；改名前为 <code>螺壳主控.app</code>，升级时换成新名字）（内含自带 Python、记忆代码、<code>luoke</code> 命令行）</td></tr>
 <tr><td><code>~/Applications/螺壳邮件助手.app</code></td><td>邮件助手</td></tr>
-<tr><td><code>~/Applications/螺壳.app</code></td><td>agent</td></tr>
+<tr><td><code>~/Applications/螺壳 agent.app</code></td><td>agent（暂名，开发版「螺壳 agent（开发）」；以后并进螺壳，见决策 0014 的 10-24 修订）</td></tr>
 <tr><td><code>~/Library/Input Methods/LuokeIME.app</code></td><td>输入法</td></tr>
 <tr><td><code>$TMPDIR/ai.luoke.inputmethod.Luoke.lock</code></td><td>输入法单实例锁</td></tr>
 <tr><td><code>~/.local/bin/luoke</code></td><td>命令行链接（可选安装）</td></tr>
@@ -26,9 +26,10 @@
 <tr><td><code>endpoint-key</code>、<code>user-models.json</code></td><td>端点密钥（0600）；登记的模型</td></tr>
 <tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
 <tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
-<tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包和挂载记录，新主控启动后清除</td></tr>
-<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控和配件；应用可在「应用」窗口里回到上一版本，卸载配件时一并删除</td></tr>
-<tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再一步换上</td></tr>
+<tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包，拷到暂存处后立即删除；<code>run/update-mount.json</code> 只为清理旧版留下的挂载而读</td></tr>
+<tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控（由换包脚本移入，不论原来在 <code>/Applications</code> 还是 <code>~/Applications</code>）和配件；应用可在「应用」窗口里回到上一版本，卸载配件时一并删除</td></tr>
+<tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再由换包脚本移到装好的位置</td></tr>
+<tr><td><code>run/swap.sh</code>、<code>run/swap-result.json</code>、<code>logs/swap.log</code></td><td>换包脚本、上次换包的结果（下次启动取走）、换包日志</td></tr>
 </table></div>
 
 <h2>记忆 <code>~/.luoke/</code></h2>
