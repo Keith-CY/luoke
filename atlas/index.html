@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-26 13:08</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-26 15:03</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 螺壳（主控） luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent luoke-agent</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -1651,6 +1651,7 @@ sequenceDiagram
 
 <h2>缺陷</h2>
 <ul>
+<li><b>邮件助手：往返和多段行程只加第一段</b>：分拣只输出一个日程，往返机票、多段行程、系列活动只能挑一个或揉成一个，结束时间可能取成最后一段的（luoke-mail#34）。</li>
 <li><b>记忆：同一机构换了名字仍各成一条</b>：按「机构:」后的名字原样合并，模型给的名称不同（如英文名、带域名、中文名）就不合并；别人来信推出的事实仍是一机构一句。</li>
 <li><b>记忆：「其他:」话题下的人和机构可能并成一条</b>：旧版邮件助手把机构来信放在「其他:机构名」下，所以「其他:」仍按机构合并；发出邮件里写的「其他:某人」若和机构同名会被并进去。</li>
 <li><b>记忆：改建议并当场处理被算成两次时形成的处理习惯不重算</b>，仍按原依据保留。</li>
@@ -1702,6 +1703,7 @@ sequenceDiagram
 
 <h2>2026-10-26</h2>
 <ul>
+<li>已知问题：邮件助手往返和多段行程只加第一段（luoke-mail#34）。</li>
 <li>已知问题（质量）：16 GB 档分拣把正常邮件的催促语判成可疑。</li>
 <li>输入法按代码复核（luoke-ime 0.1.19，307aa9e）：换版时空闲自己让位并重新拉起；找螺壳的 Python 先 <code>/Applications</code> 后 <code>~/Applications</code>、两个名字都认；第一页按「-」打连字符、数字后的逗号、{ } 打「」、Shift+⌫ 忘词；联想按应用算、终端默认不联想、激活后高亮项放在光标处；设置窗口四页和精简后的菜单；新增「安装与输入源」一节；ime-commit 断段和保留期的细节；已知限制补四条。</li>
 </ul>
