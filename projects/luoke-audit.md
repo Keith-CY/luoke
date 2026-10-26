@@ -78,11 +78,11 @@
 
 | 依赖 | 用来做什么 | 现状 |
 |---|---|---|
-| luoke-core | 空闲任务 `scan`、`update`；生成任务 `luoke-audit.explain`、`luoke-audit.identify`；常驻起 `luoke-audit-serve`；安装、升级、卸载 | 需求已提（luoke-core#17）；生成任务进配方在 luoke-core#27（beta1 之后合）；常驻怎么起在 #17 商量 |
+| luoke-core | 空闲任务 `scan`、`update`；生成任务 `luoke-audit.explain`、`luoke-audit.identify`；常驻起 `luoke-audit-serve`；安装、升级、卸载 | 需求已提（luoke-core#17）；生成任务进配方在 luoke-core#27（beta1 之后合）；常驻起 `luoke-audit-serve` 已在 #17 商定（清单加 `resident_exec` / `resident_command`），beta1 之后接 |
 | luoke-agent | 唯一的提醒出口：调 MCP 工具、画卡片、转达 outbox | 已商定（luoke-agent#2），10-23 对着测过、全对上；正式接在 beta1 之后 |
-| luoke-mem | 写"发生了什么"（用户清了哪类、忽略了哪类、自动清了什么） | 写哪些在定，定了再和 luoke-mem 商量接口 |
+| luoke-mem | 写"发生了什么"（用户清了哪类、忽略了哪类、自动清了什么） | 写哪些已定（见下）；写入口在商量（luoke-mem#7）：本工具是 Swift 程序，不带 Python |
 | luoke-search | 共用文件元信息 | 10-21 定先各做各的（luoke-search#12 已关）；以后要共用，另加只读接口 |
-| macOS | FSEvents、`getattrlistbulk`（遍历）、`getattrlist`（克隆标记）、Security（验签名）、Spotlight 元数据、`sfltool` / `launchctl`（常驻项） | 系统自带 |
+| macOS | FSEvents、`getattrlistbulk`（遍历）、`getattrlist`（克隆标记）、Security（验签名）、Spotlight 元数据、`launchctl`（常驻项；`sfltool` 会弹管理员密码框，不用） | 系统自带 |
 | ClamAV、YARA | 特征扫描（不是模型），随本工具打包、锁定版本；病毒库由 freshclam 从上游更新 | 只进不出（顶层 ADR 0016 修订） |
 
 ## 对别的项目的需求
@@ -91,15 +91,20 @@
 1. 登记两个空闲任务：`scan`（每天一次，跑 ClamAV 时约 1 GB 内存；没有新文件的那天不起 ClamAV）、`update`（每天一次，freshclam，只下载）。
 2. 用 `jobs` 的 `exec` 直接起本工具自己签名的程序，并让 macOS 把它记在本工具名下（TCC 的"负责的 app"是 `ai.luoke.audit`，不是主控），这样完全磁盘访问只授给本工具。
 3. 两个生成任务，都走 background：`explain` 每轮 1–3 次、每次约 2–4k token；`identify` 按需、每次几条。
-4. 常驻起 `luoke-audit-serve`（Chen Yu 10-26 定由主控起）：照常驻配件的规矩，登录时拉起、异常退出重启、卸载时停。起的时候也让它自己负责（disclaim），不算在主控或 `luoke-audit` 名下。清单里怎么写等 luoke-core 定。
+4. 常驻起 `luoke-audit-serve`（Chen Yu 10-26 定由主控起）：照常驻配件的规矩，登录时拉起、异常退出重启、卸载时停。起的时候也让它自己负责（disclaim），不算在主控或 `luoke-audit` 名下。清单加可选字段 `resident_exec` / `resident_command`（luoke-core 10-26 同意）。
 
 **对 luoke-agent**（luoke-agent#2）：照工具协议接上面的 MCP 工具、卡片和 outbox；`audit_autoclean` 的确认卡片要写清只限会重建的缓存（顶层 ADR 0016 修订）。
+
+**对 luoke-mem**（luoke-mem#7）：
+1. 给没有 Python 可调的程序一个写入口（倾向 `luoke_mem` 的命令行加 `record`，标准输入一行一条 JSON）。本工具起它时让它自己负责（disclaim），不沾本工具的完全磁盘访问。
+2. 本工具写五种记录（见下），不写路径。
+3. 「体检」在健康关键词里：别把本工具自己的记录标成健康。
 
 **对 luoke-search**（luoke-search#12）：两边都要遍历文件、都用 FSEvents，谈能不能共用文件元信息（大小、时间、改动），各自只存自己要的。
 
 ## 在记忆里读写什么
 
-- **写**：只写"发生了什么"：用户清了哪类、忽略了哪类、自动清了什么、多大。目录清单、文件内容、哈希不写。具体写哪些、记不记路径，Chen Yu 在定。
+- **写**：只写"发生了什么"：用户清了哪类、忽略了哪类、自动清了什么、多大。目录清单、文件内容、哈希不写。Chen Yu 10-26 定：记用户清了哪类、几项、多大；忽略了哪类或哪个应用；自动清了什么；病毒怎么处理的（文件名和病毒名）；自动清缓存的开关。不记路径，保留期跟着记忆自己的规则走。
 - **读**：第一版不读。以后可以读记忆归纳的习惯（例如"这类缓存用户总是清"）来排序。
 
 ## 要守的底线
