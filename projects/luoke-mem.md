@@ -42,6 +42,7 @@
 - **luoke-mail**：写记录（发出的邮件、机构来信、订阅的打开和原文、精选的打开和反馈、标签、亲手的处理、改过的建议、规则做的、撤回），读理解和确定的习惯，页面上显示和它有关的想问的和建议。见 [luoke-mail.md](luoke-mail.md)。
 - **luoke-ime**：个人化组件写上屏记录（带前文，标成第三方），读常用说法和别的理解做联想。见 [luoke-ime.md](luoke-ime.md)。
 - **luoke-agent**：读想问的和建议（`asks`），卡片上列依据原文（`note()["cites"]`），把回答交回（`reply`）。见 [luoke-agent.md](luoke-agent.md)。
+- **luoke-audit**（螺壳体检，beta1 之后接入）：写清了什么、忽略了什么、自动清了什么、报毒怎么处理的、自动清缓存的开关；第一版不读。见 [luoke-audit.md](luoke-audit.md)。
 - **luoke-core**：把 luoke_mem 打进主控、处理 `luoke://memory`、调度 `learn`、跑评测；卸载别的配件时，用户勾了"同时从记忆里忘掉"才调 `forget-tool`。见 [luoke-core.md](luoke-core.md)。
 
 ## 和使用方定下的
@@ -52,6 +53,7 @@
   - 机构来信推出的事实，话题写「机构:<完整机构名>」，同一机构的不同说法都用它，由记忆并成一条。从邮件原文里抽事实（发出的邮件、机构来信）是邮件助手的观察，照旧调 `conclude` / `propose`，由记忆的表定档；话题、不感兴趣、习惯由记忆归纳。精选读 `notes(kinds=["taste", "interest"])`；自动执行读 `notes(kinds=["preference"], confidence=["sure"])` 里 `auto` 为真的；页面上的想问的和建议读 `asks(tool="luoke-mail")`。
 - **luoke-ime**：`ime-commit`（用户 / 陈述，`data.app`，`data.context` 是光标前的前文、标成 `third_party`）、`ime-correction`、`ime-forget`（不要的候选）。按应用、按时间段删用 `forget_records`；用户设了保留期就 `forget_records(..., keep_cited=True)`。常用说法由记忆归纳，只数用户自己打的。
 - **luoke-agent**：想问的、建议从 `asks()` 读，依据从 `note(about_note)["cites"]` 读，回答一律 `reply`；习惯建议（`action.capability == "habit"`）给"好 / 不用 / 别再提"。
+- **luoke-audit**（luoke-mem#7 商定，beta1 之后实现）：体检是 Swift 程序，用螺壳的 Python 起 `python -m luoke_mem record --tool luoke-audit`，标准输入一行一条 JSON（字段同 `record()`），标准输出一行对一行回 `{"id"}` 或 `{"error"}`；没给 `sensitive` 就由命令标。topic：`audit-cleaned`（user / receipt）、`audit-ignored`（user / statement）、`audit-auto-cleaned`（system / activity，`by=rule`）、`audit-malware`（user / receipt）、`audit-autoclean`（user / statement）。不记路径。「螺壳体检」四个字不算健康。
 - **用户对理解说的话归记忆**：`state`、`confirm`、`reject`、`revise`、`later`、`was`、`reply` 记在 luoke-mem 名下，`data` 是 `{"via": 调用的工具}`；卸载某个工具时，用户确认过、否定过、亲口写的留着。
 - **升版通知**：luoke-mem 升版时告诉用到它的会话，说清接口有没有变；接口只加不改，主控换了新库，旧的调用照样能用。
 
