@@ -19,7 +19,7 @@
 - **配件接入契约**（DESIGN §11、V1 §8）：打包与身份、用模型的方式、评测集、数据与升级、界面与安全。
 - **空闲任务**：配件在清单 `jobs` 里登记"空闲时跑"的命令，主控在安静时刻拉起、用户回来时让它收尾（V1 §8）。
 - **主控自带的 Python 可以借**：`螺壳.app/Contents/Resources/python/bin/python3`（改名前装的是 `螺壳主控.app`；装在 `/Applications` 或 `~/Applications`，ADR 0012）（python-build-standalone 3.12，同一个 Team 签名）；契约 1 内路径和 bundle id `ai.luoke.core` 不变，换大版本前先写进这里并通知用它的配件（V1 §8）。
-- **配件用主控里那份 luoke_mem**：`GET /tasks` 顶层 `"luoke_mem": {"path", "version"}` 给出 site-packages 的位置；工具每次新起进程时问一次、插到 `sys.path` 最前面再 import，主控不在就用自带的兜底那份（兜底那份不比钉住的新）。
+- **配件用主控里那份 luoke_mem**：`GET /tasks` 顶层 `"luoke_mem": {"path", "version", "python"}` 给出 site-packages 的位置和主控自带的解释器（不带 Python 的工具用它跑 `-m luoke_mem`）；工具每次新起进程时问一次、插到 `sys.path` 最前面再 import，主控不在就用自带的兜底那份（兜底那份不比钉住的新）。
 - **`GET /accessories`**：装了哪些配件及其清单里的公开字段（含 `capabilities`）。
 - **装之前的介绍**（顶层 ADR 0014 的 10-27 修订）：发布流水线把配件清单 `capabilities.listing` 的 `tagline`、`category` 和 `capabilities.permissions` 的说明（`id`、`kind`、`title`、`facts`、`without`）抄进发布清单该项的 `listing`；大小和能在哪档用由主控出，配件自己写的不抄。
 - **打包脚本** `tools/package_python_app.py`：配件清单 + 包目录 → 自带 Python 的 .app（V1 §8）。
