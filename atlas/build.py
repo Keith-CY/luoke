@@ -9,7 +9,7 @@ import re, html, pathlib, datetime
 
 HERE = pathlib.Path(__file__).resolve().parent
 PAGES = ["overview", "concepts", "flows",
-         "core", "mem", "mail", "ime", "agent", "search",
+         "core", "mem", "mail", "ime", "agent", "search", "audit",
          "ref-api", "ref-manifest", "ref-mem", "ref-tasks", "ref-prompts", "ref-files",
          "ops",
          "decisions", "open", "glossary", "changelog"]
