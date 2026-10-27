@@ -57,7 +57,7 @@
  "jobs": [{"name": "scan", "exec": "luoke-audit", "command": ["scan", "--this-mac"], "min_interval_minutes": 1440,
            "uses_model": true, "memory_mb": 1500, "allow_battery": false, "timeout_minutes": 60},
           {"name": "update", "exec": "luoke-audit", "command": ["update", "--this-mac"], "min_interval_minutes": 1440,
-           "uses_model": false, "memory_mb": 200, "allow_battery": false, "timeout_minutes": 20}],
+           "uses_model": false, "memory_mb": 800, "allow_battery": false, "timeout_minutes": 20}],
  "data": ["~/.luoke-audit"],
  "capabilities": {"protocol": 1, "socket": "~/.luoke-audit/run/agent.sock",
                   "reports": [{"kind": "security", "title": "安全问题", "urgency": "urgent"}, {"kind": "space", "title": "空间被吃掉", "urgency": "normal"},
@@ -88,7 +88,7 @@
 ## 对别的项目的需求
 
 **对 luoke-core**（luoke-core#17）：
-1. 登记两个空闲任务：`scan`（每天一次，跑 ClamAV 时约 1 GB 内存；没有新文件的那天不起 ClamAV）、`update`（每天一次，freshclam，只下载）。
+1. 登记两个空闲任务：`scan`（每天一次，跑 ClamAV 时约 1 GB 内存；没有新文件的那天不起 ClamAV）、`update`（每天一次，freshclam 下载后逐个试载新的库文件，约 700 MB 内存）。
 2. 用 `jobs` 的 `exec` 直接起本工具自己签名的程序，并让 macOS 把它记在本工具名下（TCC 的"负责的 app"是 `ai.luoke.audit`，不是主控），这样完全磁盘访问只授给本工具。
 3. 两个生成任务，都走 background：`explain` 每轮 1–3 次、每次约 2–4k token；`identify` 按需、每次几条。
 4. 常驻起 `luoke-audit-serve`（Chen Yu 10-26 定由主控起）：照常驻配件的规矩，登录时拉起、异常退出重启、卸载时停。起的时候也让它自己负责（disclaim），不算在主控或 `luoke-audit` 名下。清单加可选字段 `resident_exec` / `resident_command`（luoke-core 10-26 同意）。
