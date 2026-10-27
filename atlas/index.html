@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-26 15:03</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-27 12:01</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 螺壳（主控） luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent luoke-agent</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -1357,7 +1357,9 @@ sequenceDiagram
 <li>输出上限由主控定：<code>item_tokens</code> × 条目数 + <code>fixed_tokens</code>；调用方给的 <code>max_tokens</code> 不用。输入超过任务的 <code>max_chars</code> 答 <code>input_too_long</code>，条目数超过 <code>batch</code> 拒绝；调用方事先按上限二分截短或减少条目。</li>
 <li>输入里的邮件、订阅、打的字一律声明为数据，其中给 AI 的话不执行。</li>
 <li>结果多少、能不能生效、把握几档由代码和记忆的表决定；模型只负责提名和分类。</li>
-<li>两个客户端都不看 <code>finish_reason</code>：输出被截断时按"无法解析"处理。</li>
+<li>采样参数在配方里按任务定：起草回复温度 0.3、<code>top_p</code> 0.9，其余生成任务温度 0、<code>top_p</code> 1；<code>top_k</code> 一律写 0。</li>
+<li>回答不能用时：邮件助手多数任务把原回答（截到放得下，最多 2000 字）和一句纠正接在消息后面再问一次；订阅体检和精选挑选不重问，往来邮件原样再问一次。记忆不在当次重问，见各任务。</li>
+<li>两个客户端都不看 <code>finish_reason</code>：输出被截断时，邮件助手按"无法解析"处理，记忆按"这批没读完"处理，下次减半重来。</li>
 </ul>
 
 <h2>邮件助手</h2>
@@ -1366,20 +1368,21 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>SYSTEM_PROMPT</code>、<code>build_messages</code>、<code>parse_output</code></td></tr>
-<tr><td>输入</td><td>今天的日期和星期；用户邮箱；记忆的"关于用户 / 处理习惯"块（≤ 600 字）；用户给这个发件人定的规则（有就给）；是否精选来源；发件域名验证结论（16 档不给）；邮件头（发件人、收件人、抄送、时间、主题、附件名 ≤ 10 个）和正文，正文按档的字符上限截短</td></tr>
+<tr><td>输入</td><td>今天的日期和星期；邮件寄出日期早于今天时，再给寄出日期和星期，并要求没写年份的日期和"明天""下周三"这类说法按寄出日期换算；用户邮箱；记忆的"关于用户 / 处理习惯"块（≤ 600 字）；用户给这个发件人定的规则（有就给）；是否精选来源；发件域名验证结论（16 档不给）；邮件头（发件人、收件人、抄送、时间、主题、附件名 ≤ 10 个）和正文。正文先去掉引用的往来、以 &gt; 开头的行和不可见字符，超过 60 个字符的链接写成 <code>https://域名/…</code>，最多 6000 字；整条消息再按档的字符上限截短（16 / 32 / 128 GB：6000 / 12000 / 32000 字）</td></tr>
 <tr><td>输出</td><td>13 个字段都必填：<code>category</code>（8 选 1）、<code>priority</code>（high / medium / low）、<code>action</code>（reply / schedule / follow_up / archive / ignore）、<code>summary</code>（≤ 40 字）、<code>reason</code>、<code>due_date</code>（只填邮件明写的期限）、5 个 <code>event_*</code>（只在 schedule 时填）、<code>reply_points</code>（≤ 3 条）、<code>suspicious</code>；文字字段用设置的语言</td></tr>
-<tr><td>校验与退路</td><td><code>action</code> 不在枚举：带一句纠正重问一次，再不行报错；<code>category</code> / <code>priority</code> 不在枚举改成 other / medium；日期须 YYYY-MM-DD、时间须 HH:MM，否则置空；只有 schedule 且日期有效才生成日程；<code>suspicious</code> 为真时强制 ignore + phishing</td></tr>
+<tr><td>判断规则</td><td>reply：对方在等用户回信（回答问题、确认时间、发回要的资料都算）；对方还在问能不能来、或请用户从几个时间里挑一个，也是 reply；schedule 只给时间已定的会议、预约和活动；follow_up：要用户做、但不用回信的事（付账单、填表、取件、续费）；只被抄送、且邮件明确让别人处理的，通常 archive；<code>due_date</code> 只填邮件明写的期限，"下周三"这类按今天换算；回复要点不编邮件里没有的人名、名单和数字。用户的规则一般照办，只有明显要用户亲自处理或看起来可疑时才给不同的 action，并在 <code>reason</code> 里说明；"移到垃圾邮件"的规则让模型给 ignore；精选来源的邮件一般 archive</td></tr>
+<tr><td>校验与退路</td><td>解析不出 JSON 或 <code>action</code> 不在枚举：带一句纠正重问一次，再不行报错；<code>category</code> / <code>priority</code> 不在枚举改成 other / medium；日期须 YYYY-MM-DD、时间须 HH:MM，否则置空；只有 schedule 且日期有效才生成日程；<code>suspicious</code> 为真时强制 ignore + phishing；没写年份、又比寄出日期晚 300 天以上的期限和日程日期，按整年往回拉（邮件里写了那一年或"明年"的不拉）</td></tr>
 <tr><td>预算</td><td>输出 320 + 80 token；温度 0</td></tr>
-<tr><td>评测</td><td>47 封（19 封难题，含钓鱼、注入、发件域名验证）；硬性：正常邮件 0 误报，可疑邮件最多漏 1 封。不覆盖规则、记忆块、精选来源、非中文输出，也不评摘要和回复要点</td></tr>
+<tr><td>评测</td><td>48 封（20 封难题，含钓鱼、注入、发件域名验证、长跟踪链接后的期限）；硬性：正常邮件 0 误报，可疑邮件最多漏 1 封。不覆盖规则、记忆块、精选来源、非中文输出，也不评摘要和回复要点</td></tr>
 </table></div>
 
 <h3><code>luoke-mail.draft</code> 起草回复</h3>
 <div class="tbl"><table>
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/triage.py</code>：<code>DRAFT_PROMPT</code>、<code>draft_reply</code></td></tr>
-<tr><td>输入</td><td>记忆块（≤ 600 字）；分拣给的回复要点（没有时让模型自己写得体的回复）；原邮件（同分拣，截短）。不含往来历史和今天的日期</td></tr>
-<tr><td>输出</td><td><code>{"body"}</code>：用原邮件的语言，不编造事实、日期、数字和承诺，要用户补的地方用【】标出，可署名</td></tr>
-<tr><td>校验与退路</td><td>只查正文非空；不重问，失败报错。草稿只存进草稿箱，由用户自己发</td></tr>
+<tr><td>输入</td><td>记忆块（≤ 600 字）；分拣给的回复要点（没有时让模型自己写得体的回复）；原邮件（邮件头和正文同分拣，截短；有发件域名验证结论时各档都带）；提示词里有今天的日期。不含往来历史</td></tr>
+<tr><td>输出</td><td><code>{"body"}</code>：用原邮件的语言，不编造事实、日期、数字和承诺，要用户补的地方用【】标出；设了签名就用它署名，没设就不署名、也不编名字；不写用户没给出的电话、住址、账号、证件号；不含主题行</td></tr>
+<tr><td>校验与退路</td><td>只查正文非空；不行带一句纠正再问一次，再不行报错。草稿只存进草稿箱，由用户自己发</td></tr>
 <tr><td>预算</td><td>输出 800 + 100 token；温度 0.3、<code>top_p</code> 0.9</td></tr>
 <tr><td>评测</td><td>无</td></tr>
 </table></div>
@@ -1410,8 +1413,8 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/digest.py</code>：<code>PROMPT</code>、<code>build_messages</code>、<code>parse</code></td></tr>
-<tr><td>输入</td><td>今天的日期；记忆的"精选口味 / 关注的话题 / 不感兴趣"块（≤ 500 字）；收藏和点过"没兴趣"的标题各 ≤ 8 条；订阅正文（HTML 转文字，≤ 12000 字，链接编成〔n〕，≤ 40 个，去掉退订和分享链接），再按档的字符上限截短</td></tr>
-<tr><td>输出</td><td><code>items</code> ≤ 8 条：<code>title</code>（≤ 30 字）、<code>score</code>（0–3）、<code>lasting</code>、<code>link</code>（编号或 null）、<code>topics</code>（1–3 个）、<code>summary</code> 和 <code>why</code>（score ≥ 2 时填）</td></tr>
+<tr><td>输入</td><td>今天的日期；记忆的"不感兴趣 + 精选口味"块（还没有精选口味时用"关注的话题"；不感兴趣排在前面；≤ 500 字）；收藏和点过"没兴趣"的标题各 ≤ 8 条；订阅正文（HTML 转文字，≤ 12000 字，链接编成〔n〕，≤ 40 个，去掉退订、偏好设置、隐私条款、在浏览器查看、分享和 mailto 链接；正文后附链接表：编号、链接文字（≤ 60 字）、域名），再按档的字符上限截短</td></tr>
+<tr><td>输出</td><td><code>items</code> ≤ 8 条：<code>title</code>（≤ 30 字）、<code>score</code>（0–3）、<code>lasting</code>、<code>link</code>（编号或 null）、<code>topics</code>（1–3 个）、<code>summary</code>（≤ 80 字，只依据原文）和 <code>why</code>（score ≥ 2 时填）；提示词要求 2 分以上要克制，和不感兴趣相关的不超过 1 分</td></tr>
 <tr><td>校验与退路</td><td>分数夹到 0–3；链接编号不在列表里就不带链接；文字截长；解析失败重问一次，再失败跳过这封。score ≥ 2 才进精选候选</td></tr>
 <tr><td>预算</td><td>输出 1300 + 100 token</td></tr>
 <tr><td>评测</td><td>无</td></tr>
@@ -1421,9 +1424,9 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/editor.py</code>：<code>PROMPT</code>、<code>choose</code>、<code>edit</code></td></tr>
-<tr><td>输入</td><td>同阅读的口味块和标题例子；候选 ≤ 30 条：标题、摘要、来源、日期、另有几家报道</td></tr>
+<tr><td>输入</td><td>同阅读的口味块和标题例子；候选每批 ≤ 30 条，最后一轮最多两倍配额（近 7 天 40 条），再按字符上限减：标题、摘要、来源、日期、另有几家报道</td></tr>
 <tr><td>输出</td><td><code>picks[{n, why}]</code>，最多 k 条（不感兴趣的宁可少选，不凑数），<code>why</code> ≤ 30 字</td></tr>
-<tr><td>校验与退路</td><td>编号去重、去越界、<code>why</code> 截到 60 字；一条可用的都没有时，改按用户点过有用、阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
+<tr><td>校验与退路</td><td>候选不多于 k 条时不问模型，全部入选；编号去重、去越界、<code>why</code> 截到 60 字；一条可用的都没有时，改按用户点过有用、阅读分数、报道家数、日期排序。选几条由代码定（近 7 天 20 条，更早每月 10 条），多轮淘汰</td></tr>
 <tr><td>预算</td><td>每条 60 + 60 token</td></tr>
 <tr><td>评测</td><td>无</td></tr>
 </table></div>
@@ -1443,7 +1446,7 @@ sequenceDiagram
 <div class="tbl"><table>
 <tr><th>项</th><th>要点</th></tr>
 <tr><td>位置</td><td><code>luoke_mail/learn.py</code>：<code>RECEIVED_PROMPT</code>、<code>parse_facts</code></td></tr>
-<tr><td>输入</td><td>多次来信、用户打开过的机构：名称、地址、封数、首末月份、最近 ≤ 6 个主题；一批 ≤ 10 个</td></tr>
+<tr><td>输入</td><td>三封以上、跨两个月以上、至少打开过一封的机构（问过的不再送）：名称、地址、封数、首末月份、最近 ≤ 6 个主题；一批 ≤ 10 个</td></tr>
 <tr><td>输出</td><td>同上，topic 8 类之一，<code>who</code> 为机构名，<code>text</code> 写明机构和用户的关系</td></tr>
 <tr><td>校验与退路</td><td>同上；只写机构名的丢掉，缺机构名的补上；结果只作猜测，等用户确认</td></tr>
 <tr><td>预算</td><td>每个 60 + 100 token</td></tr>
@@ -1456,7 +1459,7 @@ sequenceDiagram
 <tr><td>位置</td><td><code>luoke_mail/threads.py</code>：<code>PROMPT</code>、<code>parse</code></td></tr>
 <tr><td>输入</td><td>一串往来的最后 ≤ 6 封（按字符上限再减）：日期、用户或对方（名字）、主题、本人写的正文（≤ 600 字）；末尾注明最后一封是谁写的</td></tr>
 <tr><td>输出</td><td><code>state</code>（user_turn / other_turn / done）、<code>since</code>（YYYY-MM-DD）、<code>what</code>（≤ 25 字）；拿不准选 done</td></tr>
-<tr><td>校验与退路</td><td><code>state</code> 映射为等你 / 在等对方 / 已了结，不在枚举就重问一次，再失败按已了结；<code>since</code> 格式不对置空；done 时清空另两项</td></tr>
+<tr><td>校验与退路</td><td><code>state</code> 映射为等你 / 在等对方 / 已了结，解析不了或不在枚举就原样再问一次（不带纠正），再失败按已了结；<code>since</code> 格式不对置空；done 时清空另两项</td></tr>
 <tr><td>预算</td><td>60 + 100 token</td></tr>
 <tr><td>评测</td><td>16 串（10 串硬性）；硬性：已了结的不能报成等你，等你的不能漏，都一次不能错</td></tr>
 </table></div>
@@ -1469,9 +1472,9 @@ sequenceDiagram
 <tr><td>位置</td><td><code>luoke_mem/learn.py</code>：<code>PROMPT</code>、<code>messages</code>、<code>parse</code>、<code>_term</code>、<code>_interest</code></td></tr>
 <tr><td>输入</td><td>已记下的话题、还在观察的话题、用户否定过的、用户在输入法里删掉的候选；打的字每段 ≤ 300 字，一批 ≤ 40 段、≤ 6000 字</td></tr>
 <tr><td>输出</td><td><code>terms[{text, evidence}]</code>（2–12 字，照用户的写法）；<code>interests[{text, evidence}]</code>（≤ 20 字，至少两段依据，最多 3 个）</td></tr>
-<tr><td>校验与退路</td><td>编号越界丢掉，兴趣不足两段丢掉；常用说法由代码在打字记录里数（3 天、5 次）才生效，词长、常用词表、凭证、否定过的拦掉；兴趣依据跨 3 天才生效，之前是猜测。解析失败这批没有结果</td></tr>
+<tr><td>校验与退路</td><td>编号越界丢掉，兴趣不足两段丢掉；常用说法由代码在近 90 天的打字记录里数：见到 2 次起作猜测问用户，满 3 天、5 次才生效，词长、常用词表、凭证、否定过的拦掉；兴趣依据跨 3 天才生效，之前是猜测。回答不完整（被截断，或不是含两个列表的 JSON）时这批不算读过：下次每批减半重来，同一批两次不行才跳过</td></tr>
 <tr><td>预算</td><td>每段 8 + 300 token</td></tr>
-<tr><td>评测</td><td>24 例；硬性：一次性安排、别人的事、删掉的候选、秘密不能出现；底线：说法召回 70、话题召回 60、每例普通词误收 ≤ 0.5</td></tr>
+<tr><td>评测</td><td>24 例；硬性：一次性安排、别人的事、删掉的候选、秘密不能出现；底线：说法召回 70、话题召回 60、每例普通词误收 ≤ 0.5；32 GB 档有一条已知问题：一例的话题名里带上一次性安排的"答辩"</td></tr>
 </table></div>
 
 <h3><code>luoke-mem.topics</code> 邮件里的话题</h3>
@@ -1480,16 +1483,16 @@ sequenceDiagram
 <tr><td>位置</td><td><code>luoke_mem/topics.py</code>：<code>PROMPT</code>、<code>sources</code>、<code>parse</code>、<code>take</code></td></tr>
 <tr><td>输入</td><td>已记下的话题（≤ 30）和否定过的（≤ 20）；按来源汇总的邮件助手记录（一年内、用户自己的、非事务邮件），每个来源 ≤ 1200 字：名称、往来次数（来信、打开、精选里读过 / 有用 / 没兴趣）、邮件助手说过的"讲的是"、最近 ≤ 3 封原文开头（各 ≤ 280 字）；一批 ≤ 40 个来源，16 档 ≤ 20 个、≤ 3000 字</td></tr>
 <tr><td>输出</td><td><code>interests</code> ≤ 5 个，写成"领域：具体对象"（≤ 30 字）；<code>dislikes</code> ≤ 3 个，只认精选里说的"没兴趣"</td></tr>
-<tr><td>校验与退路</td><td>超过 40 字、没有有效来源编号、含凭证的丢掉；只是品牌或来源名、纯拉丁字母的丢掉；跨轮累计 ≥ 2 条记录才算；每个话题立即作为精选口味，作为"关注的话题"要过记忆的表且最多 8 个；不感兴趣必须有精选反馈记录。提示词换版本时全部重读</td></tr>
+<tr><td>校验与退路</td><td>超过 60 字、没有有效来源编号、含凭证的丢掉；只是品牌或来源名的丢掉：整条只有拉丁字母；没有"领域：对象"、又以"动态 / 通知 / 资讯 / 更新 / 消息"结尾；或冒号后只剩来源名、只剩拉丁字母加"动态"之类。写出领域和具体对象的（哪怕以"动态"结尾）保留；跨轮累计 ≥ 2 条记录才算；每个话题立即作为精选口味，作为"关注的话题"要过记忆的表且最多 8 个；不感兴趣要有两条以上精选里点"没兴趣"的记录（收藏、标签、清理、没打开都不算）。回答不完整时这批来源留到下次（每批减半），同一批两次不行才跳过；提示词换版本时全部重读</td></tr>
 <tr><td>预算</td><td>每个来源 8 + 300 token</td></tr>
-<tr><td>评测</td><td>3 个虚构的人共 12 例；硬性：一次性的事、别人的事、凭证不能进话题名，只写来源名算失败；另记话题是否具体</td></tr>
+<tr><td>评测</td><td>3 个虚构的人共 12 例；硬性：话题名和不感兴趣里不能有一次性的事、别人的事、健康、凭证，话题只是来源名或纯拉丁字母算失败；另用 5 个该留、6 个该丢的固定话题名检查品牌筛选，错一个也算硬性失败；另记话题召回、是否具体、不感兴趣的召回，和没有"没兴趣"依据的不感兴趣</td></tr>
 </table></div>
 
 <h2>没有提示词的任务</h2>
 <ul>
 <li><code>luoke-ime.rerank</code>：只送前文和候选，主控返回每个候选的对数概率。</li>
 <li><code>luoke-ime.predict</code>：只送前文，主控续写若干分支，停在标点。</li>
-<li><code>luoke-search.embed</code>：只送加好检索前缀的文字，返回向量。</li>
+<li><code>luoke-search.embed</code>（配方里仍叫 <code>digup.embed</code>，还没分到任何档）：只送加好检索前缀的文字，返回向量。</li>
 <li>agent 和系统检查目前不调用生成任务。</li>
 </ul>
 </section>
@@ -1645,12 +1648,16 @@ sequenceDiagram
 <h2>质量</h2>
 <ul>
 <li>16 GB 档（9B）的邮件分拣会把正常邮件里的催促语（例如正规商城写"请在某日前上传凭证，逾期退款申请将自动关闭"）判成可疑；32 GB 档判对。还没有专门盯这种情况的评测题。</li>
-<li>话题归纳（<code>luoke-mem.topics</code>）在 16 GB 档未通过评测，暂不开启；128 档评测分数偏低。</li>
-<li>16 GB 档的打字归纳未通过评测，暂不开启。</li>
+<li>话题归纳（<code>luoke-mem.topics</code>）在 16 GB 档未通过评测，暂不开启。</li>
+<li>16 GB 档的打字归纳：beta1 中没开；internal-1027 起评测连过，已打开。</li>
+<li>32 GB 档（9B）的邮件分拣会把真的银行审批通知标成可疑，结论随前文变化；M1 这一代的机器上更容易出现，32 GB 档的发布评测机测不出来。配方和证据里把这一题记为已知问题（<a href="https://github.com/luokelabs/luoke-core/issues/33">luoke-core#33</a>）。</li>
+<li>32 GB 档的打字归纳偶尔把一次性安排（例如"答辩"）放进话题名，两个候选分数打平；配方里记为已知问题。</li>
 </ul>
 
 <h2>缺陷</h2>
 <ul>
+<li><b>螺壳：先升螺壳、后升应用时，旧版邮件助手写不了草稿和每日摘要</b>：这三个任务没有评测记录，进不了本机的验证历史（<a href="https://github.com/luokelabs/luoke-core/issues/32">luoke-core#32</a>）。beta1 有这个问题；internal-1026-5 起已修，已经写下的旧记录不重写，升一下邮件助手就好。</li>
+<li><b>螺壳：换引擎后旧引擎留在磁盘上</b>（每份约 1.6 GB）。beta1 有这个问题；main 上已改成新引擎检查通过后删掉别的版本，随 beta1.1。</li>
 <li><b>邮件助手：往返和多段行程只加第一段</b>：分拣只输出一个日程，往返机票、多段行程、系列活动只能挑一个或揉成一个，结束时间可能取成最后一段的（luoke-mail#34）。</li>
 <li><b>记忆：同一机构换了名字仍各成一条</b>：按「机构:」后的名字原样合并，模型给的名称不同（如英文名、带域名、中文名）就不合并；别人来信推出的事实仍是一机构一句。</li>
 <li><b>记忆：「其他:」话题下的人和机构可能并成一条</b>：旧版邮件助手把机构来信放在「其他:机构名」下，所以「其他:」仍按机构合并；发出邮件里写的「其他:某人」若和机构同名会被并进去。</li>
@@ -1700,6 +1707,12 @@ sequenceDiagram
 </section>
 <section class="page" id="changelog" data-title="文档修订">
 <h1>文档修订</h1>
+
+<h2>2026-10-27</h2>
+<ul>
+<li>提示词页按代码复核（luoke-mail 0.18.11、luoke-mem 0.26.0、luoke-core 570eef2）：共同做法补采样参数、重问方式和截断后的处理；分拣补寄出日期、正文的预处理（长链接写成 <code>https://域名/…</code>、6000 字）、日期回拉、判断规则，评测改为 48 封；起草回复的输入、署名规则和重问；精选阅读、挑选的口味块、链接表、候选数；learn-orgs 的入选条件；往来邮件的重问；打字和话题的失败处理、话题名上限 60 字、品牌筛选和"没兴趣"的依据、话题评测的硬性条目；<code>luoke-search.embed</code> 在配方里仍叫 <code>digup.embed</code>。</li>
+<li>已知问题：32 GB 档银行审批通知误报、打字归纳"答辩"两条记为配方里的已知问题；16 GB 档打字归纳 internal-1027 起打开；补两条缺陷（先升螺壳后升应用时草稿和摘要被拒、换引擎后旧引擎不删），都已在 main 上修；去掉 128 档话题分数偏低。</li>
+</ul>
 
 <h2>2026-10-26</h2>
 <ul>
