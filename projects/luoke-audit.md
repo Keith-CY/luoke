@@ -17,10 +17,20 @@
   - `luoke-audit`：用户给「完全磁盘访问」的就是它；扫描、出方案、执行方案都在它里面，由主控的空闲任务拉起，**从不开 socket**。
   - `luoke-audit-serve`：只管给 agent 的 socket，**不拿完全磁盘访问、不碰用户的文件**，每个请求交给 `luoke-audit mcp` 去做；由主控当常驻配件起（见下面对 luoke-core 的需求 4）。
 - **只做 macOS**，最低 26.2。
-- **现状**（2026-10-26）：
-  - **已合**：第一版的检查引擎（11 条规则）、给 agent 的 MCP、增量扫描（FSEvents）、两个生成任务的提示词和评测（两种底座上硬性条目全过）。10-26 又合了 Swift 6（编译期查数据竞争）和性能改进（`getattrlistbulk` 遍历、utility 优先级、病毒扫描只扫新的）。
-  - **待合**：拆成两个程序（luoke-audit#14）、打包签名（luoke-audit#15）。
-  - **还没做**：常驻项的其余位置和签名检查、锁屏、报告页、要管理员权限的删除。
+- **现状**（2026-10-27）：
+  - **已合**：
+    - 检查引擎（19 条规则）、给 agent 的 MCP、增量扫描（FSEvents）、两个生成任务的提示词（照 ADR 0019 放在 `prompts/`）和评测（两种底座上硬性条目全过）；
+    - 拆成两个程序、打包签名、性能基准；
+    - 四类不用点就清，能放回，评测挑错为 0；
+    - 要密码的删除（系统目录里的卸载残留）；
+    - 配件清单的 `service`、`permissions`、`listing`，以及三种资源；
+    - 写记忆。
+  - **还没做**：
+    - 体检自己的窗口（全部明细的文件夹树、规则编辑）；
+    - 清理结果和体检结果合成一张卡片；
+    - 旧版 Homebrew 的删除（现在只报）；
+    - 在终端里用 sudo 删除的做法。
+  - **等别人**：进配方、常驻起 `luoke-audit-serve`（luoke-core#17、luoke-core#27，beta1 之后）。
   - 进度见 `luoke-audit/STATUS.md`。
 
 ## 对外提供
@@ -30,49 +40,54 @@
 | 工具 | 只读 | 做什么 |
 |---|---|---|
 | `audit_status` | 是 | 上一轮什么时候查的、查到多少、病毒库日期、哪些项没扫描及原因 |
-| `audit_findings` | 是 | 按类别、严重度列发现，每条带依据和建议动作；给一张结果卡片 |
+| `audit_findings` | 是 | 按结论（放心删 / 要确认 / 仅供参考）、类别列发现，每条带依据和建议动作；给一张结果卡片 |
 | `audit_scan_now` | 是 | 请主控尽快跑一轮（用户在对话里说"查一下"）；不改动用户的东西 |
-| `audit_plan` | 是 | 对选中的发现出一份方案（删哪些、换成克隆哪些、清哪些缓存），给一张确认卡片；要管理员权限的几项单独标出"会请你输入 Mac 的密码" |
-| `audit_apply` | 否（列进 `actions`） | 执行用户在卡片上点了的方案；删除一律移到废纸篓。要管理员权限的部分弹 macOS 标准的授权对话框 |
-| `audit_ignore` | 否（列进 `actions`） | 把一条发现或一类标成"不用管" |
-| `audit_autoclean` | 否（列进 `actions`） | 用户同意（或收回）"会重建的缓存以后自动清" |
+| `audit_plan` | 是 | 对选中的发现出方案（删哪些、换成克隆哪些、清哪些缓存），给一张确认卡片；系统目录里要密码的几项是单独一份方案、单独一个按钮（「移到废纸篓（要输入密码）」） |
+| `audit_apply` | 否（列进 `actions`） | 执行用户在卡片上点了的方案；删除一律移到废纸篓。要密码的那份：弹 macOS 的授权对话框，由单独签名的 `luoke-audit-admin` 以管理员身份做 |
+| `audit_ignore` | 否（列进 `actions`） | 把一条发现标成"不用管" |
+| `audit_restore` | 否（列进 `actions`） | 放回：清理记录里的一条（`c-…`），或一次清理的整批（`p-…` / `auto-…`）；原位置有同名的就放在旁边 |
+| `audit_autoclean` | 否（列进 `actions`） | 开或关不用点就清的四类，参数 `{"on": true/false}`（旧的 `enable` 照旧认） |
 | `audit_reveal` | 是 | 在访达里选中一条发现指的文件（只在 Mac 上） |
 | `audit_open_settings` | 是 | 打开系统设置里对应的隐私与安全性页面（只在 Mac 上） |
 | `outbox_ack` | 是 | agent 告诉体检某件事已经说过、答过或放下了 |
 
-**outbox** `luoke://luoke-audit/outbox`：
-- `security`（urgent）：病毒库报毒、新出现的未签名常驻项这类；
-- `space`（normal）：空间明显在被某个来源吃掉，或可用空间低于门槛；
-- `findings`（low）：一轮查完的摘要；
+**outbox** `luoke://luoke-audit/outbox`（也认相对 id `outbox`）：
+- `security`（urgent）：病毒库报毒、新出现的没人担保的常驻项；
+- `space`（normal）：可用空间低于门槛；
+- `findings`（low）：一轮查完的摘要和清理方案；
 - `needs-access`（normal）：要用户给完全磁盘访问，带去系统设置的说明；
-- `auto-done`（normal）：自动清了会重建的缓存（工具协议 §8a）。不给撤销（缓存删了只能等工具重建），给「以后别自动清」（luoke-agent#2 商定）。
+- `auto-done`（normal）：四类不用点就清了（工具协议 §8a）。卡片上有 [放回]（整批，缓存是直接删的、放不回）和 [以后别自动清]。
+
+**资源**（luoke-agent#3，相对 id）：`summary`（`{"count", "text"}`）、`permissions`（`fda`、`auto`、`admin` 的状态）、`page/overview`、`page/cleaned`（A2UI 基础页）。
 
 **配件清单**（`packaging/luoke-accessory.json`，打包时去掉草案标记）：
 
 ```json
 {"contract": 1, "accessory": "luoke-audit", "bundle_id": "ai.luoke.audit", "name": "螺壳体检", "version": "0.1.0",
- "type": "app", "entry": [], "resident": false, "memory": true, "ui_element": true, "min_macos": "26.2",
- "tasks": [{"name": "luoke-audit.explain", "kind": "generate", "main": true},
+ "type": "app", "entry": [], "resident": false, "resident_exec": "luoke-audit-serve", "resident_command": ["--this-mac"],
+ "memory": true, "ui_element": true, "min_macos": "26.2",
+ "tasks": [{"name": "luoke-audit.explain", "kind": "generate", "main": false},
            {"name": "luoke-audit.identify", "kind": "generate", "main": false}],
- "jobs": [{"name": "scan", "exec": "luoke-audit", "command": ["scan", "--this-mac"], "min_interval_minutes": 1440,
-           "uses_model": true, "memory_mb": 1500, "allow_battery": false, "timeout_minutes": 60},
+ "jobs": [{"name": "scan", "exec": "luoke-audit", "command": ["scan", "--this-mac", "--autoclean"], "min_interval_minutes": 1440,
+           "uses_model": false, "memory_mb": 1500, "allow_battery": false, "timeout_minutes": 60},
           {"name": "update", "exec": "luoke-audit", "command": ["update", "--this-mac"], "min_interval_minutes": 1440,
            "uses_model": false, "memory_mb": 800, "allow_battery": false, "timeout_minutes": 20}],
  "data": ["~/.luoke-audit"],
  "capabilities": {"protocol": 1, "socket": "~/.luoke-audit/run/agent.sock",
-                  "reports": [{"kind": "security", "title": "安全问题", "urgency": "urgent"}, {"kind": "space", "title": "空间被吃掉", "urgency": "normal"},
-                              {"kind": "findings", "title": "体检结果", "urgency": "low"}, {"kind": "needs-access", "title": "需要你允许", "urgency": "normal"},
-                              {"kind": "auto-done", "title": "自动清了缓存", "urgency": "normal"}],
-                  "actions": [{"name": "audit_apply", "title": "执行你点过的清理方案", "writes": true},
-                              {"name": "audit_ignore", "title": "把某项标成不用管", "writes": true},
-                              {"name": "audit_autoclean", "title": "开或关缓存自动清理", "writes": true}]}}
+                  "reports": [ …上面五类… ],
+                  "actions": [ …上面四个会改动东西的… ],
+                  "service": {"summary": true, "pages": [{"id": "overview", "title": "概览"}, {"id": "cleaned", "title": "清理记录"}]},
+                  "permissions": [{"id": "fda", "kind": "system", "tcc": "SystemPolicyAllFiles", "title": "完全磁盘访问", "facts": [ … ], "without": "degrade"},
+                                  {"id": "auto", "kind": "delegate", "title": "不用点就清 4 类", "on": "audit_autoclean"},
+                                  {"id": "admin", "kind": "each-time", "title": "删除系统目录里的东西（要 Mac 的密码）"}],
+                  "listing": {"tagline": "找出吃空间的和可疑的，替你清掉不会丢东西的", "category": "系统"}}}
 ```
 
-还差常驻起 `luoke-audit-serve` 的那一项，怎么写等 luoke-core 定（luoke-core#17）。
+`resident` 先留 false：主控还不认 `resident_exec`，旧主控按 `resident: true` 会在登录时打开主程序。怎么配合由 luoke-core 定（luoke-core#17）。
 
 **评测集**（交给 luoke-core）：`luoke-audit.explain`（发现归纳成人话：准确、不夸大、给的动作能执行）、`luoke-audit.identify`（只给路径、bundle id、大小、时间，说出可能是什么）。全部用合成的假用户目录。
 
-提示词用 explain 第 4 版、identify 第 5 版，温度 0。32 GB 档 qwen3.5-9b-4bit、128 GB 档 gemma-4-26b-8bit 上硬性条目都全过（各跑 3 遍）。接进主控的改动在 luoke-core#27（草稿，beta1 之后合）。
+提示词（`prompts/`，ADR 0019 的格式）用 explain 第 4 版、identify 第 5 版，温度 0。32 GB 档 qwen3.5-9b-4bit、128 GB 档 gemma-4-26b-8bit 上硬性条目都全过（各跑 3 遍）。接进主控的改动在 luoke-core#27（草稿，beta1 之后合）。
 
 ## 依赖
 
@@ -91,12 +106,13 @@
 1. 登记两个空闲任务：`scan`（每天一次，跑 ClamAV 时约 1 GB 内存；没有新文件的那天不起 ClamAV）、`update`（每天一次，freshclam 下载后逐个试载新的库文件，约 700 MB 内存）。
 2. 用 `jobs` 的 `exec` 直接起本工具自己签名的程序，并让 macOS 把它记在本工具名下（TCC 的"负责的 app"是 `ai.luoke.audit`，不是主控），这样完全磁盘访问只授给本工具。
 3. 两个生成任务，都走 background：`explain` 每轮 1–3 次、每次约 2–4k token；`identify` 按需、每次几条。
-4. 常驻起 `luoke-audit-serve`（Chen Yu 10-26 定由主控起）：照常驻配件的规矩，登录时拉起、异常退出重启、卸载时停。起的时候也让它自己负责（disclaim），不算在主控或 `luoke-audit` 名下。清单加可选字段 `resident_exec` / `resident_command`（luoke-core 10-26 同意）。
+4. 常驻起 `luoke-audit-serve`（Chen Yu 10-26 定由主控起）：照常驻配件的规矩，登录时拉起、异常退出重启、卸载时停。起的时候也让它自己负责（disclaim），不算在主控或 `luoke-audit` 名下。清单已加 `resident_exec` / `resident_command`（luoke-core 10-26 同意）；有它时怎么定常驻，请 luoke-core 定。
+5. `GET /tasks` 的 `luoke_mem` 里给出螺壳自带 Python 的路径（写记忆用，见下）。
 
-**对 luoke-agent**（luoke-agent#2）：照工具协议接上面的 MCP 工具、卡片和 outbox；四类按规则挑出的项不用点就清、事后能放回（顶层 ADR 0016 的 10-27 修订，规则评测覆盖这四类、不该删的误判为 0 之后才开）；开之前 `audit_autoclean` 的确认卡片照旧写清只限会重建的缓存。清理的卡片和 `audit_restore` 在 luoke-agent#2 商量。
+**对 luoke-agent**（luoke-agent#2、#3）：照工具协议接上面的 MCP 工具、卡片、outbox 和资源；四类按规则挑出的项不用点就清、事后能放回（顶层 ADR 0016 的 10-27 修订，规则评测挑错为 0）。要密码那份方案的选项绑在 `/admin_choices`。
 
 **对 luoke-mem**（luoke-mem#7）：
-1. 给没有 Python 可调的程序一个写入口：已做（luoke-mem 0.26.0），`<螺壳的 python> -m luoke_mem record --tool luoke-audit`，标准输入一行一条 JSON，标准输出一行对一行回 `{"id": N}` 或 `{"error": …}`。本工具起它时让它自己负责（disclaim），不沾本工具的完全磁盘访问；解释器路径在 luoke-core#17 要。
+1. 给没有 Python 可调的程序一个写入口：已做（luoke-mem 0.26.0），`<螺壳的 python> -m luoke_mem record --tool luoke-audit`。本工具已经接上（luoke-audit#35）：只认螺壳 Team 签名的那份 Python，起它时让它自己负责（disclaim），不沾本工具的完全磁盘访问；进配方之前主控答 403，写不进去。
 2. 本工具写五种记录（见下），不写路径。
 3. 「体检」在健康关键词里：已改，「螺壳体检」不算健康，「体检报告」照常算。
 
@@ -123,11 +139,8 @@
 - **不带模型**（ADR 0018）：要模型只找主控；主控不在时照样查，只是没有人话归纳。
 - **数据不出本机**（ADR 0013）：数据目录 `~/.luoke-audit/`（目录只有本账户能读），排除出 Time Machine；往外只下载病毒库，不上传任何东西。
 - **凭证不存值**：找到的密码、密钥、令牌只记位置和类型。
-- **只读，改动只来自用户的点按**（工具协议 §5）；删除移到废纸篓；会重建的缓存是唯一能在确认一次后自动清的（顶层 ADR 0016 修订）。
-- **要管理员权限的，两种做法**（Chen Yu 10-26 定）：
-  - 经 agent：点了以后弹 macOS 标准的授权对话框；
-  - 想自己动手的：在终端里跑 `sudo luoke-audit apply --plan <编号>`。
-  - 两种都一次一授权，不装常驻的 root 辅助程序。提权执行的是本工具自己签名的程序加方案编号（先验签名，再逐项核对路径、inode、大小，不跟随符号链接），不是拼出来的命令。
+- **只读，改动只来自用户的点按**（工具协议 §5）；删除移到废纸篓。例外是四类不用点就清（顶层 ADR 0016 的 10-27 修订）：会重建的缓存直接删；装好了的应用的安装包、下载里别处还有一份的重复文件、测试工具留下的临时文件夹移进废纸篓，能放回；放回过的那类不再自动清，用户能整个关掉。只在主控定时起的那一轮做。
+- **要管理员权限的**（Chen Yu 10-26、10-27 定）：经 agent，点了以后弹 macOS 的授权对话框，一次一授权，不装常驻的 root 辅助程序。root 那一侧先把单独签名的 `luoke-audit-admin` 拷进只有 root 能写的文件夹，按发布签名（Developer ID、Team NJQ5W3T9K5）核对这份拷贝，再用空环境跑；它按和扫描同一个判定重新判定每一项，只动 root 拥有的、不跟随符号链接、核对 inode。第一版只做系统目录里的卸载残留；在终端里自己动手的做法还没做。
 - **权限分开**：拿完全磁盘访问的 `luoke-audit` 从不开 socket；开 socket 的 `luoke-audit-serve` 不拿完全磁盘访问，也不碰用户的文件。
 - **不主动找用户**（ADR 0014）：只经 agent 的 outbox。
 - **跑得轻**：外部命令带超时和资源上限、低优先级、增量扫描，用户回来就让路。
