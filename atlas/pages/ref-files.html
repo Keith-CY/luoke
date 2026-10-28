@@ -18,17 +18,18 @@
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
 <tr><td><code>logs/hub.log</code>、<code>logs/app.log</code>、<code>logs/jobs/</code></td><td>日志（只记元数据）</td></tr>
-<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包；引擎运行目录</td></tr>
+<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包（发布版只留当前版本）；引擎运行目录（含引擎密钥 <code>settings.json</code>（0600）、<code>engine.log</code>、<code>engine.pid.json</code>）</td></tr>
 <tr><td><code>models/</code></td><td>模型；用户登记的模型在 <code>user-&lt;名字&gt;</code></td></tr>
-<tr><td><code>downloads/</code></td><td>下载暂存</td></tr>
+<tr><td><code>downloads/</code></td><td>下载暂存（应用的包在 <code>downloads/apps/</code>）</td></tr>
 <tr><td><code>state.json</code></td><td>运行状态：常驻、冒烟、探针、空闲任务、端点用量</td></tr>
 <tr><td><code>settings.json</code></td><td>能耗模式、电池、档、端点</td></tr>
 <tr><td><code>endpoint-key</code>、<code>user-models.json</code></td><td>端点密钥（0600）；登记的模型</td></tr>
 <tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
-<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
+<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布认可、当时放行哪些任务（每配件 3 个版本），供回到上一版本和主控升级后还没升级的应用使用</td></tr>
 <tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包，拷到暂存处后立即删除；<code>run/update-mount.json</code> 只为清理旧版留下的挂载而读</td></tr>
 <tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控（由换包脚本移入，不论原来在 <code>/Applications</code> 还是 <code>~/Applications</code>）和配件；应用可在「应用」窗口里回到上一版本，卸载配件时一并删除</td></tr>
 <tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再由换包脚本移到装好的位置</td></tr>
+<tr><td><code>run/upgrade.json</code>、<code>run/preselect.json</code></td><td>升级标记（新主控读后删除）；安装器交来的预选应用</td></tr>
 <tr><td><code>run/swap.sh</code>、<code>run/swap-result.json</code>、<code>logs/swap.log</code></td><td>换包脚本、上次换包的结果（下次启动取走）、换包日志</td></tr>
 </table></div>
 

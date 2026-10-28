@@ -66,7 +66,7 @@ footer{margin-top:48px;font-size:12px;color:var(--muted)}
 </style>
 <div class="wrap">
 <nav class="rail" aria-label="目录">
-  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-27 17:01</small></div>
+  <div class="brand">螺壳系统文档<small>LUOKE DOCS · 生成于 2026-10-28 11:58</small></div>
   <label class="picker-label" for="pagepicker" hidden>页面</label>
   <select class="picker" id="pagepicker"><option value="overview">概览 · 总览</option><option value="concepts">概览 · 核心概念</option><option value="flows">概览 · 数据流</option><option value="core">组件 · 螺壳（主控） luoke-core</option><option value="mem">组件 · 记忆 luoke-mem</option><option value="mail">组件 · 邮件助手 luoke-mail</option><option value="ime">组件 · 输入法 luoke-ime</option><option value="agent">组件 · agent luoke-agent</option><option value="search">组件 · 深度搜索 luoke-search</option><option value="audit">组件 · 螺壳体检 luoke-audit</option><option value="ref-api">参考 · 主控任务接口</option><option value="ref-manifest">参考 · 配件清单与配方</option><option value="ref-mem">参考 · 记忆接口与表结构</option><option value="ref-tasks">参考 · 任务与提示词</option><option value="ref-prompts">参考 · 提示词</option><option value="ref-files">参考 · 文件位置</option><option value="ops">运维 · 运行与发布</option><option value="decisions">其他 · 决策</option><option value="open">其他 · 已知问题</option><option value="glossary">其他 · 术语表</option><option value="changelog">其他 · 文档修订</option></select>
   <div class="navgroup"><div class="navlabel">概览</div><a href="#overview" data-page="overview">总览</a><a href="#concepts" data-page="concepts">核心概念</a><a href="#flows" data-page="flows">数据流</a></div>
@@ -249,8 +249,8 @@ sequenceDiagram
 <tr><th>进程</th><th>谁启动</th><th>说明</th></tr>
 <tr><td>菜单栏本体 <code>螺壳.app</code>（装在 <code>/Applications</code> 或 <code>~/Applications</code>；改名前的 <code>螺壳主控.app</code> 升级时换成新名字）</td><td>用户、登录项或 <code>luoke://</code></td><td>Swift：菜单栏海螺图标和菜单、设置、「应用」窗口（逐个应用安装、升级、回到上一版本、卸载）、主控小窗口、首次运行、安装器、检查更新和升级、卸载、打开记忆界面</td></tr>
 <tr><td>主控进程</td><td>本体</td><td>自带 Python：<code>python -m luoke_core serve</code>，在 Unix socket <code>run/hub.sock</code> 上提供任务层；父进程退出时随之退出</td></tr>
-<tr><td>推理引擎</td><td>主控</td><td>oMLX（引擎包内的 <code>omlx-cli serve</code>），只监听 127.0.0.1 随机端口并带随机密钥；运行底座模型</td></tr>
-<tr><td>打分 / 联想工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td>引擎包 Python 运行 <code>score_worker.py</code>，经管道通信，不监听端口</td></tr>
+<tr><td>推理引擎</td><td>主控</td><td>oMLX（引擎包内的 <code>omlx-cli serve</code>），只监听 127.0.0.1 随机端口并带随机密钥；密钥写在引擎运行目录里只有本账户能读的 <code>settings.json</code>（<code>auth.api_key</code>），不进命令行和环境变量；以 <code>HF_HUB_OFFLINE=1</code> 运行，不去网上找模型；运行底座模型</td></tr>
+<tr><td>打分 / 联想工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td>引擎包 Python 运行 <code>score_worker.py</code>（<code>HF_HUB_OFFLINE=1</code>），经管道通信，不监听端口</td></tr>
 <tr><td>嵌入工作进程</td><td>主控，首次请求或预热时；空闲 10 分钟停，下次用到再起</td><td><code>embed_worker.py</code>，同上</td></tr>
 <tr><td>空闲任务</td><td>主控</td><td>配件 .app 自带的 Python（或清单 <code>exec</code> 指定的 <code>Contents/MacOS</code> 下的可执行文件）运行清单中 <code>jobs</code> 的命令，环境带 <code>LUOKE_HUB_SOCKET</code></td></tr>
 <tr><td>常驻配件</td><td>本体</td><td>以 <code>--resident</code> 启动；10 分钟内最多自动重启 3 次</td></tr>
@@ -309,21 +309,21 @@ sequenceDiagram
 <ul>
 <li><b>配方</b>（<code>recipe.json</code>）定义硬件档（内存范围、引擎上限、底座是否常驻）、模型（目录、类型、常驻内存）、每档的模型分配、引擎版本、每个任务的参数、允许接入的配件版本和评测证据。</li>
 <li><b>选档</b>：取第一个满足 <code>min_gb ≤ 内存 &lt; max_gb</code> 的档；用户可在设置中选择更低的档（如 128 档的"省空间"）。</li>
-<li><b>任务开关</b>：每个任务在哪一档开启由出版流程的支持台账决定：未开启的档须 3 遍评测全部通过才开启（复测在发布后补跑，补满后下一版开启）；开启的档一遍不过即关闭；没评到的档沿用上一版。</li>
+<li><b>任务开关</b>：每个任务在哪一档开启由出版流程的支持台账决定：未开启的档须 3 遍评测全部通过才开启（复测在发布后补跑，补满后下一版开启）；开启的档一遍不过即关闭；没评到的档沿用上一版；"上一版"指最近一个真正发布出去的版本；beta 版全部重新评测、重新打包，不沿用别的版本的证据。</li>
 <li><b>冒烟检查</b>：引擎启动后测一次实际的预填和生成速度，后台估时使用实测值。</li>
 <li><b>探针</b>：打分、联想工作进程就绪后测 p90 延迟，超过配方 <code>latency_ms</code> 时把任务标为较慢。</li>
 </ul>
 
 <h2>下载、安装、升级、卸载</h2>
 <ul>
-<li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。</li>
+<li><b>下载</b>：依据发布清单（每项有文件列表、大小、sha256、多个镜像地址）。多地址时先测速排序；每个地址重试 3 次，403、404、410 直接换地址；支持续传；sha256 对上才落位。本机已有同名模型（<code>~/.omlx/models</code>、Hugging Face 缓存、LM Studio）时逐文件核对后 APFS 克隆，不重复下载。首次运行以后发现还缺模型时自动补下（失败后从 30 秒起加倍间隔，最长半小时）；网络按流量计费或开了低数据模式时不自动补下，只在设置「下载」的「还缺」一行说明，点「重试」照下；首次运行、「应用」窗口、换档是用户点的，照下。下了模型或引擎包才重启引擎、重做冒烟检查，只装应用不动引擎；发布版的新引擎冒烟检查通过后，删除 <code>engines/</code> 里的其他版本。</li>
 <li><b>配件安装校验</b>：<code>codesign --verify --deep --strict</code>、Team ID、bundle id 与清单一致、公证票据有效。</li>
-<li><b>安装位置</b>：主控 DMG 是拖放窗口，左边「螺壳」、右边「应用程序」快捷方式，拖过去装在 <code>/Applications/螺壳.app</code>。在 DMG 里直接双击「螺壳」时提示先拖进「应用程序」，另给「帮我装进去」。应用的安装器（<code>安装&lt;应用&gt;.app</code>）和「帮我装进去」把主控拷进 <code>/Applications/螺壳.app</code>（写不进去时拷进 <code>~/Applications/螺壳.app</code>），去掉下载标记并登记；目标位置已有 bundle id 不同的同名应用时不覆盖，改放另一处，两处都被占才弹框请用户改名或挪走。已装的主控以实际位置为准：<code>/Applications</code>、<code>~/Applications</code> 两处，<code>螺壳.app</code>、<code>螺壳主控.app</code> 两个名字都认，只认 bundle id 相同的，两处都有时用 <code>/Applications</code> 那份：另一份被打开时（例如登录项还指着它）直接交给装好的那份后退出，装好的那份启动时把没在跑的另几份移进 <code>previous.noindex</code>、注销登记并重新登记登录项（用户关掉过的不动）；已装着主控而安装器不比它新时，把预选交给它后退出。应用（邮件助手等）照旧装在 <code>~/Applications</code>。</li>
-<li><b>首次运行</b>：步骤条五步：这台 Mac（预检：档位、磁盘、系统版本、照实说明体验；内存不到 16 GB 或系统版本低于引擎要求时停在这一步）→ 选应用 → 确认下载 → 下载安装（逐项进度，主控排第一行；应用装好即打开，不等模型；含本机试跑）→ 完成；后来加装应用在「应用」窗口那一行里装，不走向导。离开下载页时注册登录项；下载页结束时分几种结局给出下一步：有项没下下来（先继续 / 重试）、试跑没过（重新检查 / 继续）、缺底座、主控没起来（重试会重启主控）。确认页上废纸篓里有旧输入法时提示。完成页：输入法的 <code>--status</code> 答 <code>not_registered</code> 时调一次它的 <code>--register</code>，每秒检查是否已添加；添加后可试打并一键切换（<code>--select</code>），切不过去、或输入法报告还登记着别的副本时给「重新登记输入法」，重新登记后仍不行则提示注销重新登录；列出每个应用的通知权限（经启动器的 <code>--notify-status</code>）：已允许 / 还没问过（按钮发一条测试通知，让系统询问）/ 已关闭（按钮打开该应用的通知设置），未全部允许时每 2 秒刷新。</li>
+<li><b>安装位置</b>：主控 DMG 是拖放窗口，左边「螺壳」、右边「应用程序」快捷方式，拖过去装在 <code>/Applications/螺壳.app</code>。在 DMG 里直接双击「螺壳」时提示先拖进「应用程序」，另给「帮我装进去」。发布页只放螺壳的 DMG（<code>Luoke.dmg</code>），应用在「应用」窗口里装；应用的安装器（<code>安装&lt;应用&gt;.app</code>）和「帮我装进去」把主控拷进 <code>/Applications/螺壳.app</code>（写不进去时拷进 <code>~/Applications/螺壳.app</code>），去掉下载标记并登记；目标位置已有 bundle id 不同的同名应用时不覆盖，改放另一处，两处都被占才弹框请用户改名或挪走。已装的主控以实际位置为准：<code>/Applications</code>、<code>~/Applications</code> 两处，<code>螺壳.app</code>、<code>螺壳主控.app</code> 两个名字都认，只认 bundle id 相同的，两处都有时用 <code>/Applications</code> 那份：另一份被打开时（例如登录项还指着它）直接交给装好的那份后退出，装好的那份启动时把没在跑的另几份移进 <code>previous.noindex</code>、注销登记并重新登记登录项（用户关掉过的不动）；已装着主控而安装器不比它新时，把预选交给它后退出。应用（邮件助手等）照旧装在 <code>~/Applications</code>。</li>
+<li><b>首次运行</b>：步骤条五步：这台 Mac（预检：档位、磁盘、系统版本、照实说明体验；内存不到 16 GB 或系统版本低于引擎要求时停在这一步）→ 选应用 → 确认下载 → 下载安装（逐项进度，主控排第一行；总进度的剩余时间在头 10 秒、下到 2% 以前不估；应用装好即打开，不等模型；含本机试跑）→ 完成；后来加装应用在「应用」窗口那一行里装，不走向导。离开下载页时注册登录项；下载页结束时分几种结局给出下一步：有项没下下来（先继续 / 重试）、试跑没过（重新检查 / 继续）、缺底座、主控没起来（重试会重启主控）。确认页上废纸篓里有旧输入法时提示。完成页：输入法的 <code>--status</code> 答 <code>not_registered</code> 时调一次它的 <code>--register</code>，每秒检查是否已添加；添加后输入法没在跑时在后台拉起它，可试打并一键切换（<code>--select</code>），切过去后试打框重新取得焦点，切不过去、或输入法报告还登记着别的副本时给「重新登记输入法」，重新登记后仍不行则提示注销重新登录；装了邮件助手时有一行写「已经在浏览器里打开了，第一次要连接邮箱。」，给「打开」；列出每个应用的通知权限（经启动器的 <code>--notify-status</code>）：已允许 / 还没问过（按钮发一条测试通知，让系统询问）/ 已关闭（按钮打开该应用的通知设置），未全部允许时每 2 秒刷新。</li>
 <li><b>升级</b>：同一张卡片走完五步：下载安装包 → 核对签名和公证 → 换成新版螺壳 → 补齐推理引擎和模型 → 本机试跑，大小、位置相同。有两条路：菜单「检查更新」（前三步在「检查更新」窗口里），或打开比已装的新的安装器（应用的安装器，或在主控 DMG 里直接双击「螺壳」；第三步在安装器的卡片里）。两条路都先把新版拷到环境目录的 <code>staging.noindex</code> 并核对签名，写 <code>run/upgrade.json</code>，起一个独立的换包脚本，再结束旧主控和记忆进程、自己退出。脚本等它退出（最多 2 分钟），把旧版移入 <code>previous.noindex</code>，把新版换到目标位置并登记，再用 <code>/usr/bin/open</code> 以用户身份打开新版，结果写入 <code>run/swap-result.json</code>。目标位置：已装在 <code>/Applications</code> 的还在那里；装在 <code>~/Applications</code> 的，<code>/Applications</code> 写得进去就搬过去，否则留在原处；名字统一为 <code>螺壳.app</code>。目标目录写不进去（标准账户的 <code>/Applications</code>）时，脚本经系统的管理员授权框以 root 运行；授权框在旧主控退出之前弹出，取消则什么都不动、原来的主控照常用；只有换包两步用 root，打开新版时切回用户身份。换包没成时脚本把旧版放回并重新打开，旧版启动时弹框说明原因；脚本起不来或授权被取消时卡片写原因，给「先用着」和「重试」。新主控读到标记（读后删除）接着显示卡片：常驻配件在卡片一开始就拉起，补齐未装的引擎包和本档缺的模型，等本机试跑通过或推迟后写「已升级到 X」和这一版的更新说明；已装的应用有新版本时列出名字并给「去升级应用」。应用不随主控升级。补齐或试跑没成时卡片写哪一步、为什么，给「先用着」（标记写回，下次主控启动接着补）和「重试」。经应用的安装器顺带升级的，完成后到「应用」窗口那一行里接着装那个应用。</li>
 <li><b>应用</b>：菜单「应用」打开，列出这一版发布清单里的应用（组件配件不列）和清单外已装的应用，每个应用的安装、升级、回到上一版本、卸载都在它那一行里做。没装的标「未安装」，点「安装」由主控按清单下载、核对、放好（读写记忆的应用连同螺壳记忆一起装），装好后经 <code>/usr/bin/open</code> 打开，常驻的以 <code>--resident</code> 在后台拉起，输入法装好后登记一次并提示到系统设置里添加；系统版本不够的写原因、不能装。首次运行没走完时，点「安装」或应用安装器交来预选，都回到首次运行并预选上这个应用。已装且清单版本更新的标「有新版本」、写「旧版 → 新版」，点「升级」只换这一个应用：普通应用先退出、换好后拉起（原来在跑的重新打开）；输入法先换包，再结束旧进程并立即重新拉起。结果写在窗口顶部，没成时旧版照常能用。有可升级的应用时顶部提示「升级螺壳不会顺带升级应用」。「…」菜单里的「卸载」把这个窗口换成卸载确认，完成或取消后回到这里。菜单「应用」一行、「应用」窗口、检查更新窗口和升级完成卡片按同一判断提示应用有新版本：已装版本比发布清单旧、这台 Mac 的系统版本够、不是用户回到上一版本时换下的那一版。</li>
 <li><b>检查更新</b>：菜单「检查更新」打开窗口，按本机主控的渠道（内部版 <code>internal-*</code>、beta <code>beta*</code>）查 <code>luokelabs/luoke-releases</code>，取最新的一版，<code>built_at</code> 更新才算；有新版本时列出发布说明的「更新说明」一节和大小，说明这里只升级主控、应用在「应用」里单独升，给「以后再说」和「升级到 …」。升级时在这个窗口里走前三步：下载主控 DMG（显示进度），核大小、sha256、公证票据，只读挂载后核 .app（<code>螺壳.app</code> 或 <code>螺壳主控.app</code>）的签名和 Team ID，拷到 <code>staging.noindex</code> 再核一次签名，卸下并删掉 DMG，起换包脚本（要管理员授权时在这里弹），然后主控退出，由新版接着显示卡片；连不上、核对不过、某一步失败时给「重试」（升级中失败还给「先用着」），原来的主控不动。螺壳已是最新、但已装的应用有新版本时，窗口里提示并给「去升级应用」。本机版、开发版不查，窗口里说明。默认自动检查（内部版每 3 小时、beta 每天一次；启动 60 秒后，之后每小时看是否到时间，查成了才算；开关在窗口底栏，升级中不显示），发现新版只在菜单「检查更新」一行显示「有新版本」，点它直接显示那一版，不自动安装。</li>
-<li><b>回到上一版本</b>：「应用」窗口里某个应用在 <code>previous.noindex</code> 里有经过验证的上一版时，它那一行的「…」菜单有「回到上一版本（版本号）」，就在这一行里做：主控先核签名、Team ID、bundle id、公证，两处对调并注销备份目录里的登记；普通应用对调前先结束，输入法对调后再结束旧进程并立即重新拉起（不动输入源）；结果写在窗口顶部。换下的那一版不再算作新版本，再选一次可换回。主控把每个被本版配方认可的配件版本及其通过的任务记入 <code>verified-history.json</code>（每配件 3 个版本）；换回的版本只能用记录中的任务，无记录的不提供回到上一版本。</li>
+<li><b>回到上一版本</b>：「应用」窗口里某个应用在 <code>previous.noindex</code> 里有经过验证的上一版时，它那一行的「…」菜单有「回到上一版本（版本号）」，就在这一行里做：主控先核签名、Team ID、bundle id、公证，两处对调并注销备份目录里的登记；普通应用对调前先结束，输入法对调后再结束旧进程并立即重新拉起（不动输入源）；结果写在窗口顶部。换下的那一版不再算作新版本，再选一次可换回。主控把每个被本版配方认可的配件版本，连同本版当时放行的任务（评测通过的，加上配方里没有评测的，如草稿、每日摘要），记入 <code>verified-history.json</code>（每配件 3 个版本）。换回的版本、以及主控升级后还没升级的应用，只能用记录中的任务；记录外的任务答 <code>task_unavailable</code>，提示到「应用」里升级。无记录的版本不提供回到上一版本。</li>
 <li><b>卸载</b>：入口在「设置 › 关于 › 卸载螺壳」（全部）和「应用」窗口某一行的「…」›「卸载」（该应用），直接到确认页，取消或完成后回到原来的窗口。输入法的输入源还启用时先停用（macOS 26 起不能代停，拦下并请用户在系统设置里移除），删完再核一次，并删除它的临时目录和锁；结束进程；删除 .app 时连同 <code>previous.noindex</code> 里的旧版，并注销同 bundle id 的其他副本（含废纸篓里的）；可选"一起从记忆里忘掉"和"删除数据"（删数据时先跑配件自己的 uninstall 命令）。只删除配件清单 <code>data</code> 中声明且符合配件自身标识的路径；不删除 <code>mem.db</code>。完成页列出还留着的数据和位置。"卸载全部"删除环境目录、登录项、设置和命令行链接，把主控移到废纸篓后退出。</li>
 <li><b>LaunchServices 登记</b>：装配件前先注销同 bundle id 的其他副本（含废纸篓里的）；<code>previous.noindex</code> 里的旧版在换装、回滚后和主控启动时都注销登记；「检查更新」只挂载安装包、不打开里面的主控，拷到暂存处时注销两边；换包脚本注销移入 <code>previous.noindex</code> 的旧版、登记换上的新版。主控和安装器拉起别的应用一律经 <code>/usr/bin/open</code>，不把自己记成被拉起者的父进程（否则 macOS 27 上已退出的父进程会一直留在程序坞）。</li>
 <li><b>重新登记输入法</b>（切不过去时）：结束它、注销其他副本，用新复制的一份换回原位并重新登记，不改内容、不重新下载。</li>
@@ -349,7 +349,7 @@ sequenceDiagram
 <li><b>菜单</b>：第一行是状态（启动中 / 工作中 · 底座模型 / 空闲 · 底座模型），后台暂停时下一行写原因（在用电池、低电量模式、过热、等内存）；然后是 记忆（随主控带的时候才有）、应用、设置、检查更新，「应用」「检查更新」有新版本时写成「名称：有新版本」、值加粗；最后「退出螺壳」（⌘Q）。主控没连上或引擎出错时，第一行是「出错了」，下一行写原因（进程退出码、连不上的原因或熔断原因），给「重新启动螺壳」和「导出诊断信息」。菜单栏图标是单色海螺，五种状态，都不动：虚线（启动中）、实心（准备好了）、半满（在处理请求或后台任务）、空心（后台暂停）、实心带圆点（出错：连不上主控、引擎没在运行或熔断）。</li>
 <li><b>窗口期间</b>：主控的任何窗口（首次运行、升级卡片、应用、卸载、检查更新、设置、主控小窗口）开着时，主控出现在程序坞和 ⌘Tab 里，全关后回到只在菜单栏。同一流程只开一个窗口：卸载接替「应用」或设置窗口，安装器的升级卡片出现后「检查更新」窗口关掉。</li>
 <li><b>再次打开主控</b>：有安装器交来的预选时，首次运行没走完就回到首次运行并预选那个应用，否则在「应用」窗口那一行里装；没有预选时有开着的窗口就叫到前面；都没有且首次运行已走完时弹出主控小窗口，显示运行状态（在运行 / 启动中 / 没连上），说明主控在菜单栏的海螺图标里、找不到时可能的原因，给「打开菜单栏设置」，并列出 记忆（随主控带的时候才有）、应用、检查更新、设置 四个入口。⌘, 打开设置窗口。</li>
-<li><b>设置</b>：通用（能耗模式 全速 / 均衡 / 静音、使用电池时仍运行后台、登录时启动螺壳）、下载（有下载或缺模型时出现：逐项进度或排队中，缺的可重试）、模型（占多少空间——可选档多于一个时出现，磁盘不够换档时在下面写明；底座模型；换档等待时的说明；已下载的模型及大小；本机放行）、高级（本机端点）、关于（版本、导出诊断信息、卸载螺壳）。档位、引擎、本机试跑在诊断信息里。</li>
+<li><b>设置</b>：通用（能耗模式 全速 / 均衡 / 静音、使用电池时仍运行后台、登录时启动螺壳）、下载（有下载或缺模型时出现：逐项进度或排队中，缺的可重试）、模型（占多少空间——可选档多于一个时出现，磁盘不够换档时在下面写明；底座模型；换档等待时的说明；已下载的模型及大小；本机放行）、高级（本机端点）、关于（螺壳版本即发布号、导出诊断信息、卸载螺壳）。Finder「显示简介」里的版本也是发布号（如 beta1、internal-1027；<code>CFBundleShortVersionString</code>），主控版本号在 <code>CFBundleVersion</code>。档位、引擎、本机试跑在诊断信息里。</li>
 <li><b>只给本体用的接口</b>（下载、设置、端点、冒烟、卸载、回到上一版本、重新登记）按 socket 对端进程核对是不是本体，<code>/settings</code>、<code>/endpoint</code> 也认主控自带的 <code>luoke</code> 命令行；不是的答 <code>forbidden</code>（403）。</li>
 </ul>
 
@@ -1355,10 +1355,11 @@ sequenceDiagram
 <tr><td><code>type</code></td><td><code>app</code>（装在 <code>~/Applications</code>）、<code>input-method</code>（装在 <code>~/Library/Input Methods</code>）、<code>component</code>；只有 app 可常驻</td></tr>
 <tr><td><code>entry</code></td><td>交给自带 Python 的入口参数</td></tr>
 <tr><td><code>resident</code></td><td>是否常驻（配件也可经 <code>PUT /accessory/resident</code> 声明）</td></tr>
+<tr><td><code>min_macos</code></td><td>可选；这台 Mac 的系统版本低于它时不能装、说明原因（发布清单照抄）</td></tr>
 <tr><td><code>memory</code></td><td>是否读写记忆；决定卸载时能否"一起忘掉"、首次运行是否需要记忆</td></tr>
-<tr><td><code>tasks</code></td><td>需要主控提供的任务（名、kind）</td></tr>
+<tr><td><code>tasks</code></td><td>需要主控提供的任务（<code>name</code>、<code>kind</code>、<code>main</code>）</td></tr>
 <tr><td><code>jobs</code></td><td>空闲任务：<code>name</code>、<code>command</code>（可用占位符 <code>{memory}</code>、<code>{tool}</code>）、<code>min_interval_minutes</code>（默认 120）、<code>allow_battery</code>（默认否）、<code>timeout_minutes</code>（默认 30）、<code>exec</code>（可选：不带 Python 的配件用 <code>Contents/MacOS</code> 下的可执行文件名，不能含路径）</td></tr>
-<tr><td><code>capabilities</code></td><td>给 agent 的能力声明，主控原样转交（规格见 agent 的工具协议）</td></tr>
+<tr><td><code>capabilities</code></td><td>给 agent 的能力声明，主控原样转交、不解释（规格见 agent 的工具协议），可含 <code>service</code>、<code>permissions</code>、<code>listing</code>；出版时把 <code>listing</code> 的 <code>tagline</code>、<code>category</code> 和各权限的说明（<code>id</code>、<code>kind</code>、<code>title</code>、<code>facts</code>、<code>without</code>）抄进发布清单的 <code>listing</code>，不抄 <code>size_mb</code>、<code>min_tier</code>、权限的默认值和动作名</td></tr>
 <tr><td><code>data</code></td><td>卸载时可删除的数据路径，只接受与配件自身标识绑定的形式</td></tr>
 <tr><td><code>commands</code></td><td><code>uninstall</code>（删除数据前运行）、<code>forget-tool</code>（从记忆中忘掉本工具写入的内容）</td></tr>
 <tr><td><code>icon</code>、<code>ui_element</code></td><td>打包用</td></tr>
@@ -1381,14 +1382,14 @@ sequenceDiagram
 <h2>配方 <code>recipe.json</code></h2>
 <div class="tbl"><table>
 <tr><th>字段</th><th>说明</th></tr>
-<tr><td><code>tiers.&lt;档&gt;</code></td><td><code>min_gb</code>、<code>max_gb</code>、<code>guard_gb</code>（引擎内存上限）、<code>base_resident</code>（底座是否常驻）、<code>idle_unload_secs</code></td></tr>
+<tr><td><code>tiers.&lt;档&gt;</code></td><td><code>min_gb</code>、<code>max_gb</code>、<code>guard_gb</code>（引擎内存上限）、<code>base_resident</code>（底座是否常驻）、<code>background_input_chars</code>、<code>idle_unload_secs</code></td></tr>
 <tr><td><code>models.&lt;名&gt;</code></td><td><code>dir</code>、<code>kind</code>（base / special）、<code>wired_gb</code>、<code>size_gb</code>、速度、<code>vector_space</code>（嵌入）等</td></tr>
 <tr><td><code>assignment.&lt;档&gt;</code></td><td><code>{base, special: {&lt;任务&gt;: &lt;模型&gt;}}</code></td></tr>
 <tr><td><code>engine</code></td><td>引擎版本和位置</td></tr>
 <tr><td><code>tasks.&lt;名&gt;</code></td><td><code>accessory</code>、<code>kind</code>（generate / score / predict / embed）、<code>params</code>（<code>"*"</code> 加按档覆盖）、<code>base_params</code>（采样）、<code>latency_ms</code>、<code>tiers</code>（开启的档）</td></tr>
 <tr><td><code>verified.&lt;配件&gt;</code></td><td><code>versions</code>（允许接入的版本）和各任务的评测证据</td></tr>
 <tr><td><code>evidence</code></td><td>评测记录：配件、版本、任务、模型、档、结论、评测集和证据的 sha256</td></tr>
-<tr><td><code>expectations</code></td><td>首次运行按档和芯片向用户说明的体验</td></tr>
+<tr><td><code>expectations</code></td><td>首次运行预检页照实说明的体验：<code>tiers</code> 按档（如 16 GB 档：邮件后台整理平均每封约 50 秒，点「同步新邮件」每封约 22 秒），<code>ime</code> 按芯片类别（<code>m1</code>、<code>base</code>、<code>pro</code>），<code>typing_unsupported</code> 用在不支持打字归纳的档</td></tr>
 </table></div>
 
 <h3>任务参数</h3>
@@ -1410,7 +1411,7 @@ sequenceDiagram
 <p>所有档的打分和联想模型为 qwen3.5-0.8b-base-4bit（独立进程，约 2.7 GB）。</p>
 
 <h2>发布清单 <code>release.json</code></h2>
-<p><code>{contract, release, built_at, items: {&lt;名&gt;: {kind: model | engine | accessory | hub, version, dir, files: [{path, size, sha256}], urls, bundle_id?, type?, installer?, min_macos?}}}</code>。模型有 ModelScope 和 Hugging Face 两个镜像，安装包放在 GitHub 的 <code>luokelabs/luoke-releases</code>。主控的"检查更新"从 <code>items.hub</code> 取 DMG。</p>
+<p><code>{contract, release, hub_version, built_at, local_only?, items: {&lt;名&gt;: {kind: model | engine | accessory | hub, version, dir, files: [{path, size, sha256}], urls, license?, accessory?, bundle_id?, type?, name?, memory?, installer?, min_macos?, listing?}}, installers?}</code>（<code>installers</code> 只在另出应用安装包时有；发布页只放螺壳的 <code>Luoke.dmg</code>）。模型有 ModelScope 和 Hugging Face 两个镜像，安装包放在 GitHub 的 <code>luokelabs/luoke-releases</code>。主控的"检查更新"从 <code>items.hub</code> 取 DMG。</p>
 </section>
 <section class="page" id="ref-mem" data-title="记忆接口与表结构">
 <h1>记忆接口与表结构</h1>
@@ -1708,17 +1709,18 @@ sequenceDiagram
 <tr><th>路径</th><th>内容</th></tr>
 <tr><td><code>run/hub.sock</code></td><td>任务接口 socket</td></tr>
 <tr><td><code>logs/hub.log</code>、<code>logs/app.log</code>、<code>logs/jobs/</code></td><td>日志（只记元数据）</td></tr>
-<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包；引擎运行目录</td></tr>
+<tr><td><code>engines/&lt;版本&gt;/</code>、<code>engine/&lt;版本&gt;/</code></td><td>引擎包（发布版只留当前版本）；引擎运行目录（含引擎密钥 <code>settings.json</code>（0600）、<code>engine.log</code>、<code>engine.pid.json</code>）</td></tr>
 <tr><td><code>models/</code></td><td>模型；用户登记的模型在 <code>user-&lt;名字&gt;</code></td></tr>
-<tr><td><code>downloads/</code></td><td>下载暂存</td></tr>
+<tr><td><code>downloads/</code></td><td>下载暂存（应用的包在 <code>downloads/apps/</code>）</td></tr>
 <tr><td><code>state.json</code></td><td>运行状态：常驻、冒烟、探针、空闲任务、端点用量</td></tr>
 <tr><td><code>settings.json</code></td><td>能耗模式、电池、档、端点</td></tr>
 <tr><td><code>endpoint-key</code>、<code>user-models.json</code></td><td>端点密钥（0600）；登记的模型</td></tr>
 <tr><td><code>local-verified.json</code></td><td>本机放行</td></tr>
-<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布验证、通过哪些任务（每配件 3 个版本），供回滚用</td></tr>
+<tr><td><code>verified-history.json</code></td><td>各配件版本由哪一版发布认可、当时放行哪些任务（每配件 3 个版本），供回到上一版本和主控升级后还没升级的应用使用</td></tr>
 <tr><td><code>downloads/update/</code>、<code>run/update-mount.json</code></td><td>检查更新下载的主控安装包，拷到暂存处后立即删除；<code>run/update-mount.json</code> 只为清理旧版留下的挂载而读</td></tr>
 <tr><td><code>previous.noindex/</code></td><td>换装前的旧版主控（由换包脚本移入，不论原来在 <code>/Applications</code> 还是 <code>~/Applications</code>）和配件；应用可在「应用」窗口里回到上一版本，卸载配件时一并删除</td></tr>
 <tr><td><code>staging.noindex/</code></td><td>升级主控时先放新版、核对签名，再由换包脚本移到装好的位置</td></tr>
+<tr><td><code>run/upgrade.json</code>、<code>run/preselect.json</code></td><td>升级标记（新主控读后删除）；安装器交来的预选应用</td></tr>
 <tr><td><code>run/swap.sh</code>、<code>run/swap-result.json</code>、<code>logs/swap.log</code></td><td>换包脚本、上次换包的结果（下次启动取走）、换包日志</td></tr>
 </table></div>
 
@@ -1899,6 +1901,11 @@ sequenceDiagram
 </section>
 <section class="page" id="changelog" data-title="文档修订">
 <h1>文档修订</h1>
+
+<h2>2026-10-28</h2>
+<ul>
+<li>螺壳页、配件清单页、文件页按 luoke-core eb1ad95 复核：引擎密钥写进 0600 的 settings.json、不联网找模型；计费 / 低数据网络不自动补下；只装应用不动引擎、换引擎后删旧版本；首次设置的进度估算、试打框重新聚焦、邮件助手完成行；验证历史记"本版放行的任务"；Finder 版本是发布号；"上一版"只认发布出去的、beta 全部重评；发布页只放 Luoke.dmg；配件清单的 <code>main</code>、<code>min_macos</code>、<code>capabilities</code> 里的 <code>service</code> / <code>permissions</code> / <code>listing</code>、配方的 <code>background_input_chars</code> 和 <code>expectations</code>、发布清单字段。</li>
+</ul>
 
 <h2>2026-10-27</h2>
 <ul>
